@@ -50,14 +50,14 @@ class HubServiceTest {
             ReflectionTestUtils.setField(savedHub, "createdAt", LocalDateTime.now());
             ReflectionTestUtils.setField(savedHub, "updatedAt", LocalDateTime.now());
 
-            when(hubRepository.findById(centralHubId)).thenReturn(Optional.of(centralHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.of(centralHub));
             when(hubRepository.save(any(Hub.class))).thenReturn(savedHub);
 
             // when
             HubResponse response = hubService.createHub(request);
 
             // then
-            verify(hubRepository).findById(centralHubId);
+            verify(hubRepository).findByIdAndDeletedAtIsNull(centralHubId);
             verify(hubRepository).save(any(Hub.class));
 
             assertThat(response.hubId()).isEqualTo(savedHub.getId());
@@ -72,7 +72,7 @@ class HubServiceTest {
             // given
             UUID centralHubId = UUID.randomUUID();
             HubRequest request = createHubRequest("이름", "주소", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), centralHubId);
-            when(hubRepository.findById(centralHubId)).thenReturn(Optional.empty());
+            when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> hubService.createHub(request))
@@ -82,6 +82,87 @@ class HubServiceTest {
 
         }
     }
+
+    @Nested
+    @DisplayName("허브 수정")
+    class UpdateHub {
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID oldCentralHubId = UUID.randomUUID();
+            UUID newCentralHubId = UUID.randomUUID();
+            Hub newCentralHub = Hub.createHub(null, "새 중앙허브", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "서울시 중구");
+            HubRequest request = createHubRequest("이름2", "주소2", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), newCentralHubId);
+
+            UUID hubId = UUID.randomUUID();
+            Hub savedHub = Hub.createHub(oldCentralHubId, "이름", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "부산");
+
+            ReflectionTestUtils.setField(savedHub, "id", hubId);
+            ReflectionTestUtils.setField(savedHub, "createdAt", LocalDateTime.now());
+            ReflectionTestUtils.setField(savedHub, "updatedAt", LocalDateTime.now());
+
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(savedHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(newCentralHubId)).thenReturn(Optional.of(newCentralHub));
+            when(hubRepository.saveAndFlush(any(Hub.class))).thenReturn(savedHub);
+
+            // when
+            HubResponse response = hubService.updateHub(hubId, request);
+
+            // then
+            assertThat(response.hubId()).isEqualTo(hubId);
+            assertThat(response.name()).isEqualTo("이름2");
+            assertThat(response.address()).isEqualTo("주소2");
+            assertThat(response.latitude()).isEqualTo(BigDecimal.valueOf(35.1));
+            assertThat(response.longitude()).isEqualTo(BigDecimal.valueOf(129.0));
+            assertThat(response.centralHubId()).isEqualTo(newCentralHubId);
+
+            verify(hubRepository).findByIdAndDeletedAtIsNull(hubId);
+            verify(hubRepository).findByIdAndDeletedAtIsNull(newCentralHubId);
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 허브")
+        void hubNotFound() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            UUID centralHubId = UUID.randomUUID();
+            HubRequest request = createHubRequest("이름2", "주소2", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), centralHubId);
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubService.updateHub(hubId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+
+
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 중앙 허브")
+        void centralHubNotFound() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            UUID centralHubId = UUID.randomUUID();
+            Hub existingHub = Hub.createHub(null, "이름", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "부산");
+            ReflectionTestUtils.setField(existingHub, "id", hubId);
+
+            HubRequest request = createHubRequest("이름2", "주소2", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), centralHubId);
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(existingHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubService.updateHub(hubId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.CENTRAL_HUB_NOT_FOUND);
+        }
+    }
+
 
     private HubRequest createHubRequest(String name, String address, BigDecimal latitude, BigDecimal longitude, UUID centralHubId) {
         return new HubRequest(name, address, latitude, longitude, centralHubId);
