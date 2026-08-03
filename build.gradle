@@ -40,6 +40,15 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+	// --- JPA & Validation (★ 추가) ---
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// --- DB Driver (★ 사용하는 DB에 맞게 하나 선택) ---
+	runtimeOnly 'com.h2database:h2'                    // 개발/테스트용
+
+	implementation 'org.springframework.boot:spring-boot-starter-security' // security 붙일 경우 나중에 후처리
+
 	implementation 'org.springframework.amqp:spring-rabbit-stream'
 
 	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
