@@ -17,6 +17,9 @@ public enum ErrorCode {
     // 403
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
+    // 400
+    CENTRAL_HUB_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 중앙 허브입니다."),
+
     // 404
     HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "허브를 찾을 수 없습니다."),
 
