@@ -1,0 +1,21 @@
+server:
+  port: 19094
+
+spring:
+  application:
+    name: company-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+hub-service:
+  url: ${HUB_SERVICE_URL:http://localhost:19093}
