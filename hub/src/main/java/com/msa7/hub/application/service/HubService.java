@@ -8,6 +8,7 @@ import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.response.HubResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class HubService {
     private final HubRepository hubRepository;
 
+    @Transactional
     public HubResponse createHub(HubRequest request) {
 
         ensureCentralHubExists(request.centralHubId()); // 존재하는 중앙허브 인지 검증
@@ -26,12 +28,26 @@ public class HubService {
         return HubResponse.from(saved);
     }
 
+    @Transactional
+    public HubResponse updateHub(UUID hubId, HubRequest request) {
+        Hub hub = findExistingHub(hubId);
+        ensureCentralHubExists(request.centralHubId());
+        hub.updateHub(request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
+
+        Hub saved = hubRepository.saveAndFlush(hub); //updatedAt 필드 업데이트하기 위해
+        return HubResponse.from(saved);
+    }
+
+    private Hub findExistingHub(UUID hubId) {
+        return hubRepository.findByIdAndDeletedAtIsNull(hubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HUB_NOT_FOUND));
+    }
+
     private void ensureCentralHubExists(UUID centralHubId) {
         if (centralHubId == null) {
             return;
         }
-        hubRepository.findById(centralHubId)
+        hubRepository.findByIdAndDeletedAtIsNull(centralHubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CENTRAL_HUB_NOT_FOUND));
     }
-
 }

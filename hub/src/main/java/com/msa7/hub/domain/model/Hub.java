@@ -52,4 +52,11 @@ public class Hub extends BaseEntity{
         return new Hub(centralHubId, name, latitude, longitude, address);
     }
 
+    public void updateHub(UUID centralHubId,String name, BigDecimal latitude,  BigDecimal longitude, String address) {
+        this.centralHubId = centralHubId;
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.address = address;
+    }
 }

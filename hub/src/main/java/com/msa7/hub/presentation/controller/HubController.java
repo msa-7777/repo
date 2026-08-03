@@ -33,8 +33,8 @@ public class HubController {
     public ResponseEntity<RestApiResponse<HubResponse>> createHub(
             @RequestBody @Valid HubRequest request
     ) {
-        HubResponse response = hubService.createHub(request);
 
+        HubResponse response = hubService.createHub(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(response));
     }
 
@@ -44,7 +44,8 @@ public class HubController {
             @PathVariable UUID hubId
     ) {
 
-        return null;
+        HubResponse response = hubService.updateHub(hubId, request);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
     @DeleteMapping("/hubs/{hubId}")
