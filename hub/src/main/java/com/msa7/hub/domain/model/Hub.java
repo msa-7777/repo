@@ -25,9 +25,9 @@ public class Hub extends BaseEntity{
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "hub_id", updatable = false, nullable = false)
     private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Hub centralHub;
+    
+    @Column(name = "central_hub_id")
+    private UUID centralHubId;
 
     @Column(nullable = false, length = 50)
     private String name;
