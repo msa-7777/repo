@@ -41,7 +41,7 @@ public class OrderJpaEntity extends BaseEntity {
 	@Column(name = "request_notes")
 	private String requestNotes;
 
-
+	// Domain -> Entity
 	public static OrderJpaEntity from(Order order) {
 		OrderJpaEntity entity = new OrderJpaEntity();
 		entity.id = order.getId();
@@ -54,7 +54,8 @@ public class OrderJpaEntity extends BaseEntity {
 		return entity;
 	}
 
-	public Order toDomian() {
+	// Entity -> Domain
+	public Order toDomain() {
 		return new Order(
 			this.id,
 			this.receiverCompanyId,
