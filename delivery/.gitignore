@@ -35,3 +35,16 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Custom Secret & Env ###
+# 민감한 설정 파일 제외
+src/main/resources/application-secret.yaml
+*.env
+
+### OS Specific ###
+# Mac, Windows 임시 파일
+.DS_Store
+Thumbs.db
+
+### Log Files ###
+*.log

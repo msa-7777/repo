@@ -9,6 +9,9 @@ import com.msa7.v1.order.domain.vo.OrderStatus;
 import com.msa7.v1.order.domain.vo.Quantity;
 import com.msa7.v1.order.domain.vo.RequestNotes;
 
+import lombok.Getter;
+
+@Getter
 public class Order {
 	private UUID id;
 
