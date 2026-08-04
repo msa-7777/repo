@@ -75,5 +75,4 @@ public class HubController {
         Page<HubResponse> response = hubService.getHubList(name, address, isCentral, pageable);
         return ResponseEntity.ok(RestApiResponse.ok(response));
     }
-
 }
