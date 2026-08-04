@@ -202,6 +202,50 @@ class HubServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("허브 단건 조회")
+    class GetHub {
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            Hub hub = Hub.createHub(null, "이름", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "부산");
+            ReflectionTestUtils.setField(hub, "id", hubId);
+            ReflectionTestUtils.setField(hub, "createdAt", LocalDateTime.now());
+            ReflectionTestUtils.setField(hub, "updatedAt", LocalDateTime.now());
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(hub));
+
+            // when
+            HubResponse response = hubService.getHub(hubId);
+
+            // then
+            verify(hubRepository).findByIdAndDeletedAtIsNull(hubId);
+            assertThat(response.hubId()).isEqualTo(hubId);
+            assertThat(response.name()).isEqualTo("이름");
+            assertThat(response.latitude()).isEqualTo(BigDecimal.valueOf(37.5));
+            assertThat(response.longitude()).isEqualTo(BigDecimal.valueOf(127.0));
+            assertThat(response.address()).isEqualTo("부산");
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 허브")
+        void hubNotFound() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubService.getHub(hubId))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+        }
+
+
+    }
+
 
     private HubRequest createHubRequest(String name, String address, BigDecimal latitude, BigDecimal longitude, UUID centralHubId) {
         return new HubRequest(name, address, latitude, longitude, centralHubId);
