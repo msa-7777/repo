@@ -40,9 +40,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// --- DB Driver (★ 사용하는 DB에 맞게 하나 선택) ---
-	runtimeOnly 'com.h2database:h2'                    // 개발/테스트용
+//	runtimeOnly 'com.h2database:h2'                    // 개발/테스트용
 	// runtimeOnly 'com.mysql:mysql-connector-j'       // MySQL 8.x
-	// runtimeOnly 'org.postgresql:postgresql'         // PostgreSQL
+	 runtimeOnly 'org.postgresql:postgresql'         // PostgreSQL
 
 	// --- Messaging & Tracing (기존) ---
 	implementation 'org.springframework.amqp:spring-rabbit-stream'
