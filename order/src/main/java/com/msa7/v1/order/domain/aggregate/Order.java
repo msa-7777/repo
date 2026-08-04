@@ -1,8 +1,8 @@
-package com.msa7.v1.order.domain;
+package com.msa7.v1.order.domain.aggregate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import com.msa7.v1.order.domain.vo.OrderStatus;
@@ -13,29 +13,41 @@ import lombok.Getter;
 
 @Getter
 public class Order {
-	private UUID id;
+	private final UUID id;
 
 	// 외부 도메인 참조는 오직 ID로만
-	private UUID receiverCompanyId;
-	private UUID productId;
+	private final UUID receiverCompanyId;
+	private final UUID productId;
 
 	// Value Obj
-	private Quantity quantity;
-	private OrderStatus status;
-	private RequestNotes requestNotes;
+	private final Quantity quantity;
+	private  OrderStatus status;
+	private final RequestNotes requestNotes;
 
 	// 이벤트 저장을 위한 임시 컬랙션
 	private List<Object> domainEvents = new ArrayList<>();
 
-	public Order(UUID receiverCompanyId, UUID productId, Integer quantity, OrderStatus status, String requestNotes) {
-		this.id = UUID.randomUUID();
+	// DB 복원자
+	public Order(UUID id, UUID receiverCompanyId, UUID productId, Integer quantity, OrderStatus status, String requestNotes) {
+		this.id = id;
 		this.receiverCompanyId = receiverCompanyId;
 		this.productId = productId;
 		this.quantity = new Quantity(quantity);
-		this.status = OrderStatus.PENDING;
+		this.status = status;
 		this.requestNotes = new RequestNotes(requestNotes);
 
-		// this.domainEvents.add(new OrderCreate)
+	}
+	// 신규 생성자
+	public static Order create(UUID receiverCompanyId, UUID productId, Integer quantity, String requestNotes) {
+		return new Order(
+			UUID.randomUUID(),
+			receiverCompanyId,
+			productId,
+			quantity,
+			OrderStatus.PENDING,
+			requestNotes
+			// domainEvents.add(new OrderCreate)
+		);
 	}
 
 	public void cancel(UUID requestId) {
@@ -48,7 +60,7 @@ public class Order {
 	}
 
 	// callBack메서드 1
-	public void setDelivery() {
+	public void startDelivery() {
 		if (this.status == OrderStatus.CANCELED) {
 			throw new IllegalStateException("취소된 주문은 배송 불가 합니다");
 		}
@@ -61,6 +73,10 @@ public class Order {
 		}
 		this.status = OrderStatus.COMPLETED;
 	}
+
+	// 이벤트 방출 용
+	public List<Object> getDomainEvents() {return Collections.unmodifiableList(domainEvents);}
+	public void clearEvents() { this.domainEvents.clear();}
 
 
 }
