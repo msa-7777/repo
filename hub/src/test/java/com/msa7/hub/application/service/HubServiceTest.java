@@ -163,6 +163,45 @@ class HubServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("허브 삭제")
+    class DeleteHub {
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            Hub existingHub = Hub.createHub(null, "이름", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "부산");
+            ReflectionTestUtils.setField(existingHub, "id", hubId);
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(existingHub));
+
+            // when
+            hubService.deleteHub(hubId, userId);
+
+            // then
+            verify(hubRepository).findByIdAndDeletedAtIsNull(hubId);
+            assertThat(existingHub.getDeletedAt()).isNotNull();
+            assertThat(existingHub.getDeletedBy()).isEqualTo(userId);
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 허브")
+        void hubNotFound() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubService.deleteHub(hubId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+        }
+    }
+
 
     private HubRequest createHubRequest(String name, String address, BigDecimal latitude, BigDecimal longitude, UUID centralHubId) {
         return new HubRequest(name, address, latitude, longitude, centralHubId);
