@@ -1,4 +1,4 @@
-package com.msa7.company.presentation;
+package com.msa7.company.presentation.controller;
 
 public class CompanyController {
 }
