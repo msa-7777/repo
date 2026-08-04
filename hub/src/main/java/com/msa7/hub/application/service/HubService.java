@@ -4,6 +4,7 @@ import com.msa7.hub.domain.exception.BusinessException;
 import com.msa7.hub.domain.exception.ErrorCode;
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.repository.HubRepository;
+import com.msa7.hub.domain.repository.HubSearchRepository;
 import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.response.HubResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class HubService {
     private final HubRepository hubRepository;
+    private final HubSearchRepository hubSearchRepository;
 
     @Transactional
     public HubResponse createHub(HubRequest request) {
@@ -66,7 +68,7 @@ public class HubService {
     }
 
     public Page<HubResponse> getHubList(String name, String address, Boolean isCentral, Pageable pageable) {
-        return hubRepository.search(name, address, isCentral, pageable)
+        return hubSearchRepository.search(name, address, isCentral, pageable)
                 .map(HubResponse::from);
     }
 }

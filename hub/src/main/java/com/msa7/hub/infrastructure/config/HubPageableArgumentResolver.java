@@ -1,5 +1,6 @@
 package com.msa7.hub.infrastructure.config;
 
+import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +23,9 @@ public class HubPageableArgumentResolver extends PageableHandlerMethodArgumentRe
     private static final int DEFAULT_PAGE_SIZE =10;
 
     @Override
-    public Pageable resolveArgument(MethodParameter methodParameter, @Nullable ModelAndViewContainer mavContainer,
-                                    NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) {
+    @NonNull
+    public Pageable resolveArgument(@NonNull MethodParameter methodParameter, @Nullable ModelAndViewContainer mavContainer,
+                                    @NonNull NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) {
 
         Pageable pageable = super.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 

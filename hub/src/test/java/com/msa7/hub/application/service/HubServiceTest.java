@@ -4,6 +4,7 @@ import com.msa7.hub.domain.exception.BusinessException;
 import com.msa7.hub.domain.exception.ErrorCode;
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.repository.HubRepository;
+import com.msa7.hub.domain.repository.HubSearchRepository;
 import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.response.HubResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,9 @@ class HubServiceTest {
 
     @Mock
     private HubRepository hubRepository;
+
+    @Mock
+    private HubSearchRepository hubSearchRepository;
 
     @Nested
     @DisplayName("허브 생성")
@@ -270,13 +274,13 @@ class HubServiceTest {
 
             Page<Hub> hubPage = new PageImpl<>(List.of(hub), pageable, 1);
 
-            when(hubRepository.search(name, address, isCentral, pageable)).thenReturn(hubPage);
+            when(hubSearchRepository.search(name, address, isCentral, pageable)).thenReturn(hubPage);
 
             // when
             Page<HubResponse> response = hubService.getHubList(name, address, isCentral, pageable);
 
             // then
-            verify(hubRepository).search(name, address, isCentral, pageable);
+            verify(hubSearchRepository).search(name, address, isCentral, pageable);
             assertThat(response.getTotalElements()).isEqualTo(1);
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.getContent().get(0).name()).isEqualTo(name);

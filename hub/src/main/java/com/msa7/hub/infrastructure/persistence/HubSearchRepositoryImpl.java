@@ -2,7 +2,7 @@ package com.msa7.hub.infrastructure.persistence;
 
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.model.QHub;
-import com.msa7.hub.domain.repository.HubRepositoryCustom;
+import com.msa7.hub.domain.repository.HubSearchRepository;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -12,13 +12,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
 
+@Repository
 @RequiredArgsConstructor
-public class HubRepositoryImpl implements HubRepositoryCustom {
+public class HubSearchRepositoryImpl implements HubSearchRepository {
 
     private final JPAQueryFactory queryFactory;
     private final QHub hub = QHub.hub;
