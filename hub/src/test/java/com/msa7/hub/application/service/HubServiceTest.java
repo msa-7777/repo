@@ -6,6 +6,7 @@ import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.repository.HubRepository;
 import com.msa7.hub.domain.repository.HubSearchRepository;
 import com.msa7.hub.presentation.request.HubRequest;
+import com.msa7.hub.presentation.request.HubSearchRequest;
 import com.msa7.hub.presentation.response.HubResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -273,11 +274,12 @@ class HubServiceTest {
             ReflectionTestUtils.setField(hub, "updatedAt", LocalDateTime.now());
 
             Page<Hub> hubPage = new PageImpl<>(List.of(hub), pageable, 1);
+            HubSearchRequest request = new HubSearchRequest(name, address, isCentral);
 
             when(hubSearchRepository.search(name, address, isCentral, pageable)).thenReturn(hubPage);
 
             // when
-            Page<HubResponse> response = hubService.getHubList(name, address, isCentral, pageable);
+            Page<HubResponse> response = hubService.getHubList(request, pageable);
 
             // then
             verify(hubSearchRepository).search(name, address, isCentral, pageable);

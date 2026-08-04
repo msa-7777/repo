@@ -6,6 +6,7 @@ import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.repository.HubRepository;
 import com.msa7.hub.domain.repository.HubSearchRepository;
 import com.msa7.hub.presentation.request.HubRequest;
+import com.msa7.hub.presentation.request.HubSearchRequest;
 import com.msa7.hub.presentation.response.HubResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -56,8 +57,8 @@ public class HubService {
     }
 
     @Transactional(readOnly = true)
-    public Page<HubResponse> getHubList(String name, String address, Boolean isCentral, Pageable pageable) {
-        return hubSearchRepository.search(name, address, isCentral, pageable)
+    public Page<HubResponse> getHubList(HubSearchRequest request, Pageable pageable) {
+        return hubSearchRepository.search(request.name(), request.address(), request.isCentral(), pageable)
                 .map(HubResponse::from);
     }
 
