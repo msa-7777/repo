@@ -13,10 +13,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -243,6 +248,40 @@ class HubServiceTest {
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
         }
 
+
+    }
+
+    @Nested
+    @DisplayName("허브 목록 조회")
+    class GetHubList {
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            String name = "이름";
+            String address = "주소";
+            Boolean isCentral = true;
+            Pageable pageable = PageRequest.of(0, 10);
+
+            Hub hub = Hub.createHub(null, name, BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), address);
+            ReflectionTestUtils.setField(hub, "id", UUID.randomUUID());
+            ReflectionTestUtils.setField(hub, "createdAt", LocalDateTime.now());
+            ReflectionTestUtils.setField(hub, "updatedAt", LocalDateTime.now());
+
+            Page<Hub> hubPage = new PageImpl<>(List.of(hub), pageable, 1);
+
+            when(hubRepository.search(name, address, isCentral, pageable)).thenReturn(hubPage);
+
+            // when
+            Page<HubResponse> response = hubService.getHubList(name, address, isCentral, pageable);
+
+            // then
+            verify(hubRepository).search(name, address, isCentral, pageable);
+            assertThat(response.getTotalElements()).isEqualTo(1);
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).name()).isEqualTo(name);
+            assertThat(response.getContent().get(0).address()).isEqualTo(address);
+        }
 
     }
 
