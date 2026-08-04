@@ -49,9 +49,16 @@ public class HubService {
         hub.softDelete(userId);
     }
 
+    @Transactional(readOnly = true)
     public HubResponse getHub(UUID hubId) {
         Hub hub = findExistingHub(hubId);
         return HubResponse.from(hub);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<HubResponse> getHubList(String name, String address, Boolean isCentral, Pageable pageable) {
+        return hubSearchRepository.search(name, address, isCentral, pageable)
+                .map(HubResponse::from);
     }
 
     private Hub findExistingHub(UUID hubId) {
@@ -65,10 +72,5 @@ public class HubService {
         }
         hubRepository.findByIdAndDeletedAtIsNull(centralHubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CENTRAL_HUB_NOT_FOUND));
-    }
-
-    public Page<HubResponse> getHubList(String name, String address, Boolean isCentral, Pageable pageable) {
-        return hubSearchRepository.search(name, address, isCentral, pageable)
-                .map(HubResponse::from);
     }
 }
