@@ -7,6 +7,8 @@ import com.msa7.hub.domain.repository.HubRepository;
 import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.response.HubResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,5 +63,10 @@ public class HubService {
         }
         hubRepository.findByIdAndDeletedAtIsNull(centralHubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CENTRAL_HUB_NOT_FOUND));
+    }
+
+    public Page<HubResponse> getHubList(String name, String address, Boolean isCentral, Pageable pageable) {
+        return hubRepository.search(name, address, isCentral, pageable)
+                .map(HubResponse::from);
     }
 }

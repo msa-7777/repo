@@ -72,7 +72,8 @@ public class HubController {
             @RequestParam(required = false) Boolean isCentral,
             Pageable pageable
     ) {
-        return null;
+        Page<HubResponse> response = hubService.getHubList(name, address, isCentral, pageable);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
 }
