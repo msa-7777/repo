@@ -15,6 +15,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sparta.productservice.domain.inventory.Inventory;
+import com.sparta.productservice.domain.inventory.InventoryRepository;
+import com.sparta.productservice.domain.product.Product;
+import com.sparta.productservice.domain.product.ProductRepository;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasItem;
@@ -63,6 +70,12 @@ class ProductApiIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     @Nested
     @DisplayName("상품 생성")
@@ -253,6 +266,121 @@ class ProductApiIntegrationTest {
                     .andExpect(jsonPath("$.data").doesNotExist())
                     .andExpect(jsonPath("$.error").doesNotExist());
         }
+
+        @Test
+        @DisplayName("상품을 삭제하면 연결된 재고도 함께 논리 삭제된다")
+        void deleteProduct_deletesInventoryTogether() throws Exception {
+            // given
+            /*
+             * 상품 생성 API를 호출하면 ProductService 내부에서 초기 수량 0의 재고도 함께 생성된다.
+             */
+            UUID productId = createProduct(COMPANY_A_ID, "재고 동반 삭제 상품");
+
+            /*
+             * 상품 삭제 전에 연결된 활성 재고가 실제로 존재하는지 확인한다.
+             * 이후 재고가 조회되지 않는 것이 상품 삭제 처리 때문임을
+             * 명확하게 검증하기 위한 사전 조건이다.
+             */
+            Inventory inventoryBeforeDelete = inventoryRepository
+                            .findByProductIdAndDeletedAtIsNull(productId)
+                            .orElseThrow();
+
+            UUID inventoryId = inventoryBeforeDelete.getId();
+
+            assertThat(inventoryBeforeDelete.getDeletedAt()).isNull();
+
+            // when
+            mockMvc.perform(delete(BASE_URL + "/{productId}",
+                                    productId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.message").value("상품이 삭제되었습니다."))
+                    .andExpect(jsonPath("$.data").doesNotExist())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            /*
+             * 변경 감지로 발생하는 상품·재고 UPDATE 쿼리를
+             * DB에 즉시 반영한다.
+             */
+            productRepository.flush();
+            inventoryRepository.flush();
+
+            // then 1. 삭제된 상품은 활성 상품 조회에서 제외된다.
+            assertThat(productRepository.findByIdAndDeletedAtIsNull(productId)).isEmpty();
+
+            // then 2. 삭제된 재고도 활성 재고 조회에서 제외된다.
+            assertThat(inventoryRepository.findByProductIdAndDeletedAtIsNull(productId)).isEmpty();
+
+            /*
+             * 논리 삭제이므로 DB 행 자체는 남아 있어야 한다.
+             * 삭제 조건이 없는 findById()로 다시 조회하여
+             * deletedAt과 deletedBy가 기록됐는지 확인한다.
+             */
+            Product deletedProduct = productRepository.findById(productId).orElseThrow();
+            Inventory deletedInventory = inventoryRepository.findById(inventoryId).orElseThrow();
+
+            assertThat(deletedProduct.getDeletedAt()).isNotNull();
+            assertThat(deletedInventory.getDeletedAt()).isNotNull();
+
+            /*
+             * 상품과 재고가 같은 삭제 요청에 의해 처리되므로
+             * deletedBy도 동일해야 한다.
+             */
+            assertThat(deletedInventory.getDeletedBy()).isEqualTo(deletedProduct.getDeletedBy());
+        }
+
+        @Test
+        @DisplayName("연결된 재고가 없는 상품도 정상적으로 논리 삭제할 수 있다")
+        void deleteProduct_withoutInventory_success() throws Exception {
+            // given
+            /*
+             * createProduct() 헬퍼는 상품 생성 API를 호출하므로
+             * 초기 재고도 자동으로 생성된다.
+             *
+             * 따라서 재고가 없는 상품 데이터를 만들기 위해
+             * Product 엔티티만 Repository로 직접 저장한다.
+             */
+            Product productWithoutInventory = Product.create(COMPANY_A_ID, "재고 없는 상품");
+
+            Product savedProduct = productRepository.saveAndFlush(productWithoutInventory);
+
+            UUID productId = savedProduct.getId();
+
+            /*
+             * 테스트 시작 시점에 연결된 재고가 존재하지 않는지 확인한다.
+             */
+            assertThat(inventoryRepository.findByProductIdAndDeletedAtIsNull(productId)).isEmpty();
+
+            // when
+            mockMvc.perform(delete(BASE_URL + "/{productId}",
+                                    productId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.message").value("상품이 삭제되었습니다."))
+                    .andExpect(jsonPath("$.data").doesNotExist())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            productRepository.flush();
+
+            // then 1. 재고가 없어도 상품은 활성 조회에서 제외된다.
+            assertThat(productRepository.findByIdAndDeletedAtIsNull(productId)).isEmpty();
+
+            // then 2. 상품 행에는 논리 삭제 정보가 기록된다.
+            Product deletedProduct = productRepository.findById(productId).orElseThrow();
+
+            assertThat(deletedProduct.getDeletedAt()).isNotNull();
+
+            assertThat(deletedProduct.getDeletedBy()).isNotNull();
+
+            /*
+             * 상품 삭제 과정에서 존재하지 않던 재고가
+             * 새로 생성되지 않았는지도 함께 확인한다.
+             */
+            assertThat(inventoryRepository.findByProductIdAndDeletedAtIsNull(productId)).isEmpty();
+        }
+
 
         @Test
         @DisplayName("삭제된 상품을 단건 조회하면 404를 반환한다")

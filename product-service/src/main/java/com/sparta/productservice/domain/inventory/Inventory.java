@@ -20,7 +20,7 @@ import java.util.UUID;
 @Table(
         name = "p_inventories",
         indexes = {
-                /* 상품 ID로 재고를 단건 조회하는 요청이 많을 것으로 예상
+                /* 상품 ID로 재고를 단건 조회하는 요청
                  * product_id에 인덱스를 설정한다.*/
                 @Index(name = "idx_inventories_product", columnList = "product_id"),
 
@@ -109,5 +109,11 @@ public class Inventory extends BaseEntity {
                     InventoryErrorCode.INVALID_CHANGE_QUANTITY
             );
         }
+    }
+
+
+    // 재고를 논리 삭제한다.
+    public void delete(UUID deletedBy) {
+        super.delete(deletedBy);
     }
 }

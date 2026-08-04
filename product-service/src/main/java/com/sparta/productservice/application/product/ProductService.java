@@ -153,7 +153,8 @@ public class ProductService {
         return ProductResponse.from(product);
     }
 
-    // 상품 논리 삭제
+    // 상품 논리 삭제 시, 연결된 재고를 함께 논리 삭제한다
+    // 연결된 재고가 없더라도 상품을 삭제한다
     @Transactional
     public void deleteProduct(
             UUID productId,
@@ -161,7 +162,15 @@ public class ProductService {
     ) {
         Product product = findActiveProduct(productId);
 
+        /*
+         * 상품과 재고는 같은 product-service에서 관리하므로
+         * 하나의 로컬 트랜잭션 안에서 함께 논리 삭제한다.
+         */
         product.delete(deletedBy);
+        inventoryService.deleteInventoryIfExists(productId, deletedBy);
+
+        // TODO: 주문 등 다른 서비스의 연관 데이터 비활성화 정책을 확정한다.
+        // TODO: MSA 연동 시 다른 서비스의 삭제 처리는 이벤트 또는 API 호출로 전달한다.
     }
 
     // 삭제되지 않은 상품 조회 - 상품이 없거나 이미 삭제된 경우 모두 PRODUCT_NOT_FOUND로 처리

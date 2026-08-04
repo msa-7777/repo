@@ -33,20 +33,14 @@ public class InventoryService {
     ) {
         validateInventoryNotExists(productId);
 
-        Inventory inventory = Inventory.create(
-                productId,
-                hubId
-        );
+        Inventory inventory = Inventory.create(productId, hubId);
 
         return inventoryRepository.save(inventory);
     }
 
     // 상품 ID를 기준으로 재고를 단건 조회한다.
-    public InventoryResponse getInventory(
-            UUID productId
-    ) {
-        Inventory inventory =
-                findActiveInventory(productId);
+    public InventoryResponse getInventory(UUID productId) {
+        Inventory inventory = findActiveInventory(productId);
 
         return InventoryResponse.from(inventory);
     }
@@ -69,8 +63,7 @@ public class InventoryService {
             UUID productId,
             InventoryQuantityChangeRequest request
     ) {
-        Inventory inventory =
-                findActiveInventory(productId);
+        Inventory inventory = findActiveInventory(productId);
 
         /*
          * 수량 증감 규칙은 Inventory 엔티티에 위임한다.
@@ -100,9 +93,7 @@ public class InventoryService {
     }
 
     // 삭제되지 않은 재고를 상품 ID로 조회한다.
-    private Inventory findActiveInventory(
-            UUID productId
-    ) {
+    private Inventory findActiveInventory(UUID productId) {
         return inventoryRepository
                 .findByProductIdAndDeletedAtIsNull(productId)
                 .orElseThrow(() ->
@@ -110,9 +101,7 @@ public class InventoryService {
     }
 
     // 같은 상품에 활성 재고가 중복 생성되는 것을 방지한다.
-    private void validateInventoryNotExists(
-            UUID productId
-    ) {
+    private void validateInventoryNotExists(UUID productId) {
         boolean exists = inventoryRepository
                         .existsByProductIdAndDeletedAtIsNull(productId);
 
@@ -132,5 +121,23 @@ public class InventoryService {
 
             throw new ApiException(InventoryErrorCode.INVALID_QUANTITY_RANGE);
         }
+    }
+
+
+    /**
+     * 상품 삭제 시 연결된 활성 재고가 존재하면 함께 논리 삭제한다.
+     *
+     * 재고가 없는 상품은 과거 데이터나 비정상 데이터일 수 있으므로 상품 삭제 자체를 실패시키지는 않는다.
+     */
+    @Transactional
+    public void deleteInventoryIfExists(
+            UUID productId,
+            UUID deletedBy
+    ) {
+        inventoryRepository
+                .findByProductIdAndDeletedAtIsNull(productId)
+                .ifPresent(inventory ->
+                        inventory.delete(deletedBy)
+                );
     }
 }
