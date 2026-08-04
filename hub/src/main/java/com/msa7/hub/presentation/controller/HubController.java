@@ -53,7 +53,8 @@ public class HubController {
             @PathVariable UUID hubId
     ) {
 
-        return null;
+        hubService.deleteHub(hubId, null); // TODO: 인증 구현 후 userId 값 수정
+        return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
     @GetMapping("/hubs/{hubId}")

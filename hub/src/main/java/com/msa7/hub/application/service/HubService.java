@@ -38,6 +38,13 @@ public class HubService {
         return HubResponse.from(saved);
     }
 
+    @Transactional
+    public void deleteHub(UUID hubId, UUID userId) {
+        // TODO: 삭제 후 delivery/company/inventory에 이벤트 발행 또는 동기 호출
+        Hub hub = findExistingHub(hubId);
+        hub.softDelete(userId);
+    }
+
     private Hub findExistingHub(UUID hubId) {
         return hubRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HUB_NOT_FOUND));
