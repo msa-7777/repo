@@ -61,7 +61,8 @@ public class HubController {
     public ResponseEntity<RestApiResponse<HubResponse>> getHub(
             @PathVariable UUID hubId
     ) {
-        return null;
+        HubResponse response = hubService.getHub(hubId);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
     @GetMapping("/hubs")

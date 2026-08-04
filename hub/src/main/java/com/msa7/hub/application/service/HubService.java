@@ -45,6 +45,11 @@ public class HubService {
         hub.softDelete(userId);
     }
 
+    public HubResponse getHub(UUID hubId) {
+        Hub hub = findExistingHub(hubId);
+        return HubResponse.from(hub);
+    }
+
     private Hub findExistingHub(UUID hubId) {
         return hubRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HUB_NOT_FOUND));
