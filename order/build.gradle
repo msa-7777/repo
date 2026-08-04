@@ -1,0 +1,65 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.7'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.msa7'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+ext {
+	set('springCloudVersion', "2025.0.3")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// --- Web & Cloud (기존) ---
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// --- JPA & Validation (★ 추가) ---
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// --- DB Driver (★ 사용하는 DB에 맞게 하나 선택) ---
+	runtimeOnly 'com.h2database:h2'                    // 개발/테스트용
+	// runtimeOnly 'com.mysql:mysql-connector-j'       // MySQL 8.x
+	// runtimeOnly 'org.postgresql:postgresql'         // PostgreSQL
+
+	// --- Messaging & Tracing (기존) ---
+	implementation 'org.springframework.amqp:spring-rabbit-stream'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
+	// Spring Security 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// --- Lombok (기존) ---
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// --- Test (기존) ---
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
