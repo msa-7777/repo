@@ -271,4 +271,168 @@ class HubRouteServiceTest {
                     .isEqualTo(ErrorCode.HUB_ROUTE_ALREADY_EXISTS);
         }
     }
+
+    @Nested
+    @DisplayName("허브 경로 수정")
+    class UpdateHubRoute {
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID hubRouteId = UUID.randomUUID();
+            HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
+
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, null, "도착허브");
+
+            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+            when(hubRouteRepository.saveAndFlush(any(HubRoute.class))).thenReturn(existingHubRoute);
+
+            // when
+            HubRouteResponse response = hubRouteService.updateHubRoute(hubRouteId, request);
+
+            // then
+            assertThat(response.fromHubId()).isEqualTo(fromHubId);
+            assertThat(response.toHubId()).isEqualTo(toHubId);
+            assertThat(response.distance()).isEqualTo(request.distance());
+            assertThat(response.duration()).isEqualTo(request.duration());
+
+            verify(hubRouteRepository).saveAndFlush(any(HubRoute.class));
+        }
+        @Test
+        @DisplayName("실패 - 존재하지 않는 허브 라우트")
+        void hubRouteNotFound() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID hubRouteId = UUID.randomUUID();
+            HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.empty());
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
+
+            verify(hubRouteRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 출발 허브")
+        void fromHubNotFound() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID hubRouteId = UUID.randomUUID();
+            HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
+
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, null, "도착허브");
+
+            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.empty());
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 도착 허브")
+        void toHubNotFound() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID hubRouteId = UUID.randomUUID();
+            HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
+
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, null, "도착허브");
+
+            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("실패 - 스포크끼리 연결 (중앙허브를 거치지 않음)")
+        void spokeToSpoke() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID hubRouteId = UUID.randomUUID();
+            HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
+
+            UUID centralHubId = UUID.randomUUID();
+
+            Hub fromHub = hub(fromHubId, centralHubId, "출발허브");
+            Hub toHub = hub(toHubId, centralHubId, "도착허브");
+
+            Hub existingFromHub = hub(UUID.randomUUID(), null, "기존 출발 허브");
+            Hub existingToHub = hub(UUID.randomUUID(), null, "기존 도착 허브");
+            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(existingFromHub, existingToHub, 50, 30));
+            ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
+        }
+
+        @Test
+        @DisplayName("실패 - 소속 안된 다른 중앙허브로 변경")
+        void spokeToWrongCentralHub() {
+
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID hubRouteId = UUID.randomUUID();
+            HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
+
+
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, UUID.randomUUID(), "도착허브");
+
+            Hub existingFromHub = hub(UUID.randomUUID(), null, "기존 출발 허브");
+            Hub existingToHub = hub(UUID.randomUUID(), null, "기존 도착 허브");
+            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(existingFromHub, existingToHub, 50, 30));
+            ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
+        }
+    }
 }
