@@ -31,6 +31,8 @@ public class AiApplicationService {
     private final AiHistoryRepository aiHistoryRepository;
     private final ObjectMapper objectMapper;
 
+    // #TODO 슬랙 메시지 전송 관련 수정 요망
+    // #TODO 주문 요청사항(납기일자 및 시간 등), 발송지/경유지/도착지 정보, 배송 담당자 근무시간(09-18) 추가 요망 -> order쪽 연동 필요
     @Transactional
     public AiCalculationResponse calculateDeadlineAndGenerateMessage(AiCalculationRequest request) {
         try {
@@ -78,6 +80,22 @@ public class AiApplicationService {
             log.error("AI 배송 시한 계산 및 메시지 생성 실패: {}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.AI_SERVICE_ERROR);
         }
+    }
+
+    public AiHistoryResponse getAiHistory(UUID historyId) {
+        AiHistory history = aiHistoryRepository.findByHistoryIdAndDeletedAtIsNull(historyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.AI_LOG_NOT_FOUND));
+        return AiHistoryResponse.from(history);
+    }
+
+    public Page<AiHistoryResponse> getAiHistories(UUID orderId, Pageable pageable) {
+        Page<AiHistory> histories;
+        if (orderId != null) {
+            histories = aiHistoryRepository.findAllByOrderIdAndDeletedAtIsNull(orderId, pageable);
+        } else {
+            histories = aiHistoryRepository.findAllByDeletedAtIsNull(pageable);
+        }
+        return histories.map(AiHistoryResponse::from);
     }
 
 
