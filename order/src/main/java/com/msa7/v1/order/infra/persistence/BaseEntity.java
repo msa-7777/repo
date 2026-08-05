@@ -1,4 +1,4 @@
-package com.msa7.v1.order.global.common;
+package com.msa7.v1.order.infra.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
