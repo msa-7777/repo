@@ -6,7 +6,9 @@ import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.model.HubRoute;
 import com.msa7.hub.domain.repository.HubRepository;
 import com.msa7.hub.domain.repository.HubRouteRepository;
+import com.msa7.hub.domain.repository.HubRouteSearchRepository;
 import com.msa7.hub.presentation.request.HubRouteRequest;
+import com.msa7.hub.presentation.request.HubRouteSearchRequest;
 import com.msa7.hub.presentation.response.HubRouteResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,10 +18,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,6 +42,9 @@ class HubRouteServiceTest {
 
     @Mock
     private HubRouteRepository hubRouteRepository;
+
+    @Mock
+    private HubRouteSearchRepository hubRouteSearchRepository;
 
     @Mock
     private HubRepository hubRepository;
@@ -519,6 +529,36 @@ class HubRouteServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
+        }
+    }
+
+    @Nested
+    @DisplayName("허브 라우트 목록 조회")
+    class GetHubRouteList {
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            HubRouteSearchRequest request = new HubRouteSearchRequest(fromHubId, toHubId);
+            Pageable pageable = PageRequest.of(0, 10);
+
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, null, "도착허브");
+            HubRoute hubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+
+            Page<HubRoute> hubRoutePage = new PageImpl<>(List.of(hubRoute), pageable, 1);
+
+            when(hubRouteSearchRepository.search(fromHubId, toHubId, pageable)).thenReturn(hubRoutePage);
+
+            // when
+            Page<HubRouteResponse> response = hubRouteService.getHubRouteList(request, pageable);
+
+            // then
+            assertThat(response.getTotalElements()).isEqualTo(1);
+            assertThat(response.getContent().get(0).fromHubId()).isEqualTo(fromHubId);
+            assertThat(response.getContent().get(0).toHubId()).isEqualTo(toHubId);
         }
     }
 
