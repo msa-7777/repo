@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +36,8 @@ public class HubRouteController {
     public ResponseEntity<RestApiResponse<HubRouteResponse>> createHubRoute(
             @RequestBody @Valid HubRouteRequest request
     ) {
-        return null;
+        HubRouteResponse response = hubRouteService.createHubRoute(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(response));
     }
 
     @PutMapping("/hub-routes/{hubRouteId}")

@@ -48,6 +48,10 @@ public class Hub extends BaseEntity{
         this.address = address;
     }
 
+    public boolean isCentral() {
+        return centralHubId == null;
+    }
+
     public static Hub createHub(UUID centralHubId, String name,  BigDecimal latitude, BigDecimal longitude, String address) {
         return new Hub(centralHubId, name, latitude, longitude, address);
     }

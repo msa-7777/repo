@@ -1,11 +1,14 @@
 package com.msa7.hub.domain.model;
 
+import com.msa7.hub.domain.exception.BusinessException;
+import com.msa7.hub.domain.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +16,18 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "p_hub_routes")
+@Table(
+        name = "p_hub_routes",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_hub_route_from_to",
+                        columnNames = {"from_hub_id", "to_hub_id"}
+                )
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class HubRoute extends BaseEntity{
+public class HubRoute extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "hub_route_id", nullable = false, updatable = false)
@@ -34,4 +45,46 @@ public class HubRoute extends BaseEntity{
     @Column(nullable = false)
     private int distance; // 두 허브간 거리 (km)
 
+    private HubRoute(UUID fromHubId, UUID toHubId, int duration, int distance) {
+        this.fromHubId = fromHubId;
+        this.toHubId = toHubId;
+        this.duration = duration;
+        this.distance = distance;
+    }
+
+    public static HubRoute createHubRoute(Hub fromHub, Hub toHub, int duration, int distance) {
+        if (fromHub.getId().equals(toHub.getId())) {
+            throw new BusinessException(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);
+        }
+
+        ensureValidRoute(fromHub, toHub);
+
+        return new HubRoute(
+                fromHub.getId(),
+                toHub.getId(),
+                duration,
+                distance
+        );
+    }
+
+    // 중앙허브-중앙허브, 또는 중앙허브-자기 소속 스포크 조합만 허용
+    private static void ensureValidRoute(Hub fromHub, Hub toHub) {
+        boolean fromIsCentral = fromHub.isCentral();
+        boolean toIsCentral = toHub.isCentral();
+
+        // 중앙허브-중앙허브
+        if (fromIsCentral && toIsCentral) {
+            return;
+        }
+
+        // 중앙허브-자기 소속 스포크
+        if (fromIsCentral && toHub.getCentralHubId().equals(fromHub.getId())) {
+            return;
+        }
+        if (toIsCentral && fromHub.getCentralHubId().equals(toHub.getId())) {
+            return;
+        }
+
+        throw new BusinessException(ErrorCode.INVALID_HUB_ROUTE);
+    }
 }
