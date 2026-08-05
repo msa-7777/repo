@@ -8,8 +8,8 @@ spring:
   # PostgreSQL DB 설정 (로컬 환경)
   datasource:
     url: jdbc:postgresql://localhost:5432/orderdb # 사전에 orderdb 생성 필요
-    username: myuser
-    password: mypassword
+    username: postgres
+    password:
     driver-class-name: org.postgresql.Driver
 
   jpa:
