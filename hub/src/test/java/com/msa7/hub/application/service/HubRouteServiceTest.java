@@ -11,7 +11,6 @@ import com.msa7.hub.presentation.response.HubRouteResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -46,8 +45,12 @@ class HubRouteServiceTest {
         return hub;
     }
 
-    private HubRoute withId(HubRoute hubRoute) {
-        ReflectionTestUtils.setField(hubRoute, "id", UUID.randomUUID());
+    private HubRoute hubRouteWithId(HubRoute hubRoute) {
+        return hubRouteWithId(hubRoute, UUID.randomUUID());
+    }
+
+    private HubRoute hubRouteWithId(HubRoute hubRoute, UUID id) {
+        ReflectionTestUtils.setField(hubRoute, "id", id);
         ReflectionTestUtils.setField(hubRoute, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(hubRoute, "updatedAt", LocalDateTime.now());
         return hubRoute;
@@ -68,7 +71,7 @@ class HubRouteServiceTest {
             Hub fromHub = hub(fromHubId, null, "출발허브");
             Hub toHub = hub(toHubId, null, "도착허브");
 
-            HubRoute savedHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, request.duration(), request.distance()));
+            HubRoute savedHubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, request.duration(), request.distance()));
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
@@ -182,7 +185,7 @@ class HubRouteServiceTest {
             Hub spokeHub = hub(spokeHubId, centralHubId, "스포크허브");
             Hub centralHub = hub(centralHubId, null, "중앙허브");
 
-            HubRoute savedHubRoute = withId(HubRoute.createHubRoute(spokeHub, centralHub, request.duration(), request.distance()));
+            HubRoute savedHubRoute = hubRouteWithId(HubRoute.createHubRoute(spokeHub, centralHub, request.duration(), request.distance()));
 
             when(hubRepository.findByIdAndDeletedAtIsNull(spokeHubId)).thenReturn(Optional.of(spokeHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.of(centralHub));
@@ -287,7 +290,7 @@ class HubRouteServiceTest {
             Hub fromHub = hub(fromHubId, null, "출발허브");
             Hub toHub = hub(toHubId, null, "도착허브");
 
-            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            HubRoute existingHubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
             ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
@@ -337,7 +340,7 @@ class HubRouteServiceTest {
             Hub fromHub = hub(fromHubId, null, "출발허브");
             Hub toHub = hub(toHubId, null, "도착허브");
 
-            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            HubRoute existingHubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
             ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
@@ -361,7 +364,7 @@ class HubRouteServiceTest {
             Hub fromHub = hub(fromHubId, null, "출발허브");
             Hub toHub = hub(toHubId, null, "도착허브");
 
-            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            HubRoute existingHubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
             ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
@@ -391,7 +394,7 @@ class HubRouteServiceTest {
 
             Hub existingFromHub = hub(UUID.randomUUID(), null, "기존 출발 허브");
             Hub existingToHub = hub(UUID.randomUUID(), null, "기존 도착 허브");
-            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(existingFromHub, existingToHub, 50, 30));
+            HubRoute existingHubRoute = hubRouteWithId(HubRoute.createHubRoute(existingFromHub, existingToHub, 50, 30));
             ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
@@ -421,7 +424,7 @@ class HubRouteServiceTest {
 
             Hub existingFromHub = hub(UUID.randomUUID(), null, "기존 출발 허브");
             Hub existingToHub = hub(UUID.randomUUID(), null, "기존 도착 허브");
-            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(existingFromHub, existingToHub, 50, 30));
+            HubRoute existingHubRoute = hubRouteWithId(HubRoute.createHubRoute(existingFromHub, existingToHub, 50, 30));
             ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
@@ -448,7 +451,7 @@ class HubRouteServiceTest {
 
             Hub fromHub = hub(UUID.randomUUID(), null, "출발허브");
             Hub toHub = hub(UUID.randomUUID(), null, "도착허브");
-            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            HubRoute existingHubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
             ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
@@ -476,6 +479,47 @@ class HubRouteServiceTest {
                     .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
         }
 
+    }
+    @Nested
+    @DisplayName("허브 라우트 단건 조회")
+    class GetHubRoute{
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID hubRouteId = UUID.randomUUID();
+            Hub fromHub = hub(UUID.randomUUID(), null, "출발 허브");
+            Hub toHub = hub(UUID.randomUUID(), null, "도착 허브");
+
+            HubRoute hubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 50, 30), hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(hubRoute));
+
+            // when
+            HubRouteResponse response = hubRouteService.getHubRoute(hubRouteId);
+
+            // then
+            assertThat(response.hubRouteId()).isEqualTo(hubRouteId);
+            assertThat(response.fromHubId()).isEqualTo(hubRoute.getFromHubId());
+            assertThat(response.toHubId()).isEqualTo(hubRoute.getToHubId());
+            assertThat(response.distance()).isEqualTo(hubRoute.getDistance());
+            assertThat(response.duration()).isEqualTo(hubRoute.getDuration());
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 허브 라우트")
+        void hubRouteNotFound() {
+            // given
+            UUID hubRouteId = UUID.randomUUID();
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.getHubRoute(hubRouteId))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
+        }
     }
 
 }
