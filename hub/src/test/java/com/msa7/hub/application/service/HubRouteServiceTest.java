@@ -11,6 +11,7 @@ import com.msa7.hub.presentation.response.HubRouteResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -39,6 +40,19 @@ class HubRouteServiceTest {
     @Mock
     private HubRepository hubRepository;
 
+    private Hub hub(UUID id, UUID centralHubId, String name) {
+        Hub hub = Hub.createHub(centralHubId, name, BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "주소");
+        ReflectionTestUtils.setField(hub, "id", id);
+        return hub;
+    }
+
+    private HubRoute withId(HubRoute hubRoute) {
+        ReflectionTestUtils.setField(hubRoute, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(hubRoute, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(hubRoute, "updatedAt", LocalDateTime.now());
+        return hubRoute;
+    }
+
     @Nested
     @DisplayName("허브 경로 생성")
     class CreateHubRoute {
@@ -51,15 +65,10 @@ class HubRouteServiceTest {
             UUID toHubId = UUID.randomUUID();
             HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
 
-            Hub fromHub = Hub.createHub(null, "출발허브", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "서울");
-            Hub toHub = Hub.createHub(null, "도착허브", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), "부산");
-            ReflectionTestUtils.setField(fromHub, "id", fromHubId);
-            ReflectionTestUtils.setField(toHub, "id", toHubId);
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, null, "도착허브");
 
-            HubRoute savedHubRoute = HubRoute.createHubRoute(fromHub, toHub, request.duration(), request.distance());
-            ReflectionTestUtils.setField(savedHubRoute, "id", UUID.randomUUID());
-            ReflectionTestUtils.setField(savedHubRoute, "createdAt", LocalDateTime.now());
-            ReflectionTestUtils.setField(savedHubRoute, "updatedAt", LocalDateTime.now());
+            HubRoute savedHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, request.duration(), request.distance()));
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
@@ -126,8 +135,7 @@ class HubRouteServiceTest {
             UUID hubId = UUID.randomUUID();
             HubRouteRequest request = new HubRouteRequest(hubId, hubId, 100, 60);
 
-            Hub hub = Hub.createHub(null, "허브", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "서울");
-            ReflectionTestUtils.setField(hub, "id", hubId);
+            Hub hub = hub(hubId, null, "허브");
 
             when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(hub));
             when(hubRouteRepository.existsByFromHubIdAndToHubId(hubId, hubId)).thenReturn(false);
@@ -171,15 +179,10 @@ class HubRouteServiceTest {
             UUID spokeHubId = UUID.randomUUID();
             HubRouteRequest request = new HubRouteRequest(spokeHubId, centralHubId, 100, 60);
 
-            Hub spokeHub = Hub.createHub(centralHubId, "스포크허브", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "세종");
-            Hub centralHub = Hub.createHub(null, "중앙허브", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), "대전");
-            ReflectionTestUtils.setField(spokeHub, "id", spokeHubId);
-            ReflectionTestUtils.setField(centralHub, "id", centralHubId);
+            Hub spokeHub = hub(spokeHubId, centralHubId, "스포크허브");
+            Hub centralHub = hub(centralHubId, null, "중앙허브");
 
-            HubRoute savedHubRoute = HubRoute.createHubRoute(spokeHub, centralHub, request.duration(), request.distance());
-            ReflectionTestUtils.setField(savedHubRoute, "id", UUID.randomUUID());
-            ReflectionTestUtils.setField(savedHubRoute, "createdAt", LocalDateTime.now());
-            ReflectionTestUtils.setField(savedHubRoute, "updatedAt", LocalDateTime.now());
+            HubRoute savedHubRoute = withId(HubRoute.createHubRoute(spokeHub, centralHub, request.duration(), request.distance()));
 
             when(hubRepository.findByIdAndDeletedAtIsNull(spokeHubId)).thenReturn(Optional.of(spokeHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.of(centralHub));
@@ -203,10 +206,8 @@ class HubRouteServiceTest {
             UUID toHubId = UUID.randomUUID();
             HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
 
-            Hub fromHub = Hub.createHub(centralHubId, "출발스포크", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "서울");
-            Hub toHub = Hub.createHub(centralHubId, "도착스포크", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), "인천");
-            ReflectionTestUtils.setField(fromHub, "id", fromHubId);
-            ReflectionTestUtils.setField(toHub, "id", toHubId);
+            Hub fromHub = hub(fromHubId, centralHubId, "출발스포크");
+            Hub toHub = hub(toHubId, centralHubId, "도착스포크");
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
@@ -230,10 +231,8 @@ class HubRouteServiceTest {
             UUID toHubId = UUID.randomUUID();
             HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
 
-            Hub fromHub = Hub.createHub(ownCentralHubId, "스포크", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "세종");
-            Hub toHub = Hub.createHub(null, "다른중앙허브", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), "대구");
-            ReflectionTestUtils.setField(fromHub, "id", fromHubId);
-            ReflectionTestUtils.setField(toHub, "id", toHubId);
+            Hub fromHub = hub(fromHubId, ownCentralHubId, "스포크");
+            Hub toHub = hub(toHubId, null, "다른중앙허브");
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
@@ -256,10 +255,8 @@ class HubRouteServiceTest {
             UUID toHubId = UUID.randomUUID();
             HubRouteRequest request = new HubRouteRequest(fromHubId, toHubId, 100, 60);
 
-            Hub fromHub = Hub.createHub(null, "출발허브", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "서울");
-            Hub toHub = Hub.createHub(null, "도착허브", BigDecimal.valueOf(35.1), BigDecimal.valueOf(129.0), "부산");
-            ReflectionTestUtils.setField(fromHub, "id", fromHubId);
-            ReflectionTestUtils.setField(toHub, "id", toHubId);
+            Hub fromHub = hub(fromHubId, null, "출발허브");
+            Hub toHub = hub(toHubId, null, "도착허브");
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
