@@ -33,7 +33,8 @@ public enum ErrorCode {
 	HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "HUB_NOT_FOUND", "해당 관리 허브를 찾을 수 없거나 유효하지 않습니다."),
 
 	// AI
-	AI_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_SERVICE_ERROR", "AI 배송 시한 계산 및 메시지 생성 실패");
+	AI_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_SERVICE_ERROR", "AI 배송 시한 계산 및 메시지 생성 실패"),
+	AI_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "AI_SERVICE_ERROR", "AI 메시지를 찾을 수 없습니다.");
 
     private final HttpStatus status;
 	private final String code;
