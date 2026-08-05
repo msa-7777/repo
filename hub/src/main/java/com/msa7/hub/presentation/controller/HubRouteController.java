@@ -1,7 +1,6 @@
 package com.msa7.hub.presentation.controller;
 
 import com.msa7.hub.application.service.HubRouteService;
-import com.msa7.hub.domain.model.HubRoute;
 import com.msa7.hub.presentation.request.HubRoutePathRequest;
 import com.msa7.hub.presentation.request.HubRouteRequest;
 import com.msa7.hub.presentation.request.HubRouteSearchRequest;
@@ -71,7 +70,8 @@ public class HubRouteController {
             @ModelAttribute HubRouteSearchRequest request,
             Pageable pageable
     ) {
-        return null;
+        Page<HubRouteResponse> response = hubRouteService.getHubRouteList(request, pageable);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
     @GetMapping("/hub-routes/route")

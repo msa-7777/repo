@@ -6,10 +6,14 @@ import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.model.HubRoute;
 import com.msa7.hub.domain.repository.HubRepository;
 import com.msa7.hub.domain.repository.HubRouteRepository;
+import com.msa7.hub.domain.repository.HubRouteSearchRepository;
 import com.msa7.hub.presentation.request.HubRouteRequest;
+import com.msa7.hub.presentation.request.HubRouteSearchRequest;
 import com.msa7.hub.presentation.response.HubRouteResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class HubRouteService {
     private final HubRouteRepository hubRouteRepository;
+    private final HubRouteSearchRepository hubRouteSearchRepository;
     private final HubRepository hubRepository;
 
     @Transactional
@@ -82,6 +87,11 @@ public class HubRouteService {
         return HubRouteResponse.from(hubRoute);
     }
 
+    @Transactional(readOnly = true)
+    public Page<HubRouteResponse> getHubRouteList(HubRouteSearchRequest request, Pageable pageable) {
+        return hubRouteSearchRepository.search(request.fromHubId(), request.toHubId(), pageable)
+                .map(HubRouteResponse::from);
+    }
 
     private HubRoute findExistingHubRoute(UUID huRouteId) {
          return hubRouteRepository.findByIdAndDeletedAtIsNull(huRouteId)
