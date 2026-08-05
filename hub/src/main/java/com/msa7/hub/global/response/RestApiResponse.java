@@ -1,4 +1,4 @@
-package com.msa7.hub.presentation.response;
+package com.msa7.hub.global.response;
 
 public record RestApiResponse<T>(
     boolean success,   // 요청 성공 여부

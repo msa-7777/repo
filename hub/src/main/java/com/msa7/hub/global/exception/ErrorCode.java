@@ -1,4 +1,4 @@
-package com.msa7.hub.domain.exception;
+package com.msa7.hub.global.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
