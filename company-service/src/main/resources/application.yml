@@ -17,6 +17,7 @@ spring:
       hibernate:
         format_sql: true
 
+# TODO : 임시 유레카 설정. 추후 수정 요망
 # Eureka Client 설정 (포트 19090)
 eureka:
   client:

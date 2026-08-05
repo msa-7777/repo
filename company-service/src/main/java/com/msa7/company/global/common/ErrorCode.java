@@ -29,6 +29,7 @@ public enum ErrorCode {
 
 	INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST,  "잘못된 입력값입니다."),
 	COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 업체를 찾을 수 없습니다."),
+	DUPLICATE_COMPANY_NAME(HttpStatus.BAD_REQUEST, "업체의 이름이 중복되었습니다."),
 	HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 관리 허브를 찾을 수 없거나 유효하지 않습니다.");
 
     private final HttpStatus status;

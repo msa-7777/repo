@@ -12,6 +12,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @MappedSuperclass
@@ -24,7 +25,7 @@ public abstract class BaseEntity {
 
 	@CreatedBy
 	@Column(name = "created_by", updatable = false)
-	private Long createdBy;
+	private UUID createdBy;
 
 	@LastModifiedDate
 	@Column(name = "updated_at")
@@ -32,13 +33,13 @@ public abstract class BaseEntity {
 
 	@LastModifiedBy
 	@Column(name = "updated_by")
-	private Long updatedBy;
+	private UUID updatedBy;
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
 	@Column(name = "deleted_by")
-	private Long deletedBy;
+	private UUID deletedBy;
 
 	/**
 	 * Spring Data JPA의 @LastModifiedDate/@LastModifiedBy는 스펙상 생성 시점에도 자동으로 채워진다.
@@ -56,7 +57,7 @@ public abstract class BaseEntity {
 	 * Soft Delete 처리. 실제 row는 삭제하지 않는다.
 	 * 예) orderRepository.findById(id).ifPresent(o -> o.softDelete(currentUserId));
 	 */
-	public void softDelete(Long deletedByUserId) {
+	public void softDelete(UUID deletedByUserId) {
 		this.deletedAt = LocalDateTime.now();
 		this.deletedBy = deletedByUserId;
 	}

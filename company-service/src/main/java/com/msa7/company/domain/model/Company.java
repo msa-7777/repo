@@ -5,48 +5,54 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "p_company")
 @Getter
+@Table(name = "p_company")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLRestriction("deleted_at IS NULL")
 public class Company extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(name = "company_id", nullable = false, updatable = false)
+    private UUID companyId;
 
     @Column(nullable = false, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private CompanyType type;
 
-    @Column(nullable = false)
+    @Column(name = "hub_id", nullable = false)
     private UUID hubId;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String address;
 
-    public static Company create(String name, CompanyType type, UUID hubId, String address) {
-        Company company = new Company();
-        company.name = name;
-        company.type = type;
-        company.hubId = hubId;
-        company.address = address;
-        return company;
-    }
-
-    public void updateInfo(String name, CompanyType type, UUID hubId, String address) {
+    private Company(String name, CompanyType type, UUID hubId, String address) {
         this.name = name;
         this.type = type;
         this.hubId = hubId;
         this.address = address;
     }
 
+    public static Company create(String name, CompanyType type, UUID hubId, String address) {
+        return new Company(name, type, hubId, address);
+    }
+
+    // 수정 로직 (비즈니스 메서드)
+    public void update(String name, CompanyType type, UUID hubId, String address) {
+        if (name != null) this.name = name;
+        if (type != null) this.type = type;
+        if (hubId != null) this.hubId = hubId;
+        if (address != null) this.address = address;
+    }
+
+    // 삭제 로직 (Soft Delete)
+    public void delete(UUID deletedBy) {
+        super.softDelete(deletedBy);
+    }
 }
