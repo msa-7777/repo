@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.vo.OrderStatus;
-import com.msa7.v1.order.global.common.BaseEntity;
+import com.msa7.v1.order.infra.persistence.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
