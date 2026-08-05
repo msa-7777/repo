@@ -5,3 +5,4 @@ include 'delivery'
 include 'order'
 
 include 'product-service'
+include 'slack-service'
