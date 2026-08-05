@@ -435,4 +435,47 @@ class HubRouteServiceTest {
                     .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
         }
     }
+
+    @Nested
+    @DisplayName("허브 경로 삭제 ")
+    class DeleteHubRoute{
+        @Test
+        @DisplayName("성공")
+        void success() {
+            // given
+            UUID hubRouteId = UUID.randomUUID();
+            UUID deletedBy = UUID.randomUUID();
+
+            Hub fromHub = hub(UUID.randomUUID(), null, "출발허브");
+            Hub toHub = hub(UUID.randomUUID(), null, "도착허브");
+            HubRoute existingHubRoute = withId(HubRoute.createHubRoute(fromHub, toHub, 50, 30));
+            ReflectionTestUtils.setField(existingHubRoute, "id", hubRouteId);
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
+
+            // when
+            hubRouteService.deleteHubRoute(hubRouteId, deletedBy);
+
+            // then
+            assertThat(existingHubRoute.getDeletedAt()).isNotNull();
+            assertThat(existingHubRoute.getDeletedBy()).isEqualTo(deletedBy);
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 허브 라우트")
+        void hubRouteNotFound() {
+            // given
+            UUID hubRouteId = UUID.randomUUID();
+
+            when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.deleteHubRoute(hubRouteId, UUID.randomUUID()))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
+        }
+
+    }
+
 }
