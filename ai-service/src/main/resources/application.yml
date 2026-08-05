@@ -16,9 +16,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  Gemini:
-    api:
-      key: ${GEMINI_API_KEY:your-default-api-key-here}
+  ai:
+    vertex:
+      ai:
+        Gemini:
+          api-key: ${GEMINI_API_KEY:your-default-api-key-here}
+          model: gemini-1.5-flash
 
 # TODO : 임시 유레카 설정. 추후 수정 요망
 ## Eureka Client 설정 (포트 19090)
