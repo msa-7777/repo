@@ -1,8 +1,6 @@
-package com.msa7.hub.presentation;
+package com.msa7.hub.global.exception;
 
-import com.msa7.hub.domain.exception.BusinessException;
-import com.msa7.hub.domain.exception.ErrorCode;
-import com.msa7.hub.presentation.response.RestApiResponse;
+import com.msa7.hub.global.response.RestApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

@@ -1,10 +1,10 @@
 package com.msa7.hub.presentation.controller;
 
 import com.msa7.hub.application.service.HubService;
+import com.msa7.hub.global.response.RestApiResponse;
 import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.request.HubSearchRequest;
 import com.msa7.hub.presentation.response.HubResponse;
-import com.msa7.hub.presentation.response.RestApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

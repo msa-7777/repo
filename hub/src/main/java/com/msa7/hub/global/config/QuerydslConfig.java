@@ -1,4 +1,4 @@
-package com.msa7.hub.infrastructure.config;
+package com.msa7.hub.global.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
