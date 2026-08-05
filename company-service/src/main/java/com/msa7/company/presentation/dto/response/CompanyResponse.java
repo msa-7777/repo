@@ -11,7 +11,7 @@ import java.util.UUID;
 @Builder
 public class CompanyResponse {
 
-    private UUID id;
+    private UUID companyId;
     private String name;
     private CompanyType type;
     private UUID hubId;
@@ -19,7 +19,7 @@ public class CompanyResponse {
 
     public static CompanyResponse from(Company company) {
         return CompanyResponse.builder()
-                .id(company.getCompanyId())
+                .companyId(company.getCompanyId())
                 .name(company.getName())
                 .type(company.getType())
                 .hubId(company.getHubId())
