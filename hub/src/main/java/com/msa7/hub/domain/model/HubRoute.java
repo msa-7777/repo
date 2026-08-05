@@ -1,7 +1,7 @@
 package com.msa7.hub.domain.model;
 
-import com.msa7.hub.domain.exception.BusinessException;
-import com.msa7.hub.domain.exception.ErrorCode;
+import com.msa7.hub.global.exception.BusinessException;
+import com.msa7.hub.global.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

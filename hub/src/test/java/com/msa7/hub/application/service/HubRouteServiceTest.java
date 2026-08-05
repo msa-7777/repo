@@ -1,12 +1,12 @@
 package com.msa7.hub.application.service;
 
-import com.msa7.hub.domain.exception.BusinessException;
-import com.msa7.hub.domain.exception.ErrorCode;
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.model.HubRoute;
 import com.msa7.hub.domain.repository.HubRepository;
 import com.msa7.hub.domain.repository.HubRouteRepository;
 import com.msa7.hub.domain.repository.HubRouteSearchRepository;
+import com.msa7.hub.global.exception.BusinessException;
+import com.msa7.hub.global.exception.ErrorCode;
 import com.msa7.hub.presentation.request.HubRouteRequest;
 import com.msa7.hub.presentation.request.HubRouteSearchRequest;
 import com.msa7.hub.presentation.response.HubRouteResponse;
