@@ -51,6 +51,11 @@ public class OrderJpaEntity extends BaseEntity {
 		entity.quantity = order.getQuantity().value();
 		entity.requestNotes = order.getRequestNotes().contents();
 		entity.status = order.getStatus();
+
+		// 도메인 상태가 DELETED면 소프트 삭제 정보도 엔티티에 세팅
+		if (order.getStatus() == OrderStatus.DELETED) {
+			entity.markAsDeleted(null); // 필요 시 삭제자 UUID 전달
+		}
 		return entity;
 	}
 
