@@ -1,6 +1,7 @@
 package com.msa7.hub.presentation.controller;
 
 import com.msa7.hub.application.service.HubRouteService;
+import com.msa7.hub.domain.model.HubRoute;
 import com.msa7.hub.presentation.request.HubRoutePathRequest;
 import com.msa7.hub.presentation.request.HubRouteRequest;
 import com.msa7.hub.presentation.request.HubRouteSearchRequest;
@@ -61,7 +62,8 @@ public class HubRouteController {
     public ResponseEntity<RestApiResponse<HubRouteResponse>> getHubRoute(
             @PathVariable UUID hubRouteId
     ) {
-        return null;
+        HubRouteResponse response = hubRouteService.getHubRoute(hubRouteId);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
     @GetMapping("/hub-routes")
