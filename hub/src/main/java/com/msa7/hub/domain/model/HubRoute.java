@@ -52,6 +52,10 @@ public class HubRoute extends BaseEntity {
         this.distance = distance;
     }
 
+    public void softDelete(UUID deletedBy) {
+        super.softDelete(deletedBy);
+    }
+
     public static HubRoute createHubRoute(Hub fromHub, Hub toHub, int duration, int distance) {
         if (fromHub.getId().equals(toHub.getId())) {
             throw new BusinessException(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);

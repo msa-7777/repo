@@ -70,6 +70,17 @@ public class HubRouteService {
         }
     }
 
+    @Transactional
+    public void deleteHubRoute(UUID hubRouteId, UUID deletedBy) {
+        HubRoute hubRoute = findExistingHubRoute(hubRouteId);
+        hubRoute.softDelete(deletedBy);
+    }
+
+    private HubRoute findExistingHubRoute(UUID huRouteId) {
+         return hubRouteRepository.findByIdAndDeletedAtIsNull(huRouteId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HUB_ROUTE_NOT_FOUND));
+    }
+
     private Hub findExistingHub(UUID hubId) {
         return hubRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HUB_NOT_FOUND));

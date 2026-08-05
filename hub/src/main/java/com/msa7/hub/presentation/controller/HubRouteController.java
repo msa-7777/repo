@@ -53,7 +53,8 @@ public class HubRouteController {
     public ResponseEntity<RestApiResponse<Void>> deleteHubRoute(
             @PathVariable UUID hubRouteId
     ) {
-        return null;
+        hubRouteService.deleteHubRoute(hubRouteId, null); // TODO: 인증 구현 후 수정
+        return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
     @GetMapping("/hub-routes/{hubRouteId}")
