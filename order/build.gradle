@@ -30,9 +30,9 @@ repositories {
 dependencies {
 	// --- Web & Cloud (기존) ---
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+//	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+//	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	// --- JPA & Validation (★ 추가) ---
