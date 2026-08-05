@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
-//@Profile({"local", "test"})
+@Profile({"local", "test"})
 public class TemporarySlackClient implements SlackClient {
     // 초기 CRUD 검증 단계에서는 임시 구현체
     // Slack API 구현 전 로컬 CRUD 확인용
