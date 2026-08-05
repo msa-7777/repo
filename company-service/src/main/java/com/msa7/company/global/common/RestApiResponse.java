@@ -1,5 +1,7 @@
 package com.msa7.company.global.common;
 
+import org.springframework.http.HttpStatus;
+
 public record RestApiResponse<T>(
 	// Swagger의 @ApiResponse와 충돌 가능성 사전 차단
 	boolean success,   // 요청 성공 여부
@@ -14,8 +16,8 @@ public record RestApiResponse<T>(
 		return new RestApiResponse<>(true, 200, "요청이 성공했습니다.", data, null);
 	}
 
-	public static <T> RestApiResponse<T> ok(String message, T data) {
-		return new RestApiResponse<>(true, 200, message, data, null);
+	public static <T> RestApiResponse<T> ok(HttpStatus status, String message, T data) {
+		return new RestApiResponse<>(true, status.value(), message, data, null);
 	}
 
 	// 에러 응답
