@@ -47,6 +47,29 @@ public class HubRouteService {
         }
     }
 
+    @Transactional
+    public HubRouteResponse updateHubRoute(UUID hubRouteId, HubRouteRequest request) {
+        HubRoute hubRoute = hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HUB_ROUTE_NOT_FOUND));
+
+        Hub fromHub = findExistingHub(request.fromHubId());
+        Hub toHub = findExistingHub(request.toHubId());
+        hubRoute.updateHubRoute(
+                fromHub,
+                toHub,
+                request.duration(),
+                request.distance()
+        );
+
+        try {
+            HubRoute saved = hubRouteRepository.saveAndFlush(hubRoute);
+            return HubRouteResponse.from(saved);
+
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.HUB_ROUTE_ALREADY_EXISTS);
+        }
+    }
+
     private Hub findExistingHub(UUID hubId) {
         return hubRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HUB_NOT_FOUND));

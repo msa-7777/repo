@@ -67,6 +67,19 @@ public class HubRoute extends BaseEntity {
         );
     }
 
+    public void updateHubRoute(Hub fromHub, Hub toHub, int duration, int distance) {
+        if (fromHub.getId().equals(toHub.getId())) {
+            throw new BusinessException(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);
+        }
+
+        ensureValidRoute(fromHub, toHub);
+
+        this.fromHubId = fromHub.getId();
+        this.toHubId = toHub.getId();
+        this.duration = duration;
+        this.distance = distance;
+    }
+
     // 중앙허브-중앙허브, 또는 중앙허브-자기 소속 스포크 조합만 허용
     private static void ensureValidRoute(Hub fromHub, Hub toHub) {
         boolean fromIsCentral = fromHub.isCentral();

@@ -45,7 +45,8 @@ public class HubRouteController {
             @PathVariable UUID hubRouteId,
             @RequestBody @Valid HubRouteRequest request
     ) {
-        return null;
+        HubRouteResponse response = hubRouteService.updateHubRoute(hubRouteId, request);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
     @DeleteMapping("/hub-routes/{hubRouteId}")

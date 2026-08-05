@@ -22,6 +22,7 @@ public enum ErrorCode {
 
     // 404
     HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "허브를 찾을 수 없습니다."),
+    HUB_ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브 라우트 입니다."),
 
     // 409
     CONFLICT(HttpStatus.CONFLICT, "리소스 충돌이 발생했습니다."),
