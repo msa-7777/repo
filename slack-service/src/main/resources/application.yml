@@ -1,6 +1,12 @@
 server:
-  port: 8082
+  port: 19098
 
 spring:
   application:
     name: slack-service
+
+# Eureka 클라이언트
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
