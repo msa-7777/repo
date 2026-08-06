@@ -33,15 +33,23 @@ public class AiApplicationService {
     주문쪽에서 가져오는 것 구현 요망   */
     @Transactional
     public AiHistoryResponse generateDeadlineAndNotify(CreateAiHistoryRequest request) {
-        // 1. 프롬프트 구성
+        // 프롬프트 구성
         String prompt = geminiAiClient.buildPrompt(request);
 
-        // 2. Gemini AI 호출 (Structured Output)
-        AiDeadlineResponse aiResponse = geminiAiClient.getCalculatedDeadline(prompt);
+        AiDeadlineResponse aiResponse = null;
 
-        //AI 메세지 확인
-        log.info("calculatedDeadline : " + aiResponse.calculatedDeadline());
-        log.info("generatedMessage : " + aiResponse.generatedMessage());
+        try {
+            // Gemini AI 호출 (Structured Output)
+            aiResponse = geminiAiClient.getCalculatedDeadline(prompt);
+
+            // AI 메세지 확인
+            log.info("calculatedDeadline : " + aiResponse.calculatedDeadline());
+            log.info("generatedMessage : " + aiResponse.generatedMessage());
+
+        } catch (Exception e) {
+            log.error("AI 답변 생성 실패 : {}", e.getMessage());
+            throw new BusinessException(ErrorCode.AI_SERVICE_ERROR);
+        }
 
         // 3. 슬랙 알림 발송
         boolean isNotified = false;
@@ -52,7 +60,7 @@ public class AiApplicationService {
 //            log.error("Slack 메시지 발송 실패: {}", e.getMessage());
 //        }
 
-        // 4. AI 이력 저장 (p_ai_histories)
+        // AI 이력 저장 (p_ai_histories)
         AiHistory aiHistory = AiHistory.create(
                 request.orderId(),
                 prompt,
