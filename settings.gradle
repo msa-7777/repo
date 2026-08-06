@@ -1,6 +1,5 @@
 rootProject.name = 'v1'
 
-
 include 'company-service'
 include 'ai-service'
 
@@ -12,4 +11,5 @@ include 'slack-service'
 include 'eureka-server'
 
 include 'hub'
+
 
