@@ -7,9 +7,12 @@ import com.msa7.hub.domain.repository.HubRouteRepository;
 import com.msa7.hub.domain.repository.HubRouteSearchRepository;
 import com.msa7.hub.global.exception.BusinessException;
 import com.msa7.hub.global.exception.ErrorCode;
+import com.msa7.hub.presentation.request.HubRoutePathRequest;
 import com.msa7.hub.presentation.request.HubRouteRequest;
 import com.msa7.hub.presentation.request.HubRouteSearchRequest;
+import com.msa7.hub.presentation.response.HubRoutePathResponse;
 import com.msa7.hub.presentation.response.HubRouteResponse;
+import com.msa7.hub.presentation.response.HubRouteSegment;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -559,6 +562,211 @@ class HubRouteServiceTest {
             assertThat(response.getTotalElements()).isEqualTo(1);
             assertThat(response.getContent().get(0).fromHubId()).isEqualTo(fromHubId);
             assertThat(response.getContent().get(0).toHubId()).isEqualTo(toHubId);
+        }
+    }
+
+    @Nested
+    @DisplayName("허브 라우트 최적 경로 조회")
+    class GetHubRoutePath {
+
+        private void assertSegment(HubRouteSegment segment, int sequence, UUID fromId, UUID toId, int distance, int duration) {
+            assertThat(segment.sequence()).isEqualTo(sequence);
+            assertThat(segment.fromHubId()).isEqualTo(fromId);
+            assertThat(segment.toHubId()).isEqualTo(toId);
+            assertThat(segment.distance()).isEqualTo(distance);
+            assertThat(segment.duration()).isEqualTo(duration);
+        }
+
+        @Test
+        @DisplayName("성공 - spoke -> spoke(다른 중앙)")
+        void spokeToSpoke() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID fromCentralId = UUID.randomUUID();
+
+            UUID toHubId = UUID.randomUUID();
+            UUID toCentralId = UUID.randomUUID();
+
+            Hub fromHub = hub(fromHubId, fromCentralId, "출발 허브");
+            Hub fromCentralHub = hub(fromCentralId, null, "출발 중앙 허브");
+            Hub toHub = hub(toHubId, toCentralId, "도착 허브");
+            Hub toCentralHub = hub(toCentralId, null, "도착 중앙 허브");
+
+            HubRoutePathRequest request = new HubRoutePathRequest(fromHubId, toHubId);
+
+            HubRoute hubRoute1= hubRouteWithId(HubRoute.createHubRoute(fromHub, fromCentralHub, 30, 30));
+            HubRoute hubRoute2= hubRouteWithId(HubRoute.createHubRoute(fromCentralHub, toCentralHub, 40, 40));
+            HubRoute hubRoute3= hubRouteWithId(HubRoute.createHubRoute(toCentralHub, toHub, 50, 50));
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, fromCentralId)).thenReturn(Optional.of(hubRoute1));
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromCentralId, toCentralId)).thenReturn(Optional.of(hubRoute2));
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(toCentralId, toHubId)).thenReturn(Optional.of(hubRoute3));
+
+            // when
+            HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+
+            // then
+            assertThat(response.segments()).hasSize(3);
+
+            assertSegment(response.segments().get(0), 0, fromHubId, fromCentralId, 30, 30);
+            assertSegment(response.segments().get(1), 1, fromCentralId, toCentralId, 40, 40);
+            assertSegment(response.segments().get(2), 2, toCentralId, toHubId, 50, 50);
+
+            assertThat(response.totalDistance()).isEqualTo(120);
+            assertThat(response.totalDuration()).isEqualTo(120);
+        }
+
+        @Test
+        @DisplayName("성공 - spoke -> spoke(같은 중앙)")
+        void spokeToSpoke_sameCentral() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID centralId = UUID.randomUUID();
+
+            UUID toHubId = UUID.randomUUID();
+
+            Hub fromHub = hub(fromHubId, centralId, "출발 허브");
+            Hub centralHub = hub(centralId, null, "중앙 허브");
+            Hub toHub = hub(toHubId, centralId, "도착 허브");
+
+            HubRoutePathRequest request = new HubRoutePathRequest(fromHubId, toHubId);
+
+            HubRoute hubRoute1= hubRouteWithId(HubRoute.createHubRoute(fromHub, centralHub, 30, 30));
+            HubRoute hubRoute2= hubRouteWithId(HubRoute.createHubRoute(centralHub, toHub, 40, 40));
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, centralId)).thenReturn(Optional.of(hubRoute1));
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(centralId, toHubId)).thenReturn(Optional.of(hubRoute2));
+
+            // when
+            HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+
+            // then
+            assertThat(response.segments()).hasSize(2);
+
+            assertSegment(response.segments().get(0), 0, fromHubId, centralId, 30, 30);
+            assertSegment(response.segments().get(1), 1, centralId, toHubId, 40, 40);
+
+            assertThat(response.totalDistance()).isEqualTo(70);
+            assertThat(response.totalDuration()).isEqualTo(70);
+        }
+
+        @Test
+        @DisplayName("성공 - 중앙 -> 중앙")
+        void centralToCentral() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+
+            Hub fromHub = hub(fromHubId, null, "출발 중앙 허브");
+            Hub toHub = hub(toHubId, null, "도착 중앙 허브");
+
+            HubRoutePathRequest request = new HubRoutePathRequest(fromHubId, toHubId);
+
+            HubRoute hubRoute = hubRouteWithId(HubRoute.createHubRoute(fromHub, toHub, 60, 60));
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(Optional.of(hubRoute));
+
+            // when
+            HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+
+            // then
+            assertThat(response.segments()).hasSize(1);
+
+            assertSegment(response.segments().get(0), 0, fromHubId, toHubId, 60, 60);
+
+            assertThat(response.totalDistance()).isEqualTo(60);
+            assertThat(response.totalDuration()).isEqualTo(60);
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 출발 허브")
+        void fromHubNotFound() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            HubRoutePathRequest request = new HubRoutePathRequest(fromHubId, toHubId);
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 도착 허브")
+        void toHubNotFound() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            HubRoutePathRequest request = new HubRoutePathRequest(fromHubId, toHubId);
+
+            Hub fromHub = hub(fromHubId, null, "출발 허브");
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("실패 - 출발 허브와 도착 허브가 동일함")
+        void sameHub() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            HubRoutePathRequest request = new HubRoutePathRequest(hubId, hubId);
+
+            Hub hub = hub(hubId, null, "허브");
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(hub));
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);
+        }
+
+        @Test
+        @DisplayName("실패 - 등록되지 않은 구간 경로")
+        void routeNotFound() {
+            // given
+            UUID fromHubId = UUID.randomUUID();
+            UUID fromCentralId = UUID.randomUUID();
+            UUID toHubId = UUID.randomUUID();
+            UUID toCentralId = UUID.randomUUID();
+
+            Hub fromHub = hub(fromHubId, fromCentralId, "출발 허브");
+            Hub toHub = hub(toHubId, toCentralId, "도착 허브");
+
+            HubRoutePathRequest request = new HubRoutePathRequest(fromHubId, toHubId);
+
+            when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
+            when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
+
+            // 출발허브 -> 출발 중앙허브 구간이 등록되어 있지 않음
+            when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, fromCentralId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
         }
     }
 
