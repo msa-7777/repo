@@ -21,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import com.sparta.slackservice.infrastructure.client.slack.SlackApiException;
 
 import java.util.UUID;
 
@@ -32,21 +34,32 @@ public class SlackMessageService {
 
     private final SlackMessageRepository slackMessageRepository;
 
-    /* 현재 로컬 환경에서는 TemporarySlackClient가 주입된다.
+    /*
+     * SlackClient 인터페이스를 통해 환경별 구현체를 주입받는다.
      *
-     * 서비스가 TemporarySlackClient 구현체에 직접 의존하지 않고
-     * SlackClient 인터페이스에 의존하도록 구성하면,
-     * 이후 실제 Slack API 구현체로 쉽게 교체할 수 있다.
+     * local, dev:
+     * - SlackApiClient
+     * - 실제 Slack Web API 호출
+     *
+     * test:
+     * - TemporarySlackClient
+     * - 외부 API를 호출하지 않고 임시 성공 결과 반환
      */
     private final SlackClient slackClient;
 
-    /* Slack 메시지를 발송하고 발송 결과를 저장한다.
+    @Value("${slack.api.test-user-id}")
+    private String temporarySlackUserId;
+
+    /*
+     * Slack 메시지를 발송하고 결과를 저장한다.
      *
-     * 현재 로컬 개발 흐름:
-     * 1. 발송 요청으로 SlackMessage 엔티티 생성
-     * 2. receiverId를 기반으로 임시 사용자 정보 생성
-     * 3. TemporarySlackClient를 통해 임시 Slack 발송
-     * 4. 성공하면 SENT, 실패하면 FAILED로 상태 저장
+     * 현재 로컬 흐름:
+     * 1. 요청 정보로 SlackMessage 엔티티 생성
+     * 2. 환경변수에서 실제 테스트용 Slack 사용자 ID 조회
+     * 3. SlackApiClient가 chat.postMessage 호출
+     * 4. 성공하면 SENT, 실패하면 FAILED로 저장
+     *
+     * TODO: user-service 연동 후 테스트 사용자 정보 생성 로직 제거
      */
     @Transactional
     public SlackMessageCreateResponse createSlackMessage(
@@ -109,7 +122,7 @@ public class SlackMessageService {
             slackMessage.markAsSent(sendResult.channelId(),
                                     sendResult.slackTs(),
                                     sendResult.sentAt());
-        } catch (Exception exception) {
+        } catch (SlackApiException exception) {
             // 발송에 실패해도 발송 요청 이력은 삭제하지 않는다.
             /*
              * - status        : FAILED
@@ -124,8 +137,9 @@ public class SlackMessageService {
 
             // 메시지 본문이나 Slack Token과 같은 민감 정보는 로그에 출력하지 않는다.
             log.error(
-                    "Slack 메시지 발송 실패. receiverId={}, failureReason={}",
+                    "Slack 메시지 발송 실패. receiverId={}, slackError={}, failureReason={}",
                     request.receiverId(),
+                    exception.getSlackError(),
                     failureReason,
                     exception
             );
@@ -226,7 +240,8 @@ public class SlackMessageService {
 
         try {
             /*
-             * 현재는 TemporarySlackClient가 수정 성공 결과를 반환한다.
+             * local, dev 환경에서는 SlackApiClient가 chat.update를 호출한다.
+             * test 환경에서는 TemporarySlackClient가 임시 성공 결과를 반환한다.
              *
              * 실제 연동 시에는 Slack chat.update API를 호출하도록
              * SlackClient 구현체를 교체한다.
@@ -310,25 +325,16 @@ public class SlackMessageService {
 
     // 로컬 CRUD 검증을 위한 임시 수신자 정보를 생성한다.
     // receiverId는 요청값을 그대로 사용하고, receiverName과 slackUserId만 임시값으로 만든다.
-    private TemporaryReceiverInfo createTemporaryReceiverInfo(
-            UUID receiverId
-    ) {
+    private TemporaryReceiverInfo createTemporaryReceiverInfo(UUID receiverId) {
         /*
-         * TODO: user-service FeignClient 연동
+         * TODO: user-service FeignClient 연동 후 제거
          *
-         * 추후 아래 임시값 생성 로직을 제거하고
-         * user-service의 공통 응답 data를 사용한다.
+         * 현재는 실제 Slack API 연동을 로컬에서 확인하기 위해
+         * 환경변수에 등록한 테스트 사용자의 실제 Slack Member ID를 사용한다.
          */
         String receiverName = "임시 담당자-" + receiverId.toString().substring(0, 8);
 
-        String slackUserId =
-                "U_TEMP_" + receiverId
-                        .toString()
-                        .replace("-", "")
-                        .substring(0, 10)
-                        .toUpperCase();
-
-        return new TemporaryReceiverInfo(receiverName, slackUserId);
+        return new TemporaryReceiverInfo(receiverName, temporarySlackUserId);
     }
 
     /**
@@ -338,7 +344,7 @@ public class SlackMessageService {
      * 예외 유형이 없으므로 기본적으로 MESSAGE_SEND_FAILED를 사용한다.
      */
     private SlackFailureReason resolveSendFailureReason(
-            Exception exception
+            SlackApiException exception
     ) {
         /*
          * TODO: 실제 Slack API 연동 후 예외 유형별로 분리
@@ -350,7 +356,11 @@ public class SlackMessageService {
          * - 요청 시간 초과         -> API_TIMEOUT
          * - 메시지 전송 실패       -> MESSAGE_SEND_FAILED
          */
-        return SlackFailureReason.MESSAGE_SEND_FAILED;
+        return switch (exception.getSlackError()) {
+            case "channel_not_found" -> SlackFailureReason.CHANNEL_CREATE_FAILED;
+            case "communication_error" -> SlackFailureReason.API_TIMEOUT;
+            default -> SlackFailureReason.MESSAGE_SEND_FAILED;
+        };
     }
 
     /**

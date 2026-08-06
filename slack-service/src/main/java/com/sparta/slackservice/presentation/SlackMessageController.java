@@ -2,6 +2,7 @@ package com.sparta.slackservice.presentation;
 
 import com.sparta.slackservice.application.SlackMessageService;
 import com.sparta.slackservice.domain.SlackMessageSearchCondition;
+import com.sparta.slackservice.domain.SlackMessageStatus;
 import com.sparta.slackservice.global.response.RestApiResponse;
 import com.sparta.slackservice.infrastructure.client.slack.TemporarySlackClient;
 import com.sparta.slackservice.presentation.request.SlackMessageCreateRequest;
@@ -44,11 +45,11 @@ public class SlackMessageController {
          */
         SlackMessageCreateResponse response = slackMessageService.createSlackMessage(request);
 
-        return RestApiResponse.success(
-                HttpStatus.CREATED,
-                "Slack 메시지 발송 요청이 처리되었습니다.",
-                response
-        );
+        String message = response.status() == SlackMessageStatus.SENT
+                ? "Slack 메시지가 발송되었습니다."
+                : "Slack 메시지 발송에 실패하여 실패 이력이 저장되었습니다.";
+
+        return RestApiResponse.success(HttpStatus.CREATED, message, response);
     }
 
     // Slack 메시지 단건 조회
