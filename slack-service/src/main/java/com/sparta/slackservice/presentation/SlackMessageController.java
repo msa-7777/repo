@@ -58,7 +58,12 @@ public class SlackMessageController {
     public RestApiResponse<SlackMessageDetailResponse> getSlackMessage(
             @PathVariable UUID slackMessageId
     ) {
-        // TODO: Gateway 권한 전달 방식 확정 후 MASTER 권한 검증
+        // TODO(gateway): Gateway에서 전달한 사용자 ID와 권한 정보를 사용한다.
+        // MASTER 권한 검증 후 처리
+        /*
+         * X-User-Id
+         * X-Role
+         */
 
         SlackMessageDetailResponse response =
                 slackMessageService.getSlackMessage(slackMessageId);

@@ -61,6 +61,8 @@ public class SlackMessageService {
      *
      * TODO: user-service 연동 후 테스트 사용자 정보 생성 로직 제거
      */
+     // TODO: order-service 주문 생성/상태 변경 이벤트 또는 내부 API를 통해 Slack 메시지 생성 요청을 받도록 연동
+     // 현재는 Swagger를 통한 직접 호출만 지원한다.
     @Transactional
     public SlackMessageCreateResponse createSlackMessage(
             SlackMessageCreateRequest request
@@ -76,12 +78,13 @@ public class SlackMessageService {
                 request.hubId(),
                 request.receiverId(),
                 request.message()
+                // TODO: ai-service 연동 후에는 AI가 생성한 메시지를 전달받아 Slack 메시지로 사용한다.
+                // 현재는 요청 메시지를 그대로 사용한다.
         );
 
         // TODO: user-service 연동
-        /*
+        /* receiverId로 user-service를 조회하여 receiverName과 slackUserId(slackId)를 조회
          * 실제 MSA 연동 시에는 receiverId로 아래 API를 호출한다.
-         *
          * GET /api/v1/admin/users/{userId}
          *
          * 공통 응답의 data에서 다음 값을 사용한다.
@@ -99,9 +102,6 @@ public class SlackMessageService {
 
         try {
             /*
-             * 현재는 TemporarySlackClient가 실제 Slack API 대신
-             * 임시 channelId, slackTs, sentAt을 반환한다.
-             *
              * 정책:
              * - Slack API 호출은 한 번만 수행
              * - 자동 재시도 없음
@@ -111,14 +111,6 @@ public class SlackMessageService {
                             request.message()
                     );
 
-            // 임시 Slack 발송에 성공하면 다음 값들을 저장한다.
-            /*
-             * - status        : SENT
-             * - channelId     : 메시지가 발송된 DM 채널
-             * - slackTs       : Slack 메시지 식별값
-             * - sentAt        : 발송 시각
-             * - failureReason : NULL
-             */
             slackMessage.markAsSent(sendResult.channelId(),
                                     sendResult.slackTs(),
                                     sendResult.sentAt());
@@ -242,9 +234,6 @@ public class SlackMessageService {
             /*
              * local, dev 환경에서는 SlackApiClient가 chat.update를 호출한다.
              * test 환경에서는 TemporarySlackClient가 임시 성공 결과를 반환한다.
-             *
-             * 실제 연동 시에는 Slack chat.update API를 호출하도록
-             * SlackClient 구현체를 교체한다.
              */
             slackClient.updateMessage(
                     slackMessage.getChannelId(),
@@ -252,13 +241,7 @@ public class SlackMessageService {
                     request.message()
             );
         } catch (Exception exception) {
-            /*
-             * Slack 수정에 실패하면 DB의 message와 status를
-             * 변경하지 않는다.
-             *
-             * 기존 상태가 SENT이면 SENT 유지,
-             * 기존 상태가 MODIFIED이면 MODIFIED 유지한다.
-             */
+            // Slack 수정에 실패하면 DB의 message와 status를 변경하지 않는다.
             log.error(
                     "Slack 메시지 수정 실패. slackMessageId={}",
                     slackMessageId,
@@ -270,9 +253,8 @@ public class SlackMessageService {
             );
         }
 
+        // Slack 수정이 성공한 경우에만 DB 내용을 변경한다.
         /*
-         * Slack 수정이 성공한 경우에만 DB 내용을 변경한다.
-         *
          * - message 변경
          * - status -> MODIFIED
          * - failureReason -> NULL
@@ -328,6 +310,7 @@ public class SlackMessageService {
     private TemporaryReceiverInfo createTemporaryReceiverInfo(UUID receiverId) {
         /*
          * TODO: user-service FeignClient 연동 후 제거
+         * TemporaryReceiverInfo 제거하고 UserClient(FeignClient)로 실제 사용자 정보를 조회하도록 변경
          *
          * 현재는 실제 Slack API 연동을 로컬에서 확인하기 위해
          * 환경변수에 등록한 테스트 사용자의 실제 Slack Member ID를 사용한다.
@@ -337,25 +320,10 @@ public class SlackMessageService {
         return new TemporaryReceiverInfo(receiverName, temporarySlackUserId);
     }
 
-    /**
-     * Slack 발송 예외를 DB에 저장할 실패 사유로 변환한다.
-     *
-     * 현재 TemporarySlackClient 단계에서는 상세한 외부 API
-     * 예외 유형이 없으므로 기본적으로 MESSAGE_SEND_FAILED를 사용한다.
-     */
+    // Slack 발송 예외를 DB에 저장할 실패 사유로 변환한다.
     private SlackFailureReason resolveSendFailureReason(
             SlackApiException exception
     ) {
-        /*
-         * TODO: 실제 Slack API 연동 후 예외 유형별로 분리
-         *
-         * 예:
-         * - 사용자 조회 실패       -> USER_NOT_FOUND
-         * - Slack ID 없음        -> SLACK_ID_NOT_FOUND
-         * - DM 채널 생성 실패      -> CHANNEL_CREATE_FAILED
-         * - 요청 시간 초과         -> API_TIMEOUT
-         * - 메시지 전송 실패       -> MESSAGE_SEND_FAILED
-         */
         return switch (exception.getSlackError()) {
             case "channel_not_found" -> SlackFailureReason.CHANNEL_CREATE_FAILED;
             case "communication_error" -> SlackFailureReason.API_TIMEOUT;
