@@ -21,7 +21,7 @@ import java.util.UUID;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uq_hub_route_from_to",
-                        columnNames = {"from_hub_id", "to_hub_id"}
+                        columnNames = {"from_hub_id", "to_hub_id", "unique_column"}
                 )
         }
 )
@@ -45,15 +45,24 @@ public class HubRoute extends BaseEntity {
     @Column(nullable = false)
     private int distance; // 두 허브간 거리 (km)
 
+    // soft delete된 row끼리는 유니크 제약에서 서로 겹치지 않도록 하기 위한 컬럼
+    // 활성 상태: 고정값 공유, 삭제 상태: 자기 자신의 id로 교체
+    // 추후 ddl 작성 하게 되면 PostgreSQL partial unique index로 교체
+    @Column(name = "unique_column", nullable = false)
+    private UUID uniqueColumn;
+
+
     private HubRoute(UUID fromHubId, UUID toHubId, int duration, int distance) {
         this.fromHubId = fromHubId;
         this.toHubId = toHubId;
         this.duration = duration;
         this.distance = distance;
+        this.uniqueColumn = new UUID(0L, 0L);
     }
 
     public void softDelete(UUID deletedBy) {
         super.softDelete(deletedBy);
+        this.uniqueColumn = this.id;
     }
 
     public static HubRoute createHubRoute(Hub fromHub, Hub toHub, int duration, int distance) {

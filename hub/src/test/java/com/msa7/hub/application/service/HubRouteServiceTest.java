@@ -85,7 +85,7 @@ class HubRouteServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(fromHubId, toHubId)).thenReturn(false);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(false);
             when(hubRouteRepository.saveAndFlush(any(HubRoute.class))).thenReturn(savedHubRoute);
 
             // when
@@ -151,7 +151,7 @@ class HubRouteServiceTest {
             Hub hub = hub(hubId, null, "허브");
 
             when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(hub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(hubId, hubId)).thenReturn(false);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(hubId, hubId)).thenReturn(false);
 
             // when & then
             assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
@@ -173,7 +173,7 @@ class HubRouteServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(fromHubId, toHubId)).thenReturn(true);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(true);
 
             // when & then
             assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
@@ -199,7 +199,7 @@ class HubRouteServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(spokeHubId)).thenReturn(Optional.of(spokeHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.of(centralHub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(spokeHubId, centralHubId)).thenReturn(false);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(spokeHubId, centralHubId)).thenReturn(false);
             when(hubRouteRepository.saveAndFlush(any(HubRoute.class))).thenReturn(savedHubRoute);
 
             // when
@@ -224,7 +224,7 @@ class HubRouteServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(fromHubId, toHubId)).thenReturn(false);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(false);
 
             // when & then
             assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
@@ -249,7 +249,7 @@ class HubRouteServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(fromHubId, toHubId)).thenReturn(false);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(false);
 
             // when & then
             assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
@@ -273,7 +273,7 @@ class HubRouteServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.of(fromHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
-            when(hubRouteRepository.existsByFromHubIdAndToHubId(fromHubId, toHubId)).thenReturn(false);
+            when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(false);
             when(hubRouteRepository.saveAndFlush(any(HubRoute.class)))
                     .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint \"uq_hub_route_from_to\""));
 

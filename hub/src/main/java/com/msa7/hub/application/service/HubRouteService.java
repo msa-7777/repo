@@ -54,11 +54,15 @@ public class HubRouteService {
 
     @Transactional
     public HubRouteResponse updateHubRoute(UUID hubRouteId, HubRouteRequest request) {
-        HubRoute hubRoute = hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.HUB_ROUTE_NOT_FOUND));
-
+        HubRoute hubRoute = findExistingHubRoute(hubRouteId);
         Hub fromHub = findExistingHub(request.fromHubId());
         Hub toHub = findExistingHub(request.toHubId());
+
+        // 출발/도착 허브가 변경되는 경우에만 중복 경로 검증 (변경 없으면 자기 자신과 충돌하므로 제외)
+        if (!hubRoute.getFromHubId().equals(request.fromHubId()) || !hubRoute.getToHubId().equals(request.toHubId())) {
+            ensureNotDuplicate(request.fromHubId(), request.toHubId());
+        }
+
         hubRoute.updateHubRoute(
                 fromHub,
                 toHub,
@@ -104,7 +108,7 @@ public class HubRouteService {
     }
 
     private void ensureNotDuplicate(UUID fromHubId, UUID toHubId) {
-        if (hubRouteRepository.existsByFromHubIdAndToHubId(fromHubId, toHubId)) {
+        if (hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)) {
             throw new BusinessException(ErrorCode.HUB_ROUTE_ALREADY_EXISTS);
         }
     }

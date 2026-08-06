@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface HubRouteRepository extends JpaRepository<HubRoute, UUID> {
 
-    boolean existsByFromHubIdAndToHubId(UUID fromHubId, UUID toHubId);
+    boolean existsByFromHubIdAndToHubIdAndDeletedAtIsNull(UUID fromHubId, UUID toHubId);
 
     Optional<HubRoute> findByIdAndDeletedAtIsNull(UUID hubRouteId);
 }
