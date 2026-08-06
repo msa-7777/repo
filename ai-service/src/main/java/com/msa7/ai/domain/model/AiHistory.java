@@ -3,7 +3,6 @@ package com.msa7.ai.domain.model;
 import com.msa7.ai.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "p_ai_histories")
 @Getter
+@Table(name = "p_ai_histories")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AiHistory extends BaseEntity {
 
@@ -34,18 +33,25 @@ public class AiHistory extends BaseEntity {
     private String generatedMessage;
 
     @Column(name = "is_slack_notified", nullable = false)
-    private Boolean isSlackNotified = false;
+    private Boolean isSlackNotified;
 
-    @Builder
-    public AiHistory(UUID orderId, String promptRequest, LocalDateTime calculatedDeadline, String generatedMessage, Boolean isSlackNotified) {
+    private AiHistory(UUID orderId, String promptRequest, LocalDateTime calculatedDeadline, String generatedMessage, Boolean isSlackNotified) {
         this.orderId = orderId;
         this.promptRequest = promptRequest;
         this.calculatedDeadline = calculatedDeadline;
         this.generatedMessage = generatedMessage;
-        this.isSlackNotified = (isSlackNotified != null) ? isSlackNotified : false;
+        this.isSlackNotified = isSlackNotified;
     }
 
-    public void updateSlackNotifiedStatus(boolean status) {
+    public static AiHistory create(UUID orderId, String promptRequest, LocalDateTime calculatedDeadline, String generatedMessage, Boolean isSlackNotified) {
+        return new AiHistory(orderId, promptRequest, calculatedDeadline, generatedMessage, isSlackNotified);
+    }
+
+    public void updateSlackNotificationStatus(boolean status) {
         this.isSlackNotified = status;
+    }
+
+    public void delete(UUID deletedBy) {
+        super.softDelete(deletedBy);
     }
 }

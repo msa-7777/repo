@@ -19,6 +19,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/companies/**", "/actuator/**").permitAll() // 해당 경로 인증 허용
+                        .requestMatchers("/api/v1/ai/**", "/actuator/**").permitAll() // 해당 경로 인증 허용
                         .anyRequest().authenticated()
                 );
 

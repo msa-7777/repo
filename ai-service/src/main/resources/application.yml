@@ -17,11 +17,29 @@ spring:
       hibernate:
         format_sql: true
   ai:
-    vertex:
-      ai:
-        Gemini:
-          api-key: ${GEMINI_API_KEY:your-default-api-key-here}
-          model: gemini-1.5-flash
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+      chat:
+        options:
+          model: gemini-2.5-flash-lite
+#        embedding:
+#          options:
+#            model: text-embedding-004
+#    model:
+#      embedding: transformers
+
+#  ai:
+#    openai:
+#      # 발급받으신 Gemini API 키
+#      api-key: ${GEMINI_API_KEY}
+#      # 끝에 반드시 슬래시(/)가 포함된 호환 URL
+#      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+#      chat:
+#        options:
+#          # Google AI Studio OpenAI 호환 호스트 지원 정식 모델명
+#          model: gemini-1.5-flash
+#          temperature: 0.2
 
 # TODO : 임시 유레카 설정. 추후 수정 요망
 ## Eureka Client 설정 (포트 19090)
@@ -35,7 +53,9 @@ spring:
 ## Hub 서비스 연동 포트 (19093)
 #hub-service:
 #  url: ${HUB_SERVICE_URL:http://localhost:19093}
-
+## 슬랙 연동
+slack:
+  webhook-url: ${SLACK_WEBHOOK_URL:https://hooks.slack.com/services/test/test/test}
 eureka:
   client:
     enabled: false

@@ -29,8 +29,26 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // Spring AI Vertex AI Gemini Starter
-    implementation 'org.springframework.ai:spring-ai-vertex-ai-gemini-spring-boot-starter'
+//    // Spring AI Google Vertex AI Gemini
+//    implementation platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
+//    //implementation 'org.springframework.ai:spring-ai-starter-model-vertex-ai-gemini'
+//    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
+    //LLM-RAG
+    //implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation 'org.springframework.ai:spring-ai-starter-model-transformers'
+    //vectorDB 추가
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+    //document reader 추가
+    implementation 'org.springframework.ai:spring-ai-markdown-document-reader'
+
+    // Spring Web & Reactive (스트리밍 지원 Flux 활용)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // JSON 처리
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // Web & Validation
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -44,7 +62,6 @@ dependencies {
     // Querydsl
     implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
     annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
-
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
@@ -59,6 +76,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
+    // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // Test
@@ -76,7 +94,7 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+        mavenBom "org.springframework.ai:spring-ai-bom:1.1.1"
     }
 }
 

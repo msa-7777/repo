@@ -2,8 +2,7 @@ package com.msa7.ai.presentation.controller;
 
 import com.msa7.ai.application.AiApplicationService;
 import com.msa7.ai.global.common.RestApiResponse;
-import com.msa7.ai.presentation.dto.request.AiCalculationRequest;
-import com.msa7.ai.presentation.dto.response.AiCalculationResponse;
+import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiHistoryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,38 +23,36 @@ public class AiController {
 
     private final AiApplicationService aiApplicationService;
 
-    // 1. Gemini AI를 활용한 발송 마감시한 계산 및 슬랙 메시지 생성 이력 저장
-    @PostMapping("/calculate")
-    public ResponseEntity<RestApiResponse<AiCalculationResponse>> calculateDeadline(
-            @Valid @RequestBody AiCalculationRequest request
-    ) {
-        AiCalculationResponse response = aiApplicationService.calculateDeadlineAndGenerateMessage(request);
+    @PostMapping("/generate")
+    public ResponseEntity<RestApiResponse<AiHistoryResponse>> generateDeadline(
+            @Valid @RequestBody CreateAiHistoryRequest request) {
+        AiHistoryResponse response = aiApplicationService.generateDeadlineAndNotify(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(RestApiResponse.ok(HttpStatus.CREATED, "AI 발송 시한 계산 및 메시지 생성이 완료되었습니다.", response));
+                .body(RestApiResponse.ok(HttpStatus.CREATED, "AI 최종 발송 시한 생성 및 메시지 전송 성공", response));
     }
 
-    // 2. AI 분석 및 발송 이력 단건 조회
-    @GetMapping("/histories/{historyId}")
+    @GetMapping("/{historyId}")
     public ResponseEntity<RestApiResponse<AiHistoryResponse>> getAiHistory(
-            @PathVariable UUID historyId
-    ) {
+            @PathVariable UUID historyId) {
         AiHistoryResponse response = aiApplicationService.getAiHistory(historyId);
-        return ResponseEntity.ok(
-                RestApiResponse.ok(HttpStatus.OK, "AI 이력 단건 조회가 완료되었습니다.", response)
-        );
+        return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 분석 이력 조회 성공", response));
     }
 
-    // 3. AI 분석 및 발송 이력 목록 조회
-    @GetMapping("/histories")
-    public ResponseEntity<RestApiResponse<Page<AiHistoryResponse>>> getAiHistories(
+    @GetMapping
+    public ResponseEntity<RestApiResponse<Page<AiHistoryResponse>>> searchAiHistories(
             @RequestParam(required = false) UUID orderId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        Page<AiHistoryResponse> response = aiApplicationService.getAiHistories(orderId, pageable);
-        return ResponseEntity.ok(
-                RestApiResponse.ok(HttpStatus.OK, "AI 이력 목록 조회가 완료되었습니다.", response)
-        );
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<AiHistoryResponse> response = aiApplicationService.searchAiHistories(orderId, pageable);
+        return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 분석 이력 목록 조회 성공", response));
     }
 
+    @DeleteMapping("/{historyId}")
+    public ResponseEntity<RestApiResponse<Void>> deleteAiHistory(
+            @PathVariable UUID historyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+        UUID deletedBy = (userId != null) ? userId : UUID.fromString("11111111-1111-1111-1111-111111111111");
+        aiApplicationService.deleteAiHistory(historyId, deletedBy);
+        return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 이력이 정상 삭제(Soft Delete) 되었습니다.", null));
+    }
 }
