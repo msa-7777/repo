@@ -1,4 +1,4 @@
-package com.sparta.slackservice;
+package com.sparta.slackservice.presentation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
