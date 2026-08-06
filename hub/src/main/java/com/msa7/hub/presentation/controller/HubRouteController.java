@@ -74,11 +74,12 @@ public class HubRouteController {
         return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
-    @GetMapping("/hub-routes/route")
+    @GetMapping("/hub-routes/path")
     public ResponseEntity<RestApiResponse<HubRoutePathResponse>> getHubRoutePath(
-            @Valid HubRoutePathRequest request
+            @ModelAttribute @Valid HubRoutePathRequest request
     ) {
-        return null;
+        HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+        return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 
 }

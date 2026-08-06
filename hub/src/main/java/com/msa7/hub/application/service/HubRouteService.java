@@ -7,18 +7,25 @@ import com.msa7.hub.domain.repository.HubRouteRepository;
 import com.msa7.hub.domain.repository.HubRouteSearchRepository;
 import com.msa7.hub.global.exception.BusinessException;
 import com.msa7.hub.global.exception.ErrorCode;
+import com.msa7.hub.presentation.request.HubRoutePathRequest;
 import com.msa7.hub.presentation.request.HubRouteRequest;
 import com.msa7.hub.presentation.request.HubRouteSearchRequest;
+import com.msa7.hub.presentation.response.HubRoutePathResponse;
 import com.msa7.hub.presentation.response.HubRouteResponse;
+import com.msa7.hub.presentation.response.HubRouteSegment;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HubRouteService {
@@ -95,6 +102,65 @@ public class HubRouteService {
     public Page<HubRouteResponse> getHubRouteList(HubRouteSearchRequest request, Pageable pageable) {
         return hubRouteSearchRepository.search(request.fromHubId(), request.toHubId(), pageable)
                 .map(HubRouteResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public HubRoutePathResponse getHubRoutePath(HubRoutePathRequest request) {
+
+        // 존재 하는 허브인지 검증
+        Hub fromHub = findExistingHub(request.fromHubId());
+        Hub toHub = findExistingHub(request.toHubId());
+
+        // 출발 허브 도착허브 같으면 에러 반환
+        if (fromHub.getId().equals(toHub.getId())) {
+            throw new BusinessException(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);
+        }
+
+        UUID fromCentralId = fromHub.isCentral() ? fromHub.getId() : fromHub.getCentralHubId();
+        UUID toCentralId = toHub.isCentral() ? toHub.getId() : toHub.getCentralHubId();
+
+        List<HubRouteSegment> segments = new ArrayList<>(); // 각 경로를 저장할 변수
+
+        int totalDistance = 0;
+        int totalDuration = 0;
+
+        // 출발허브가 중앙 허브가 아니면 소속 중앙 허브로 보냄
+        if (!fromHub.isCentral()) {
+            addSegment(segments, fromHub.getId(), fromCentralId);
+        }
+
+        // 출발지, 목적지 같은 중앙 허브가 아니면 목적지 중앙 허브로 보냄
+        if (!fromCentralId.equals(toCentralId)) {
+            addSegment(segments,fromCentralId, toCentralId);
+        }
+
+        // 도착지가 중앙허브가 아니면 소속 일반 허브로 보냄
+        if (!toHub.isCentral()) {
+            addSegment(segments,toCentralId, toHub.getId());
+        }
+
+        // 총 거리, 시간 계산
+        for (HubRouteSegment segment : segments) {
+            totalDistance += segment.distance();
+            totalDuration += segment.duration();
+        }
+
+        return new HubRoutePathResponse(totalDistance, totalDuration, segments);
+    }
+
+    private void addSegment(List<HubRouteSegment> segments, UUID fromId, UUID toId) {
+        HubRoute hubRoute = findExistingHubRoute(fromId, toId);
+        segments.add(new HubRouteSegment(
+                segments.size(), fromId, toId, hubRoute.getDistance(), hubRoute.getDuration())
+        );
+    }
+
+    private HubRoute findExistingHubRoute(UUID fromHubId, UUID toHubId) {
+        return hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)
+                .orElseThrow(() -> {
+                    log.warn("허브 경로를 찾을 수 없음 - from: {}, to: {}", fromHubId, toHubId);
+                    return new BusinessException(ErrorCode.HUB_ROUTE_NOT_FOUND);
+                });
     }
 
     private HubRoute findExistingHubRoute(UUID huRouteId) {
