@@ -6,3 +6,4 @@ include 'order'
 
 include 'product-service'
 include 'slack-service'
+include 'eureka-server'
