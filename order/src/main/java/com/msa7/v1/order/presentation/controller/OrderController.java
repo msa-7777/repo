@@ -18,6 +18,7 @@ import com.msa7.v1.order.app.OrderService;
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.presentation.dto.CreateOrderRequest;
 import com.msa7.v1.order.presentation.dto.OrderResponse;
+import com.msa7.v1.order.presentation.dto.RestApiResponse;
 import com.msa7.v1.order.presentation.dto.UpdateOrderRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -31,26 +32,28 @@ public class OrderController {
 
 	// 주문 생성
 	@PostMapping
-	public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
+	public ResponseEntity<RestApiResponse<OrderResponse>> createOrder(@RequestBody CreateOrderRequest request) {
 		Order order = orderService.createOrder(
 			request.receiverCompanyId(),
 			request.productId(),
 			request.quantity(),
 			request.requestNotes()
 		);
-		return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(order));
+		return ResponseEntity.status(HttpStatus.CREATED)
+			.body(new RestApiResponse<>(true, 201, "주문이 생성되었습니다.", OrderResponse.from(order), null));
 	}
 
 	// 주문 단건 조회
 	@GetMapping("/{orderId}")
-	public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID orderId) {
+	public ResponseEntity<RestApiResponse<OrderResponse>> getOrder(@PathVariable UUID orderId) {
 		Order order = orderService.getOrder(orderId);
-		return ResponseEntity.ok(OrderResponse.from(order));
+		return ResponseEntity.ok(RestApiResponse.ok(OrderResponse.from(order)));
 	}
+
 
 	// 주문 수정
 	@PutMapping("/{orderId}")
-	public ResponseEntity<OrderResponse> updateOrder(
+	public ResponseEntity<RestApiResponse<OrderResponse>> updateOrder(
 		@PathVariable UUID orderId,
 		@RequestBody UpdateOrderRequest request) {
 		Order order = orderService.updateOrder(
@@ -58,21 +61,21 @@ public class OrderController {
 			request.quantity(),
 			request.requestNotes()
 		);
-		return ResponseEntity.ok(OrderResponse.from(order));
+		return ResponseEntity.ok(RestApiResponse.ok("주문이 수정되었습니다.", OrderResponse.from(order)));
 	}
 
 	// 주문 취소 (상태 변경이므로 PATCH 또는 POST 주로 사용)
 	@PatchMapping("/{orderId}/cancel")
-	public ResponseEntity<Void> cancelOrder(@PathVariable UUID orderId) {
+	public ResponseEntity<RestApiResponse<Void>> cancelOrder(@PathVariable UUID orderId) {
 		orderService.cancelOrder(orderId);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(RestApiResponse.ok("주문이 취소되었습니다.", null));
 	}
 
 	// 주문 삭제
 	@DeleteMapping("/{orderId}")
-	public ResponseEntity<Void> deleteOrder(@PathVariable UUID orderId) {
+	public ResponseEntity<RestApiResponse<Void>> deleteOrder(@PathVariable UUID orderId) {
 		orderService.deleteOrder(orderId);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(RestApiResponse.ok("주문이 삭제되었습니다.", null));
 	}
 
 }
