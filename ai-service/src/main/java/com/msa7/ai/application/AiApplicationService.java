@@ -39,6 +39,10 @@ public class AiApplicationService {
         // 2. Gemini AI 호출 (Structured Output)
         AiDeadlineResponse aiResponse = geminiAiClient.getCalculatedDeadline(prompt);
 
+        //AI 메세지 확인
+        log.info("calculatedDeadline : " + aiResponse.calculatedDeadline());
+        log.info("generatedMessage : " + aiResponse.generatedMessage());
+
         // 3. 슬랙 알림 발송
         boolean isNotified = false;
 //        try {
