@@ -1,7 +1,12 @@
 rootProject.name = 'v1'
 
-include 'global'
+
+include 'company-service'
+include 'ai-service'
+include 'eureka-service'
+=======
 include 'delivery'
 include 'order'
 
 include 'product-service'
+
