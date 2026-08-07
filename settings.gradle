@@ -9,3 +9,5 @@ include 'order'
 
 include 'product-service'
 
+include 'hub'
+
