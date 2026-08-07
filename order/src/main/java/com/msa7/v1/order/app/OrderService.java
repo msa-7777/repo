@@ -56,7 +56,7 @@ public class OrderService {
 	public void deleteOrder(UUID orderId) {
 		Order order = getOrder(orderId);
 		order.delete();
-		orderRepo.delete(order);
+		orderRepo.save(order); // 상태 업데이트해서 softDelete
 	}
 
 }

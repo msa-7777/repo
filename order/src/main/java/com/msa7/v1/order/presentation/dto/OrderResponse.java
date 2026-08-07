@@ -9,7 +9,7 @@ public record OrderResponse(
 	UUID orderId,
 	UUID receiverId,
 	UUID productId,
-	Quantity quantity
+	Integer quantity
 ) {
 	// 도메인 객체 -> DTO 변환 팩토리 메서드
 	public static OrderResponse from(Order order) {
@@ -17,7 +17,7 @@ public record OrderResponse(
 			order.getId(),
 			order.getReceiverCompanyId(),
 			order.getProductId(),
-			order.getQuantity()
+			order.getQuantity().value()
 		);
 	}
 }
