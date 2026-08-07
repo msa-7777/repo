@@ -1,4 +1,4 @@
-package com.msa7.hub.infrastructure.config;
+package com.msa7.hub.global.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
