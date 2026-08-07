@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.sparta'
 version = '0.0.1-SNAPSHOT'
-description = 'product-service'
+description = 'slack-service'
 
 java {
     toolchain {
@@ -60,7 +60,7 @@ dependencies {
     // Request DTO 입력값 검증
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Eureka 서버에 product-service 등록
+    // Eureka 서버에 product-service 등록 (Eureka client)
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
     // 다른 마이크로서비스의 내부 API 호출
@@ -77,7 +77,6 @@ dependencies {
 
     // Security 테스트
     // testImplementation 'org.springframework.security:spring-security-test'
-
 
 }
 
