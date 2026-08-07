@@ -39,4 +39,9 @@ public abstract class BaseEntity {
 
     @Column(name = "deleted_by")
     private UUID deletedBy;
+
+    public void softDelete(UUID deletedBy) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
+    }
 }

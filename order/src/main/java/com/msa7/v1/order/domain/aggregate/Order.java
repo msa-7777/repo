@@ -1,0 +1,101 @@
+package com.msa7.v1.order.domain.aggregate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import com.msa7.v1.order.domain.vo.OrderStatus;
+import com.msa7.v1.order.domain.vo.Quantity;
+import com.msa7.v1.order.domain.vo.RequestNotes;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+
+public class Order {
+	private final UUID id;
+
+	// 외부 도메인 참조는 오직 ID로만
+	private final UUID receiverCompanyId;
+	private final UUID productId;
+
+	// Value Obj
+	private  Quantity quantity;
+	private  OrderStatus status;
+	private RequestNotes requestNotes;
+
+	// 이벤트 저장을 위한 임시 컬랙션
+	private final List<Object> domainEvents = new ArrayList<>();
+
+	@Builder
+	public Order(UUID id, UUID receiverCompanyId, UUID productId, Integer quantity, OrderStatus status, String requestNotes) {
+		this.id = id;
+		this.receiverCompanyId = receiverCompanyId;
+		this.productId = productId;
+		this.quantity = new Quantity(quantity);
+		this.status = status;
+		this.requestNotes = new RequestNotes(requestNotes);
+	}
+
+	public static Order create(UUID receiverCompanyId, UUID productId, Integer quantity, String requestNotes) {
+		return Order.builder()
+			.id(UUID.randomUUID())
+			.receiverCompanyId(receiverCompanyId)
+			.productId(productId)
+			.quantity(quantity)
+			.status(OrderStatus.PENDING)
+			.requestNotes(requestNotes)
+			.build();
+	}
+
+
+	public void update(Integer newQuantity, String newNotes) {
+		if (this.status != OrderStatus.PENDING) {
+			throw new IllegalStateException("배송 전 상태(PENDING)에서만 수정 가능.");
+		}
+		this.quantity = new Quantity(newQuantity);
+		this.requestNotes = new RequestNotes(newNotes);
+	}
+
+
+	public void cancel() {
+		if (this.status == OrderStatus.SHIPPED || this.status == OrderStatus.DELIVERED) {
+			throw new IllegalStateException("이미 배송된 주문은 취소 할수 없습니다.");
+		}
+		this.status = OrderStatus.CANCELED;
+
+		// this.domainEvents.add(new OrderCanceldEvent(this.id, requestId));
+	}
+
+	public void delete() {
+		this.status = OrderStatus.DELETED;
+	}
+
+
+	// callBack메서드 1
+	public void startDelivery() {
+		if (this.status == OrderStatus.CANCELED) {
+			throw new IllegalStateException("취소된 주문은 배송 불가 합니다");
+		}
+		this.status = OrderStatus.PROCESSING;
+	}
+	// callBack메서드 2
+	public void completeOrder(UUID requestId) {
+		if (this.status != OrderStatus.PROCESSING
+		&& this.status != OrderStatus.SHIPPED) {
+			throw new IllegalStateException("배송 중 인 주문만 완료 가능 합니다");
+		}
+		this.status = OrderStatus.DELIVERED;
+	}
+
+	// 이벤트 방출 용
+	public List<Object> getDomainEvents() {return Collections.unmodifiableList(domainEvents);}
+	public void clearEvents() { this.domainEvents.clear();}
+
+
+}
