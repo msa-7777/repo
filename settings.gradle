@@ -3,3 +3,5 @@ rootProject.name = 'v1'
 include 'global'
 include 'delivery'
 include 'order'
+
+include 'product-service'
