@@ -2,6 +2,13 @@ server:
   port: 8081 # API GW(보통 8080)와 충돌 방지를 위한 독립 포트
 
 spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
   application:
     name: order-service # [중요] MSA 환경에서 서비스 식별자(신분증) 역할
 
