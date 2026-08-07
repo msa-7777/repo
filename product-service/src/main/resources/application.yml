@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 19095
 
 spring:
   application:
@@ -27,7 +27,8 @@ spring:
       hibernate:
         format_sql: true
 
-# Eureka Server 실행X
+# Eureka 클라이언트
 eureka:
   client:
-    enabled: false
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
