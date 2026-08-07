@@ -17,9 +17,9 @@ spring:
 
   # PostgreSQL DB 설정 (로컬 환경)
   datasource:
-    url: ${HUB_DB_URL}
-    username: ${HUB_DB_USERNAME}
-    password: ${HUB_DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/b2b?currentSchema=slack_schema
+    username: ${B2B_DB_USERNAME}
+    password: ${B2B_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:

@@ -5,9 +5,9 @@ spring:
   application:
     name: ai-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/postgres}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/b2b?currentSchema=ai_schema
+    username: ${B2B_DB_USERNAME}
+    password: ${B2B_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
