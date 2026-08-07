@@ -28,6 +28,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	// --- Spring Cloud OpenFeign 추가 ---
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	//querydsl
 	implementation 'io.github.openfeign.querydsl:querydsl-jpa:5.6.1:jakarta'

@@ -1,34 +1,40 @@
 server:
-  port: 19095
+  port: 19095 # API GW(보통 8080)와 충돌 방지를 위한 독립 포트
 
 spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
   application:
     name: product-service
+  config:
+    import: optional:classpath:application-secret.yaml
 
+
+  # PostgreSQL DB 설정 (로컬 환경)
   datasource:
-    url: jdbc:h2:mem:product-db
-    driver-class-name: org.h2.Driver
-    username: user
-    password: pwd
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      # http://localhost:8081/h2-console
+    url: ${HUB_DB_URL}
+    username: ${HUB_DB_USERNAME}
+    password: ${HUB_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
-      # ddl-auto: update
-      # 유지할 때 update
-    show-sql: true
+      ddl-auto: update # 엔티티 변경 시 DB 스키마 자동 업데이트 (로컬 개발용)
+    show-sql: true # 실행되는 SQL 로그 확인
     properties:
       hibernate:
-        format_sql: true
+        format_sql: true # SQL 가독성 향상
 
-# Eureka 클라이언트
+# Eureka 클라이언트 설정
 eureka:
   client:
+    register-with-eureka: true # 서버 등록 임시 비활성화
+    fetch-registry: true # 레지스트리 정보 가져오기 임시 비활성화
     service-url:
-      defaultZone: http://localhost:19090/eureka/
+      defaultZone: http://localhost:8761/eureka/ # 향후 연결할 유레카 서버 주소
+

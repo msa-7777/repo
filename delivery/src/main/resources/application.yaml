@@ -10,16 +10,16 @@ spring:
             connect-timeout: 3000
             read-timeout: 5000
   application:
-    name: deliver-service
+    name: delivery-service
   config:
     import: optional:classpath:application-secret.yaml
 
 
   # PostgreSQL DB 설정 (로컬 환경)
   datasource:
-    url: jdbc:postgresql://localhost:5432/deliverdb # 사전에 orderdb 생성 필요
-    username: postgres
-    password:
+    url: ${HUB_DB_URL}
+    username: ${HUB_DB_USERNAME}
+    password: ${HUB_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
