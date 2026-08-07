@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,8 +33,12 @@ public class OrderController {
 
 	// 주문 생성
 	@PostMapping
-	public ResponseEntity<RestApiResponse<OrderResponse>> createOrder(@RequestBody CreateOrderRequest request) {
+	public ResponseEntity<RestApiResponse<OrderResponse>>
+	// @RequestHeader("X-Request-ID") UUID requestId 추가
+	createOrder(
+		@RequestBody CreateOrderRequest request) {
 		Order order = orderService.createOrder(
+			// requestId,
 			request.receiverCompanyId(),
 			request.productId(),
 			request.quantity(),

@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
+import com.msa7.v1.order.infra.feign.ProductService;
+import com.msa7.v1.order.infra.feign.UserClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,9 +17,17 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
 	private final OrderRepo orderRepo;
+	// private final UserClient userClient;
+	// private final ProductService productService;
 
 	@Transactional
 	public Order createOrder(UUID receiverId, UUID productId, Integer quantity, String requests) {
+		// 추가 로직: 주문 요청자의 정보 검증 (동기 호출된 유저 정보)
+
+		// 추가 로직: 상품 재고 확인 (동기 호출된 상품 재고 및 최단거리 허브 배정 정보)
+
+		// 추가 로직: 재고 차감(동기 호출)
+
 		Order order = Order.create(receiverId, productId, quantity, requests);
 		return orderRepo.save(order);
 	}
