@@ -25,3 +25,14 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
+
+# 라우팅
+# http://localhost:19091/actuator/gateway/routes
+management:
+  endpoint:
+    gateway:
+      access: read-only
+  endpoints:
+    web:
+      exposure:
+        include: health,gateway
