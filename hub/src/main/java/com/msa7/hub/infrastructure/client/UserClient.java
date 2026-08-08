@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
 
-@FeignClient(name = "user-service", url = "${user-service.url}")
+@FeignClient(name = "user-service")
 public interface UserClient {
     @GetMapping("/api/v1/users")
     RestApiResponse<PageResponse<UserResponse>> getUserList(@RequestParam UUID hubId);
