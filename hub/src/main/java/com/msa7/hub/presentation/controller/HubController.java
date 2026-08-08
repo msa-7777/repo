@@ -1,5 +1,6 @@
 package com.msa7.hub.presentation.controller;
 
+import com.msa7.hub.application.service.HubDeleteFacade;
 import com.msa7.hub.application.service.HubService;
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.global.response.RestApiResponse;
@@ -30,6 +31,7 @@ import java.util.UUID;
 public class HubController {
 
     private final HubService hubService;
+    private final HubDeleteFacade hubDeleteFacade;
 
     @PostMapping("/hubs")
     public ResponseEntity<RestApiResponse<HubResponse>> createHub(
@@ -55,7 +57,7 @@ public class HubController {
             @PathVariable UUID hubId
     ) {
 
-        hubService.deleteHub(hubId, null); // TODO: 인증 구현 후 userId 값 수정
+        hubDeleteFacade.deleteHub(hubId, null); // TODO: 인증 구현 후 userId 값 수정
         return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 

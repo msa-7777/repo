@@ -37,10 +37,9 @@ public class HubService {
     }
 
     @Transactional
-    public void deleteHub(UUID hubId, UUID userId) {
-        // TODO: 삭제 후 delivery/company/inventory에 이벤트 발행 또는 동기 호출
-        Hub hub = findExistingHub(hubId);
-        hub.softDelete(userId);
+    void softDelete(Hub hub, UUID deletedBy) {
+        hub.softDelete(deletedBy);
+        hubRepository.save(hub);
     }
 
     @Transactional(readOnly = true)

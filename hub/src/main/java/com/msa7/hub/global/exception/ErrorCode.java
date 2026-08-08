@@ -27,6 +27,9 @@ public enum ErrorCode {
     // 409
     CONFLICT(HttpStatus.CONFLICT, "리소스 충돌이 발생했습니다."),
     HUB_ROUTE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 등록된 허브 경로입니다."),
+    HUB_REFERENCED_BY_COMPANY(HttpStatus.CONFLICT, "해당 허브를 참조하는 업체가 존재하여 삭제할 수 없습니다."),
+    HUB_REFERENCED_BY_INVENTORY(HttpStatus.CONFLICT, "해당 허브에 재고가 존재하여 삭제할 수 없습니다."),
+    HUB_REFERENCED_BY_USER(HttpStatus.CONFLICT, "해당 허브를 참조하는 유저가 존재하여 삭제할 수 없습니다."),
 
     // 500
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
