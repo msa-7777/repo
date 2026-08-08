@@ -20,6 +20,31 @@ spring:
               predicates:
                 - Path=/api/v1/slack-messages/**
 
+            - id: delivery-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/v1/deliveries/**
+
+            - id: order-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/orders/**
+
+            - id: hub-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/hubs/**,/api/v1/hub-routes/**
+
+            - id: ai-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/v1/ai/**
+
+            - id: company-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/companies/**
+
 # Eureka 클라이언트
 eureka:
   client:
