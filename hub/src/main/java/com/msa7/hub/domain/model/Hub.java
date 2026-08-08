@@ -1,5 +1,6 @@
 package com.msa7.hub.domain.model;
 
+import com.msa7.hub.global.audit.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

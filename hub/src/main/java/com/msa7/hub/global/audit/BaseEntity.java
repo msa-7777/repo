@@ -1,4 +1,4 @@
-package com.msa7.hub.domain.model;
+package com.msa7.hub.global.audit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

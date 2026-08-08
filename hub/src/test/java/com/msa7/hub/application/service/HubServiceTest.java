@@ -1,13 +1,11 @@
 package com.msa7.hub.application.service;
 
 import com.msa7.hub.domain.model.Hub;
-import com.msa7.hub.domain.repository.HubRepository;
-import com.msa7.hub.domain.repository.HubSearchRepository;
+import com.msa7.hub.infrastructure.persistence.HubRepository;
 import com.msa7.hub.global.exception.BusinessException;
 import com.msa7.hub.global.exception.ErrorCode;
 import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.request.HubSearchRequest;
-import com.msa7.hub.presentation.response.HubResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,9 +39,6 @@ class HubServiceTest {
     @Mock
     private HubRepository hubRepository;
 
-    @Mock
-    private HubSearchRepository hubSearchRepository;
-
     @Nested
     @DisplayName("허브 생성")
     class CreateHub {
@@ -64,15 +59,15 @@ class HubServiceTest {
             when(hubRepository.save(any(Hub.class))).thenReturn(savedHub);
 
             // when
-            HubResponse response = hubService.createHub(request);
+            Hub response = hubService.createHub(request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
 
             // then
             verify(hubRepository).findByIdAndDeletedAtIsNull(centralHubId);
             verify(hubRepository).save(any(Hub.class));
 
-            assertThat(response.hubId()).isEqualTo(savedHub.getId());
-            assertThat(response.name()).isEqualTo(request.name());
-            assertThat(response.centralHubId()).isEqualTo(centralHubId);
+            assertThat(response.getId()).isEqualTo(savedHub.getId());
+            assertThat(response.getName()).isEqualTo(request.name());
+            assertThat(response.getCentralHubId()).isEqualTo(centralHubId);
         }
 
         @Test
@@ -85,7 +80,7 @@ class HubServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubService.createHub(request))
+            assertThatThrownBy(() -> hubService.createHub(request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.CENTRAL_HUB_NOT_FOUND);
@@ -115,18 +110,18 @@ class HubServiceTest {
 
             when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(savedHub));
             when(hubRepository.findByIdAndDeletedAtIsNull(newCentralHubId)).thenReturn(Optional.of(newCentralHub));
-            when(hubRepository.saveAndFlush(any(Hub.class))).thenReturn(savedHub);
+            when(hubRepository.save(any(Hub.class))).thenReturn(savedHub);
 
             // when
-            HubResponse response = hubService.updateHub(hubId, request);
+            Hub response = hubService.updateHub(hubId, request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
 
             // then
-            assertThat(response.hubId()).isEqualTo(hubId);
-            assertThat(response.name()).isEqualTo("이름2");
-            assertThat(response.address()).isEqualTo("주소2");
-            assertThat(response.latitude()).isEqualTo(BigDecimal.valueOf(35.1));
-            assertThat(response.longitude()).isEqualTo(BigDecimal.valueOf(129.0));
-            assertThat(response.centralHubId()).isEqualTo(newCentralHubId);
+            assertThat(response.getId()).isEqualTo(hubId);
+            assertThat(response.getName()).isEqualTo("이름2");
+            assertThat(response.getAddress()).isEqualTo("주소2");
+            assertThat(response.getLatitude()).isEqualTo(BigDecimal.valueOf(35.1));
+            assertThat(response.getLongitude()).isEqualTo(BigDecimal.valueOf(129.0));
+            assertThat(response.getCentralHubId()).isEqualTo(newCentralHubId);
 
             verify(hubRepository).findByIdAndDeletedAtIsNull(hubId);
             verify(hubRepository).findByIdAndDeletedAtIsNull(newCentralHubId);
@@ -143,7 +138,7 @@ class HubServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubService.updateHub(hubId, request))
+            assertThatThrownBy(() -> hubService.updateHub(hubId, request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -166,7 +161,7 @@ class HubServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(centralHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubService.updateHub(hubId, request))
+            assertThatThrownBy(() -> hubService.updateHub(hubId, request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.CENTRAL_HUB_NOT_FOUND);
@@ -228,15 +223,15 @@ class HubServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(hub));
 
             // when
-            HubResponse response = hubService.getHub(hubId);
+            Hub response = hubService.getHub(hubId);
 
             // then
             verify(hubRepository).findByIdAndDeletedAtIsNull(hubId);
-            assertThat(response.hubId()).isEqualTo(hubId);
-            assertThat(response.name()).isEqualTo("이름");
-            assertThat(response.latitude()).isEqualTo(BigDecimal.valueOf(37.5));
-            assertThat(response.longitude()).isEqualTo(BigDecimal.valueOf(127.0));
-            assertThat(response.address()).isEqualTo("부산");
+            assertThat(response.getId()).isEqualTo(hubId);
+            assertThat(response.getName()).isEqualTo("이름");
+            assertThat(response.getLatitude()).isEqualTo(BigDecimal.valueOf(37.5));
+            assertThat(response.getLongitude()).isEqualTo(BigDecimal.valueOf(127.0));
+            assertThat(response.getAddress()).isEqualTo("부산");
         }
 
         @Test
@@ -276,17 +271,17 @@ class HubServiceTest {
             Page<Hub> hubPage = new PageImpl<>(List.of(hub), pageable, 1);
             HubSearchRequest request = new HubSearchRequest(name, address, isCentral);
 
-            when(hubSearchRepository.search(name, address, isCentral, pageable)).thenReturn(hubPage);
+            when(hubRepository.search(name, address, isCentral, pageable)).thenReturn(hubPage);
 
             // when
-            Page<HubResponse> response = hubService.getHubList(request, pageable);
+            Page<Hub> response = hubService.getHubList(request.name(), request.address(), request.isCentral(), pageable);
 
             // then
-            verify(hubSearchRepository).search(name, address, isCentral, pageable);
+            verify(hubRepository).search(name, address, isCentral, pageable);
             assertThat(response.getTotalElements()).isEqualTo(1);
             assertThat(response.getContent()).hasSize(1);
-            assertThat(response.getContent().get(0).name()).isEqualTo(name);
-            assertThat(response.getContent().get(0).address()).isEqualTo(address);
+            assertThat(response.getContent().get(0).getName()).isEqualTo(name);
+            assertThat(response.getContent().get(0).getAddress()).isEqualTo(address);
         }
 
     }

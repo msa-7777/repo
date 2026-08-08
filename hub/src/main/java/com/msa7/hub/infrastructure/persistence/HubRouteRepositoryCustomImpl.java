@@ -2,7 +2,6 @@ package com.msa7.hub.infrastructure.persistence;
 
 import com.msa7.hub.domain.model.HubRoute;
 import com.msa7.hub.domain.model.QHubRoute;
-import com.msa7.hub.domain.repository.HubRouteSearchRepository;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -20,7 +19,7 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class HubRouteSearchRepositoryImpl implements HubRouteSearchRepository {
+public class HubRouteRepositoryCustomImpl implements HubRouteRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
     private final QHubRoute hubRoute = QHubRoute.hubRoute;

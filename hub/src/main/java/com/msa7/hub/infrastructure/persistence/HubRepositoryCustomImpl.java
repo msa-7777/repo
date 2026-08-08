@@ -2,7 +2,6 @@ package com.msa7.hub.infrastructure.persistence;
 
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.model.QHub;
-import com.msa7.hub.domain.repository.HubSearchRepository;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -20,7 +19,7 @@ import java.util.Objects;
 
 @Repository
 @RequiredArgsConstructor
-public class HubSearchRepositoryImpl implements HubSearchRepository {
+public class HubRepositoryCustomImpl implements HubRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
     private final QHub hub = QHub.hub;
