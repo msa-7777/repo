@@ -7,8 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
-import com.msa7.v1.order.infra.feign.ProductService;
-import com.msa7.v1.order.infra.feign.UserClient;
+import com.msa7.v1.order.infra.feign.DeliveryClient;
+import com.msa7.v1.order.infra.feign.InventoryClient;
+import com.msa7.v1.order.infra.feign.dto.CreateDeliveryRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,19 +18,22 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
 	private final OrderRepo orderRepo;
-	// private final UserClient userClient;
-	// private final ProductService productService;
+	private final DeliveryClient deliveryClient;
+	private final InventoryClient inventoryClient;
 
 	@Transactional
 	public Order createOrder(UUID receiverId, UUID productId, Integer quantity, String requests) {
-		// 추가 로직: 주문 요청자의 정보 검증 (동기 호출된 유저 정보)
+		// 재고 확인 inventory에서 요청
+		inventoryClient.verifyInventory(productId);
 
-		// 추가 로직: 상품 재고 확인 (동기 호출된 상품 재고 및 최단거리 허브 배정 정보)
-
-		// 추가 로직: 재고 차감(동기 호출)
-
+		// 도메인 객체 생성 및 저장
 		Order order = Order.create(receiverId, productId, quantity, requests);
-		return orderRepo.save(order);
+		Order savedOrder = orderRepo.save(order);
+
+		// 배송 생성 요청
+		deliveryClient.createDelivery(new CreateDeliveryRequest(savedOrder.getId(), receiverId));
+
+		return savedOrder;
 	}
 
 	// cqurs 분리 예정이라 단건 조회 및 다중조건 조회 구현 구체화 할 예정
