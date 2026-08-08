@@ -1,0 +1,12 @@
+server:
+  port: 19091
+
+spring:
+  application:
+    name: gateway-service
+
+# Eureka 클라이언트
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
