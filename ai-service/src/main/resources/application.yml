@@ -1,5 +1,5 @@
 server:
-  port: 19097
+  port: 19099
 
 spring:
   application:
@@ -41,14 +41,11 @@ spring:
 #          model: gemini-1.5-flash
 #          temperature: 0.2
 
-# TODO : 임시 유레카 설정. 추후 수정 요망
-## Eureka Client 설정 (포트 19090)
-#eureka:
-#  client:
-#    service-url:
-#      defaultZone: http://localhost:19090/eureka/
-#  instance:
-#    prefer-ip-address: true
+# Eureka 클라이언트
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
 #
 ## Hub 서비스 연동 포트 (19093)
 #hub-service:
@@ -56,6 +53,3 @@ spring:
 ## 슬랙 연동
 slack:
   webhook-url: ${SLACK_WEBHOOK_URL:https://hooks.slack.com/services/test/test/test}
-eureka:
-  client:
-    enabled: false
