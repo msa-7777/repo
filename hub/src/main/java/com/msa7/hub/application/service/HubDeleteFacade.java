@@ -28,23 +28,28 @@ public class HubDeleteFacade {
     private final UserClient userClient;
 
     private final HubService hubService;
+    private final HubRouteService hubRouteService;
 
     public void deleteHub(UUID hubId, UUID deletedBy) {
         // 허브 조회 (짧은 readOnly 트랜잭션)
         Hub hub = hubService.getHub(hubId);
 
+        // HubRoute 참조 확인(짧은 readOnly 트랜잭션)
+        hubRouteService.ensureNotReferencedByHub(hubId);
+
         // 참조 확인. 외부 api 호출 (트랜잭션 바깥)
-        checkHubReference(hubId);
+        checkExternalHubReference(hubId);
 
         // hub 삭제 (짧은 트랜잭션, soft delete)
         hubService.softDelete(hub, deletedBy);
     }
 
-    private void checkHubReference(UUID hubId) {
+    private void checkExternalHubReference(UUID hubId) {
         ensureNotReferencedByCompany(hubId);
         ensureNotReferencedByInventory(hubId);
         // TODO: user-service 모듈이 아직 없어서 호출 비활성화.
         // ensureNotReferencedByUser(hubId);
+        // TODO: delivery 참조 무결성 확인
     }
 
     private void ensureNotReferencedByCompany(UUID hubId) {

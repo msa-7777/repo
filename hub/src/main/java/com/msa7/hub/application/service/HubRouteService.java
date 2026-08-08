@@ -167,4 +167,11 @@ public class HubRouteService {
             throw new BusinessException(ErrorCode.HUB_ROUTE_ALREADY_EXISTS);
         }
     }
+
+    @Transactional(readOnly = true)
+    void ensureNotReferencedByHub(UUID hubId) {
+        if (hubRouteRepository.existsByFromHubIdAndDeletedAtIsNullOrToHubIdAndDeletedAtIsNull(hubId, hubId)) {
+            throw new BusinessException(ErrorCode.HUB_REFERENCED_BY_HUB_ROUTE);
+        }
+    }
 }
