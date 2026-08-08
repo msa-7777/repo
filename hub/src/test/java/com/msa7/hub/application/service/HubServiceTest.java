@@ -188,6 +188,27 @@ class HubServiceTest {
             assertThat(existingHub.getDeletedBy()).isEqualTo(userId);
             verify(hubRepository).save(existingHub);
         }
+
+        @Test
+        @DisplayName("실패 - 다른 허브가 중앙 허브로 참조 중이면 삭제 불가")
+        void fail_referencedAsCentralHub() {
+            // given
+            UUID hubId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            Hub existingHub = Hub.createHub(null, "이름", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), "부산");
+            ReflectionTestUtils.setField(existingHub, "id", hubId);
+
+            when(hubRepository.existsByCentralHubIdAndDeletedAtIsNull(hubId)).thenReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> hubService.softDelete(existingHub, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.HUB_REFERENCED_BY_CHILD_HUB);
+
+            assertThat(existingHub.getDeletedAt()).isNull();
+            verify(hubRepository, never()).save(any());
+        }
     }
 
     @Nested

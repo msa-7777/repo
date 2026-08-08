@@ -38,6 +38,8 @@ public class HubService {
 
     @Transactional
     void softDelete(Hub hub, UUID deletedBy) {
+        // 나를 중앙허브로 참조하고 있는 hub가 있는지 검증
+        ensureNotReferencedByCentralHub(hub.getId());
         hub.softDelete(deletedBy);
         hubRepository.save(hub);
     }
@@ -63,5 +65,11 @@ public class HubService {
         }
         hubRepository.findByIdAndDeletedAtIsNull(centralHubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CENTRAL_HUB_NOT_FOUND));
+    }
+
+    private void ensureNotReferencedByCentralHub(UUID hubId) {
+        if (hubRepository.existsByCentralHubIdAndDeletedAtIsNull(hubId)) {
+            throw new BusinessException(ErrorCode.HUB_REFERENCED_BY_CHILD_HUB);
+        }
     }
 }

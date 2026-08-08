@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface HubRepository extends JpaRepository<Hub, UUID>, HubRepositoryCustom {
 
     Optional<Hub> findByIdAndDeletedAtIsNull(UUID hubId);
+
+    boolean existsByCentralHubIdAndDeletedAtIsNull(UUID centralHubId);
 }

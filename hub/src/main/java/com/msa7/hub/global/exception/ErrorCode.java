@@ -29,6 +29,7 @@ public enum ErrorCode {
     HUB_ROUTE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 등록된 허브 경로입니다."),
     HUB_REFERENCED_BY_COMPANY(HttpStatus.CONFLICT, "해당 허브를 참조하는 업체가 존재하여 삭제할 수 없습니다."),
     HUB_REFERENCED_BY_INVENTORY(HttpStatus.CONFLICT, "해당 허브에 재고가 존재하여 삭제할 수 없습니다."),
+    HUB_REFERENCED_BY_CHILD_HUB(HttpStatus.CONFLICT, "해당 허브를 중앙 허브로 참조하는 소속 허브가 존재하여 삭제할 수 없습니다."),
     HUB_REFERENCED_BY_USER(HttpStatus.CONFLICT, "해당 허브를 참조하는 유저가 존재하여 삭제할 수 없습니다."),
 
     // 500
