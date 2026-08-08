@@ -34,7 +34,8 @@ public class OrderController {
 	// 주문 생성
 	@PostMapping
 	public ResponseEntity<RestApiResponse<OrderResponse>>
-	// @RequestHeader("X-Request-ID") UUID requestId 추가
+	// @RequestHeader("X-Request-ID") UUID requestId 추가 -> apiGW에서 넘어온 유저 식별자
+	// @RequestHeader("X-Role") String role 추가
 	createOrder(
 		@RequestBody CreateOrderRequest request) {
 		Order order = orderService.createOrder(
@@ -69,7 +70,7 @@ public class OrderController {
 		return ResponseEntity.ok(RestApiResponse.ok("주문이 수정되었습니다.", OrderResponse.from(order)));
 	}
 
-	// 주문 취소 (상태 변경이므로 PATCH 또는 POST 주로 사용)
+	// 주문 취소
 	@PatchMapping("/{orderId}/cancel")
 	public ResponseEntity<RestApiResponse<Void>> cancelOrder(@PathVariable UUID orderId) {
 		orderService.cancelOrder(orderId);
@@ -78,7 +79,10 @@ public class OrderController {
 
 	// 주문 삭제
 	@DeleteMapping("/{orderId}")
-	public ResponseEntity<RestApiResponse<Void>> deleteOrder(@PathVariable UUID orderId) {
+	public ResponseEntity<RestApiResponse<Void>>
+	deleteOrder(@PathVariable UUID orderId)
+	// @RequestHeader("X-User-Id") UUID userId
+	{
 		orderService.deleteOrder(orderId);
 		return ResponseEntity.ok(RestApiResponse.ok("주문이 삭제되었습니다.", null));
 	}
