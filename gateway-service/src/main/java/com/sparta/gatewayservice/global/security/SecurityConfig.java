@@ -11,6 +11,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableWebFluxSecurity
 public class SecurityConfig {
     // Gateway는 WebFlux 기반이라 SecurityWebFilterChain을 사용
+    // 어떤 요청에 인증이 필요한지 결정
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {

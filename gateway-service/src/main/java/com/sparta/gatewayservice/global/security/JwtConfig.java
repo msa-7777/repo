@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 
 @Configuration
 public class JwtConfig {
+    // JWT 서명/만료 검증 방법 설정
 
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder(@Value("${jwt.secret}") String secret) {

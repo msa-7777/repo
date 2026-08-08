@@ -17,7 +17,8 @@ class JwtTokenGeneratorTest {
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
         String token = Jwts.builder()
-                .subject(UUID.randomUUID().toString())
+                /*.subject(UUID.randomUUID().toString())*/
+                .subject("550e8400-e29b-41d4-a716-446655440000")
                 .claim("username", "user01")
                 .claim("role", "MASTER")
                 .issuedAt(new Date())
