@@ -33,6 +33,9 @@ dependencies {
     // 라우팅 확인
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Security 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
