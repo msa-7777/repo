@@ -34,7 +34,10 @@ public enum ErrorCode {
     HUB_REFERENCED_BY_USER(HttpStatus.CONFLICT, "해당 허브를 참조하는 유저가 존재하여 삭제할 수 없습니다."),
 
     // 500
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
+
+    // 503
+    EXTERNAL_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "외부 서비스 상태를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.");
 
     private final HttpStatus status;
     private final String message;
