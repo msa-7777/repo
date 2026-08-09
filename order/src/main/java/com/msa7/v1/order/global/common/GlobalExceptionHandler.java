@@ -7,7 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.msa7.v1.order.presentation.dto.RestApiResponse;
+import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
 
 @Slf4j
 @RestControllerAdvice

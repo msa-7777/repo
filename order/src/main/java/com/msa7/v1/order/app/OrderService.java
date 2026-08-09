@@ -36,7 +36,7 @@ public class OrderService {
 		return savedOrder;
 	}
 
-	// cqurs 분리 예정이라 단건 조회 및 다중조건 조회 구현 구체화 할 예정
+
 	@Transactional
 	public Order getOrder(UUID orderId) {
 		return orderRepo.findById(orderId).orElseThrow(() -> new IllegalArgumentException("Order not found"));

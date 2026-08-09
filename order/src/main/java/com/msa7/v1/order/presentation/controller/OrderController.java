@@ -11,16 +11,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.msa7.v1.order.app.OrderService;
 import com.msa7.v1.order.domain.aggregate.Order;
-import com.msa7.v1.order.presentation.dto.CreateOrderRequest;
-import com.msa7.v1.order.presentation.dto.OrderResponse;
-import com.msa7.v1.order.presentation.dto.RestApiResponse;
-import com.msa7.v1.order.presentation.dto.UpdateOrderRequest;
+import com.msa7.v1.order.presentation.dto.onlycontoller.CreateOrderRequest;
+import com.msa7.v1.order.presentation.dto.onlycontoller.OrderResponse;
+import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
+import com.msa7.v1.order.presentation.dto.onlycontoller.UpdateOrderRequest;
 
 import lombok.RequiredArgsConstructor;
 

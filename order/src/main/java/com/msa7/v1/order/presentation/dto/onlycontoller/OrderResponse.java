@@ -1,9 +1,8 @@
-package com.msa7.v1.order.presentation.dto;
+package com.msa7.v1.order.presentation.dto.onlycontoller;
 
 import java.util.UUID;
 
 import com.msa7.v1.order.domain.aggregate.Order;
-import com.msa7.v1.order.domain.vo.Quantity;
 
 public record OrderResponse(
 	UUID orderId,
