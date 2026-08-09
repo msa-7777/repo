@@ -34,7 +34,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
-    // private final CompanyClient companyClient;
+    private final CompanyClient companyClient;
 
     /*
      * TODO: company-service 연동 완료 후 제거한다.
