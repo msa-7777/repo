@@ -1,4 +1,6 @@
-package com.msa7.company.domain.model;
+package com.msa7.company.presentation.dto.request;
+
+import com.msa7.company.domain.model.CompanyType;
 
 import java.util.UUID;
 

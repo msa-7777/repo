@@ -1,10 +1,10 @@
 package com.msa7.company.application;
 
 import com.msa7.company.domain.model.Company;
-import com.msa7.company.domain.model.CompanySearchCondition;
+import com.msa7.company.presentation.dto.request.CompanySearchCondition;
 import com.msa7.company.domain.repository.CompanyRepository;
-import com.msa7.company.global.common.BusinessException;
-import com.msa7.company.global.common.ErrorCode;
+import com.msa7.company.global.exception.BusinessException;
+import com.msa7.company.global.exception.ErrorCode;
 import com.msa7.company.presentation.dto.request.UpdateCompanyRequest;
 import com.msa7.company.presentation.dto.request.CreateCompanyRequest;
 import com.msa7.company.presentation.dto.response.CompanyResponse;
