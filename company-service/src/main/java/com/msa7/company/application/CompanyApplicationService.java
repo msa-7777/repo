@@ -1,6 +1,7 @@
 package com.msa7.company.application;
 
 import com.msa7.company.domain.model.Company;
+import com.msa7.company.infrastructure.client.HubClient;
 import com.msa7.company.presentation.dto.request.CompanySearchCondition;
 import com.msa7.company.domain.repository.CompanyRepository;
 import com.msa7.company.global.exception.BusinessException;
@@ -22,15 +23,15 @@ import java.util.UUID;
 public class CompanyApplicationService {
 
     private final CompanyRepository companyRepository;
-//    private final HubClient hubClient;
+    private final HubClient hubClient;
 
     // 1. 업체 등록 (Create)
     @Transactional
     public CompanyResponse createCompany(CreateCompanyRequest request) {
         // #TODO : hub 확인후 수정 요망
-//        if (!hubClient.existsHub(hubId)) {
-//            throw new BusinessException(ErrorCode.HUB_NOT_FOUND);
-//        }
+        if (!hubClient.existsHub(request.hubId())) {
+            throw new BusinessException(ErrorCode.HUB_NOT_FOUND);
+        }
 
         if (companyRepository.existsByNameAndDeletedAtIsNull(request.name())) {
             throw new BusinessException(ErrorCode.DUPLICATE_COMPANY_NAME);
