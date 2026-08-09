@@ -208,17 +208,4 @@ public class ProductController {
                         new IllegalStateException("인증된 사용자의 권한 정보를 찾을 수 없습니다.")
                 );
     }
-
-
-    // Gateway가 전달한 내부 헤더와 Spring Security 권한 검증이 정상 동작하는지 확인하기 위한 임시 API다.
-    @PreAuthorize("hasRole('MASTER')")
-    @GetMapping("/test-user-header")
-    public ResponseEntity<String> testUserHeader(
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Role") String role
-    ) {
-        return ResponseEntity.ok(
-                "userId=" + userId + ", role=" + role
-        );
-    }
 }

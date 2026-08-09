@@ -20,6 +20,12 @@ public enum ProductErrorCode implements ErrorCode {
                     "동일한 업체에 같은 이름의 상품이 이미 존재합니다."
     ),
 
+    PRODUCT_ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "PRODUCT_ACCESS_DENIED",
+            "해당 상품에 대한 접근 권한이 없습니다."
+    ),
+
     COMPANY_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "COMPANY_NOT_FOUND",
