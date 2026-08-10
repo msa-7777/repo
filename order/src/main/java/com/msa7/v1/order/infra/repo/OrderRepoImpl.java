@@ -8,39 +8,32 @@ import org.springframework.stereotype.Repository;
 
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
-import com.msa7.v1.order.infra.entity.OrderJpaEntity;
+import com.msa7.v1.order.infra.entity.OrderEntity;
 
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
 public class OrderRepoImpl implements OrderRepo {
-	private final OrderJpaRepo jpaRepo;
+	private final OrderJpaRepository jpaRepo;
 	private final ApplicationEventPublisher eventPublisher;
 
 	@Override
 	public Order save(Order order) {
 		// 도메인 -> jpaEntity 변환
-		OrderJpaEntity entity = OrderJpaEntity.from(order);
+		OrderEntity entity = OrderEntity.fromDomain(order);
 		// DB에 저장
-		OrderJpaEntity savedEntity = jpaRepo.save(entity);
+		jpaRepo.save(entity);
 
-		//도메인 이벤트
-		// order.getDomainEvents().forEach(eventPublisher::publishEvent);
-		// order.clearEvents();
-		// jpaEntity -> 도메인 변환후 반환
-		return savedEntity.toDomain();
+		// 애거리거트에 쌓인 도메인 이벤트를 스프링 컨텍스트로 발행 (outbox 트리거)
+		order.getDomainEvents().forEach(eventPublisher::publishEvent);
+		order.clearEvents();
+		return order;
 	}
 
 	@Override
 	public Optional<Order> findById(UUID id) {
 		return jpaRepo.findById(id)
-			.map(OrderJpaEntity::toDomain);
+			.map(OrderEntity::toDomain);
 	}
-
-	@Override
-	public void delete(Order order) {
-		jpaRepo.deleteById(order.getId());
-	}
-
 }
