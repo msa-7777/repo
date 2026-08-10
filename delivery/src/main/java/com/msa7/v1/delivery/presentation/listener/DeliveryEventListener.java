@@ -8,15 +8,15 @@ import com.msa7.v1.delivery.presentation.dto.payload.OrderCreatedEvent;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
-@RequiredArgsConstructor
-public class DeliveryEventListener {
-	private final DeliveryService deliveryService;
-
-	@RabbitListener(queues = "order-created-queue")
-	public void onOrderCreated(OrderCreatedEvent event) {
-		deliveryService.createDelivery(event);
-	}
-
-
-}
+// @Component
+// @RequiredArgsConstructor
+// public class DeliveryEventListener {
+// 	private final DeliveryService deliveryService;
+//
+// 	@RabbitListener(queues = "order-created-queue")
+// 	public void onOrderCreated(OrderCreatedEvent event) {
+// 		deliveryService.createDelivery(event);
+// 	}
+//
+//
+// }

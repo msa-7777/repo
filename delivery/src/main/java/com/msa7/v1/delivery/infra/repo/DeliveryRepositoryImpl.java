@@ -39,6 +39,15 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 			.map(this::toDomain);
 	}
 
+	@Override
+	public void deleteById(UUID id, UUID deletedBy) {
+		jpaDeliveryRepository.findById(id).ifPresent(entity -> {
+			Delivery delivery = toDomain(entity);
+			delivery.delete(deletedBy.toString());
+			jpaDeliveryRepository.save(toEntity(delivery));
+		});
+	}
+
 	// Mapper 로직 (MapStruct 등을 활용할 수 있음)
 	private DeliveryEntity toEntity(Delivery domain) {
 		// 1. 부모 엔티티 생성

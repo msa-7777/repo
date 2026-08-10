@@ -1,5 +1,6 @@
 package com.msa7.v1.delivery.app;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,11 +12,15 @@ import com.msa7.v1.delivery.domain.aggregateDelivery.DeliveryRouteRecord;
 import com.msa7.v1.delivery.domain.aggregateManager.DeliveryManager;
 import com.msa7.v1.delivery.domain.repo.DeliveryManagerRepo;
 import com.msa7.v1.delivery.domain.repo.DeliveryRepo;
+import com.msa7.v1.delivery.domain.vo.DeliveryStatus;
 import com.msa7.v1.delivery.domain.vo.ManagerType;
+import com.msa7.v1.delivery.domain.vo.RouteStatus;
 import com.msa7.v1.delivery.infra.feign.HubClient;
 import com.msa7.v1.delivery.infra.feign.UserClient;
+import com.msa7.v1.delivery.infra.repo.JpaDeliveryRouteRecordRepository;
 import com.msa7.v1.delivery.presentation.dto.HubRouteResponse;
-
+import com.msa7.v1.delivery.presentation.dto.payload.DeliveryResponse;
+import com.msa7.v1.delivery.presentation.dto.payload.DeliveryRouteResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,39 +31,88 @@ public class DeliveryService {
 	private final DeliveryRepo deliveryRepo;
 	private final UserClient userClient;
 	private final HubClient hubClient;
+	private final JpaDeliveryRouteRecordRepository routeRepo;
 
 	@Transactional
 	public UUID createDelivery(UUID orderId, UUID startHubId, UUID endHubId, String destinationAddress,
-		String receiverName, UUID receiverSlackId, UUID companyManagerId) {
+		String receiverName, UUID receiverSlackId) {
 
-		// 1. 도메인 객체 생성
+		// 1. 업체 배송 담당자 할당
+		UUID companyManagerId = userClient.getNextDeliveryManagerId(endHubId);
+
+		// 2. 도메인 객체 생성
 		Delivery delivery = Delivery.create(orderId, startHubId, endHubId, receiverName,destinationAddress,receiverSlackId, companyManagerId);
 
-		// 2. 허브 간 경로 생성 및 담당자 순차 배정 (Round-Robin 가정)
-		HubRouteResponse response = hubClient.getRouteInfo(startHubId, endHubId);
+		// 3. 배송 경로 기록 일괄 생성 (최초 생성 시 전체 경로 세팅)
+		HubRouteResponse hubRoute = hubClient.getRouteInfo(startHubId, endHubId);
+		List<HubRouteResponse> hubRoutes = List.of(hubRoute);
+		List<DeliveryRouteRecord> routes = new ArrayList<>();
 
-		// 순차 배정을 위해 다음 담당자 조회 (예시: 이전 할당 Seq 상태 캐싱/조회 필요)
-		DeliveryManager nextHubManager = managerRepo
-			.findNextAvailableManager(startHubId, ManagerType.HUB_STAFF, -1)
-			.orElseThrow(() -> new IllegalStateException("배정 가능한 허브 담당자가 없습니다."));
+		int sequence = 0;
 
-		// 3. 경로 기록 생성
-		DeliveryRouteRecord route = DeliveryRouteRecord.create(
-			1, response.startHubId(), response.endHubId(),
-			response.estimatedDistance(), response.estimatedTime(),
-			nextHubManager.getId()
-		);
-		delivery.assignRoutes(List.of(route));
+		for (HubRouteResponse res : hubRoutes) {
+			// 각 구간마다 담당할 허브 배송 담당자를 순차 할당 (UserClient 활용)
+			UUID hubDeliveryManagerId = userClient.getNextDeliveryManagerId(res.startHubId());
 
-		// 4. 최종 업체 배송 담당자 배정 (엔티티 필드)
-		DeliveryManager nextCompanyManager = managerRepo
-			.findNextAvailableManager(endHubId, ManagerType.COMPANY_STAFF, -1)
-			.orElseThrow(() -> new IllegalStateException("배정 가능한 업체 담당자가 없습니다."));
+			DeliveryRouteRecord route = DeliveryRouteRecord.create(
+				sequence++,
+				res.startHubId(),
+				res.endHubId(),
+				res.estimatedDistance(),
+				res.estimatedTime(),
+				hubDeliveryManagerId
+			);
+			routes.add(route);
+		}
 
-		delivery.assignCompanyManager(nextCompanyManager.getId());
+		// 4. 경로 할당 및 저장
+		delivery.assignRoutes(routes);
+		deliveryRepo.save(delivery);
 
-		return deliveryRepo.save(delivery).getId();
+		return delivery.getId();
 	}
+
+	@Transactional
+	public void updateDeliveryStatus(UUID deliveryId, DeliveryStatus status) {
+		Delivery delivery = deliveryRepo.findById(deliveryId)
+			.orElseThrow(() -> new IllegalArgumentException("배송을 찾을 수 없습니다."));
+
+		// 도메인 로직 위임: 상태 변경
+		delivery.updateStatus(status);
+		deliveryRepo.save(delivery);
+	}
+
+	@Transactional
+	public void deleteDelivery(UUID id, UUID deletedBy) {
+		deliveryRepo.deleteById(id, deletedBy);
+	}
+
+	// API 1: 허브 ID와 상태로 배송 경로 목록 조회
+	@Transactional(readOnly = true)
+	public List<DeliveryRouteResponse> getDeliveryRoutes(UUID hubId, RouteStatus status) {
+		return routeRepo.findAllByStartHubIdAndStatusAndIsDeletedFalse(hubId, status).stream()
+			.map(route -> new DeliveryRouteResponse(
+				route.getId(),
+				route.getSequence(),
+				route.getStartHubId(),
+				route.getEndHubId(),
+				route.getStatus()
+			))
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public DeliveryResponse getDeliveryInfo(UUID deliveryId) {
+		Delivery delivery = deliveryRepo.findById(deliveryId)
+			.orElseThrow(() -> new IllegalArgumentException("배송을 찾을 수 없습니다."));
+
+		return new DeliveryResponse(
+			delivery.getId(),
+			delivery.getOrderId(),
+			delivery.getStatus()
+		);
+	}
+
 
 
 }

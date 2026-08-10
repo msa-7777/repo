@@ -5,6 +5,21 @@
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/ai-service" />
+            <option value="$PROJECT_DIR$/company-service" />
+            <option value="$PROJECT_DIR$/delivery" />
+            <option value="$PROJECT_DIR$/eureka-server" />
+            <option value="$PROJECT_DIR$/gateway-service" />
+            <option value="$PROJECT_DIR$/hub" />
+            <option value="$PROJECT_DIR$/order" />
+            <option value="$PROJECT_DIR$/product-service" />
+            <option value="$PROJECT_DIR$/slack-service" />
+            <option value="$PROJECT_DIR$/user-service" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>

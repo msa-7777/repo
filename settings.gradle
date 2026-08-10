@@ -10,6 +10,7 @@ include 'product-service'
 include 'slack-service'
 include 'eureka-server'
 include 'gateway-service'
+include 'user-service'
 
 include 'hub'
 

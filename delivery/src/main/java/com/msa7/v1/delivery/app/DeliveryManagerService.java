@@ -18,22 +18,19 @@ public class DeliveryManagerService {
 	private final HubClient hubClient;
 
 	@Transactional
-	public UUID createDeliveryManager(CreateManagerRequest req) {
-		// 1. 업체 배송 담당자일 경우, 소속 허브 존재 여부 검증
-		if (req.type() == ManagerType.COMPANY_STAFF) {
-			boolean exists = hubClient.checkHubExists(req.hubId());
-			if (!exists) throw new IllegalArgumentException("존재하지 않는 허브입니다.");
+	public UUID createDeliveryManager(UUID userId, UUID slackId, UUID hubId, ManagerType type) {
+		if (hubId != null) {
+			boolean exists = hubClient.checkHubExists(hubId);
+			if (!exists) {
+				throw new IllegalArgumentException("존재하지 않는 허브 ID 입니다.");
+			}
 		}
+		int nextSeq = managerRepo.findMaxSequence().orElse(0) + 1;
 
-		// 2. 가장 마지막 배송 순번 조회
-		Integer lastSeq = managerRepo.findMaxSequence().orElse(-1);
+		DeliveryManager manager = DeliveryManager.create(userId, slackId, hubId, type, nextSeq);
+		managerRepo.save(manager);
 
-		// 3. 도메인 생성 및 새 순번 할당 (삭제된 순번 재배열 안함)
-		DeliveryManager manager = DeliveryManager.create(
-			req.userId(), req.hubId(), req.slackId(), req.type(), lastSeq + 1
-		);
-
-		return managerRepo.save(manager).getId();
+		return manager.getId();
 	}
 
 	@Transactional
