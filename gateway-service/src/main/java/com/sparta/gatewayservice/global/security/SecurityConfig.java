@@ -21,9 +21,8 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/actuator/health").permitAll()
-                        // TODO 나중에 user-service의 회원가입, 로그인 API 확정 시 추가
-                        /*.pathMatchers("/api/v1/auth/login").permitAll()
-                        .pathMatchers("/api/v1/users/signup").permitAll()*/
+                        .pathMatchers("/api/v1/auth/login").permitAll()
+                        .pathMatchers("/api/v1/auth/signup").permitAll()
                         .anyExchange().authenticated()
                 )
 

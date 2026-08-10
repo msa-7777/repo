@@ -21,35 +21,40 @@ spring:
                 - Path=/api/v1/slack-messages/**
 
             - id: delivery-service
-              uri: lb://product-service
+              uri: lb://delivery-service
               predicates:
                 - Path=/api/v1/deliveries/**
 
             - id: order-service
-              uri: lb://slack-service
+              uri: lb://order-service
               predicates:
                 - Path=/api/v1/orders/**
 
             - id: hub-service
-              uri: lb://slack-service
+              uri: lb://hub-service
               predicates:
                 - Path=/api/v1/hubs/**,/api/v1/hub-routes/**
 
             - id: ai-service
-              uri: lb://product-service
+              uri: lb://ai-service
               predicates:
                 - Path=/api/v1/ai/**
 
             - id: company-service
-              uri: lb://slack-service
+              uri: lb://company-service
               predicates:
                 - Path=/api/v1/companies/**
+
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/admin/**
 
 # Eureka 클라이언트
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:19090/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}
 
 # 라우팅
 # http://localhost:19091/actuator/gateway/routes

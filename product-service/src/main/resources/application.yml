@@ -6,20 +6,14 @@ spring:
     name: product-service
 
   datasource:
-    url: jdbc:h2:mem:product-db
-    driver-class-name: org.h2.Driver
-    username: user
-    password: pwd
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      # http://localhost:8081/h2-console
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
       # ddl-auto: update
       # 유지할 때 update
     show-sql: true
@@ -31,4 +25,4 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:19090/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}
