@@ -26,6 +26,7 @@ public class Delivery {
 	private DeliveryStatus status;
 	private final DestinationAddress destinationAddress;
 
+	// saga Event 버퍼
 	private final List<DeliveryRouteRecord> routes = new ArrayList<>();
 
 	private LocalDateTime deletedAt;
