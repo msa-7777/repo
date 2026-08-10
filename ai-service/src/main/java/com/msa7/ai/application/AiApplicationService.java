@@ -5,7 +5,13 @@ import com.msa7.ai.domain.repository.AiHistoryRepository;
 import com.msa7.ai.global.common.BusinessException;
 import com.msa7.ai.global.common.ErrorCode;
 import com.msa7.ai.infrastructure.ai.GeminiAiClient;
-import com.msa7.ai.infrastructure.client.SlackClient;
+import com.msa7.ai.infrastructure.client.delivery.DeliveryClient;
+import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
+import com.msa7.ai.infrastructure.client.order.OrderClient;
+import com.msa7.ai.infrastructure.client.order.OrderResponse;
+import com.msa7.ai.infrastructure.client.product.ProductClient;
+import com.msa7.ai.infrastructure.client.product.ProductResponse;
+import com.msa7.ai.infrastructure.client.slack.SlackClient;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiDeadlineResponse;
 import com.msa7.ai.presentation.dto.response.AiHistoryResponse;
@@ -28,13 +34,23 @@ public class AiApplicationService {
     private final SlackClient slackClient;
     private final AiHistoryRepository aiHistoryRepository;
 
+    private final OrderClient orderClient;         // Order 서비스 Feign
+    private final ProductClient productClient;     // Product 서비스 Feign
+    private final DeliveryClient deliveryClient;   // Delivery 서비스 Feign
+
 /*     #TODO : CreateAiHistoryRequet에 있는
     요청사항(납기일자 및 시간 등), 상품 및 수량정보, 발송지/경유지/도착지 정보, 배송담당자 근무시간 등
     주문쪽에서 가져오는 것 구현 요망   */
     @Transactional
     public AiHistoryResponse generateDeadlineAndNotify(CreateAiHistoryRequest request) {
+
+        // MSA 서비스 간 동기 통신 (OpenFeign)을 통한 데이터 수집
+        OrderResponse order = orderClient.getOrder(request.orderId());
+        ProductResponse product = productClient.getProduct(order.productId());
+        DeliveryResponse delivery = deliveryClient.getDeliveryByOrder(request.orderId());
+
         // 프롬프트 구성
-        String prompt = geminiAiClient.buildPrompt(request);
+        String prompt = geminiAiClient.buildPrompt(order, product, delivery);
 
         AiDeadlineResponse aiResponse = null;
 
