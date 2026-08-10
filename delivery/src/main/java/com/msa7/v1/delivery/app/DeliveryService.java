@@ -77,7 +77,6 @@ public class DeliveryService {
 		Delivery delivery = deliveryRepo.findById(deliveryId)
 			.orElseThrow(() -> new IllegalArgumentException("배송을 찾을 수 없습니다."));
 
-		// 도메인 로직 위임: 상태 변경
 		delivery.updateStatus(status);
 		deliveryRepo.save(delivery);
 	}
