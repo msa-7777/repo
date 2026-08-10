@@ -1,0 +1,13 @@
+server:
+  port: 19096
+
+spring:
+  application:
+    name: order-service
+
+# Eureka 클라이언트
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+# http://localhost:19090 로 접속

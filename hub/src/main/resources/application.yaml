@@ -14,3 +14,9 @@ spring:
     open-in-view: false
 server:
   port: 19093
+
+# Eureka 클라이언트
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
