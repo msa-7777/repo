@@ -88,7 +88,7 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송이 삭제되었습니다.", null));
 	}
 
-	// 우태님 요청사항 api : 허브 ID와 경로 상태 기준
+	// 우태님 요청사항 api : 허브 ID와 경로 상태 기준 배송 상태가 completed가 아닌 배송 조회
 	@GetMapping("/routes")
 	public ResponseEntity<RestApiResponse<List<DeliveryRouteResponse>>> getDeliveryRoutes(
 		@RequestParam UUID hubId,
@@ -106,6 +106,4 @@ public class DeliveryController {
 		DeliveryResponse response = deliveryService.getDeliveryInfo(deliveryId);
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 단건 조회가 완료되었습니다.", response));
 	}
-
-
 }

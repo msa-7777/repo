@@ -5,6 +5,9 @@ import java.util.UUID;
 public record OrderCreatedEvent(
 	UUID orderId,
 	UUID receiverId,
-	String requestNotes
+	UUID receiverSlackId,
+	UUID startHubId,
+	UUID endHubId,
+	String destinationAddress
 ) {
 }

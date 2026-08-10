@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.msa7.v1.order.domain.vo.OrderStatus;
 import com.msa7.v1.order.domain.vo.Quantity;
 import com.msa7.v1.order.domain.vo.RequestNotes;
+import com.msa7.v1.order.presentation.dto.payload.OrderCreatedEvent;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,36 +24,55 @@ public class Order {
 	// 외부 도메인 참조는 오직 ID로만
 	private final UUID receiverCompanyId;
 	private final UUID productId;
+	private UUID deliveryId;
 
 	// Value Obj
 	private  Quantity quantity;
 	private  OrderStatus status;
 	private RequestNotes requestNotes;
 
-	// 이벤트 저장을 위한 임시 컬랙션
+	// 주문 내 이벤트 버퍼(outBox 패턴 트리거 + saga)
 	private final List<Object> domainEvents = new ArrayList<>();
 
 	@Builder
-	public Order(UUID id, UUID receiverCompanyId, UUID productId, Integer quantity, OrderStatus status, String requestNotes) {
+	public Order(UUID id, UUID receiverCompanyId, UUID productId,
+		UUID deliveryId,Integer quantity, OrderStatus status, String requestNotes) {
 		this.id = id;
 		this.receiverCompanyId = receiverCompanyId;
 		this.productId = productId;
+		this.deliveryId = deliveryId;
 		this.quantity = new Quantity(quantity);
 		this.status = status;
 		this.requestNotes = new RequestNotes(requestNotes);
 	}
 
-	public static Order create(UUID receiverCompanyId, UUID productId, Integer quantity, String requestNotes) {
-		return Order.builder()
+	public static Order create(UUID receiverCompanyId, UUID productId,
+		Integer quantity, String requestNotes, UUID receiverSlackId, UUID startHubId,
+		UUID endHubId, String destinationAddress) {
+		Order order = Order.builder()
 			.id(UUID.randomUUID())
-			.receiverCompanyId(receiverCompanyId)
 			.productId(productId)
 			.quantity(quantity)
-			.status(OrderStatus.PENDING)
+			.status(OrderStatus.PENDING)// c초기 상태
 			.requestNotes(requestNotes)
 			.build();
+		// 주문 생성 이벤트 등록(outbox -> MQ)
+		order.registerEvent(new OrderCreatedEvent(
+			order.getId(), receiverCompanyId, receiverSlackId, startHubId, endHubId, destinationAddress
+		));
+		return order;
 	}
 
+	// callBack메서드 배송 생성 성공시 상태 변경 및 배송 ID 할당+ SAGA 완료시 상태
+	public void startDelivery(UUID deliveryId) {
+		this.deliveryId = deliveryId;
+		this.status = OrderStatus.SHIPPED;
+	}
+
+	// 배송 생성 실패시 주문 취소
+	public void cancelOrder() {
+		this.status = OrderStatus.CANCELLED;
+	}
 
 	public void update(Integer newQuantity, String newNotes) {
 		if (this.status != OrderStatus.PENDING) {
@@ -62,39 +82,14 @@ public class Order {
 		this.requestNotes = new RequestNotes(newNotes);
 	}
 
-
-	public void cancel() {
-		if (this.status == OrderStatus.SHIPPED || this.status == OrderStatus.DELIVERED) {
-			throw new IllegalStateException("이미 배송된 주문은 취소 할수 없습니다.");
-		}
-		this.status = OrderStatus.CANCELED;
-
-		// this.domainEvents.add(new OrderCanceldEvent(this.id, requestId));
+	public void registerEvent(Object event) {
+		this.domainEvents.add(event);
 	}
 
-	public void delete() {
-		this.status = OrderStatus.DELETED;
+	public List<Object> getDomainEvents(){
+		return Collections.unmodifiableList(domainEvents);
 	}
 
-
-	// callBack메서드 1
-	public void startDelivery() {
-		if (this.status == OrderStatus.CANCELED) {
-			throw new IllegalStateException("취소된 주문은 배송 불가 합니다");
-		}
-		this.status = OrderStatus.PROCESSING;
-	}
-	// callBack메서드 2
-	public void completeOrder(UUID requestId) {
-		if (this.status != OrderStatus.PROCESSING
-		&& this.status != OrderStatus.SHIPPED) {
-			throw new IllegalStateException("배송 중 인 주문만 완료 가능 합니다");
-		}
-		this.status = OrderStatus.DELIVERED;
-	}
-
-	// 이벤트 방출 용
-	public List<Object> getDomainEvents() {return Collections.unmodifiableList(domainEvents);}
 	public void clearEvents() { this.domainEvents.clear();}
 
 
