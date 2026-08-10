@@ -1,0 +1,1091 @@
+{
+  "info": {
+    "_postman_id": "b2e4f0a0-0a1a-4b1a-9d3a-v1-all-services",
+    "name": "v1 전체 서비스 (Hub/Company/Product/Order/Delivery/Slack/AI)",
+    "description": "v1 프로젝트 전체 서비스 통합 테스트용 컬렉션. 폴더 순서(Hub → Company → Product → Order → Delivery → Slack → AI)대로 실행하면 앞 단계에서 생성된 id가 컬렉션 변수에 저장되어 다음 요청에 이어서 쓰입니다. 각 서비스는 포트가 달라서 서비스별 baseUrl 변수를 따로 둠. Hub의 생성/수정/삭제/hub-route 전체 시나리오는 hub/postman/hub-service.postman_collection.json 참고 (여기선 체이닝에 필요한 최소 요청만 포함). 맨 아래 'Cleanup(선택)' 폴더는 전체 실행 순서상 맨 마지막에만 실행할 것 - 중간에 실행하면 뒤 단계 요청들이 참조하는 리소스가 삭제되어 실패함.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "gatewayBaseUrl",
+      "value": "http://localhost:19091/api/v1"
+    },
+    {
+      "key": "userBaseUrl",
+      "value": "http://localhost:19092/api/v1"
+    },
+    {
+      "key": "hubBaseUrl",
+      "value": "http://localhost:19093/api/v1"
+    },
+    {
+      "key": "companyBaseUrl",
+      "value": "http://localhost:19094/api/v1"
+    },
+    {
+      "key": "productBaseUrl",
+      "value": "http://localhost:19095/api/v1"
+    },
+    {
+      "key": "orderBaseUrl",
+      "value": "http://localhost:19096/api/v1"
+    },
+    {
+      "key": "deliveryBaseUrl",
+      "value": "http://localhost:19097/api/v1"
+    },
+    {
+      "key": "slackBaseUrl",
+      "value": "http://localhost:19098/api/v1"
+    },
+    {
+      "key": "aiBaseUrl",
+      "value": "http://localhost:19099/api/v1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "centralHubId",
+      "value": ""
+    },
+    {
+      "key": "spokeHubId",
+      "value": ""
+    },
+    {
+      "key": "producerCompanyId",
+      "value": ""
+    },
+    {
+      "key": "receiverCompanyId",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "deliveryId",
+      "value": ""
+    },
+    {
+      "key": "slackMessageId",
+      "value": ""
+    },
+    {
+      "key": "aiHistoryId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00. Auth (마스터 관리자 로그인 - 게이트웨이 경유)",
+      "description": "부트스트랩용 MASTER 계정(master01 / Master1234!)으로 로그인해서 accessToken을 컬렉션 변수에 저장. 이 토큰이 있어야 게이트웨이를 거치는 나머지 모든 요청(anyExchange().authenticated())이 401 없이 통과함. 이 계정은 DB에 SQL로 직접 넣은 계정이라 회원가입 API로는 재현이 안 됨 - MASTER는 정책상 회원가입으로 생성 불가.",
+      "item": [
+        {
+          "name": "01 로그인 (master01)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const token = json.data.accessToken.replace(/^Bearer\\s+/, \"\");",
+                  "pm.collectionVariables.set(\"accessToken\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"loginId\": \"master01\",\n  \"password\": \"Master1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/auth/login",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "0. Hub (최소 - centralHubId/spokeHubId 생성용)",
+      "description": "체이닝에 필요한 hub만 최소로 생성. 전체 Hub/HubRoute 시나리오는 hub/postman/hub-service.postman_collection.json 참고.",
+      "item": [
+        {
+          "name": "01 중앙허브 생성",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"centralHubId\", json.data.hubId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"경기남부센터\",\n  \"address\": \"경기도 화성시\",\n  \"latitude\": 37.2636,\n  \"longitude\": 127.0286,\n  \"centralHubId\": null\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hubs",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hubs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 스포크허브 생성 (경기남부 소속)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"spokeHubId\", json.data.hubId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"서울\",\n  \"address\": \"서울특별시\",\n  \"latitude\": 37.5665,\n  \"longitude\": 126.9780,\n  \"centralHubId\": \"{{centralHubId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hubs",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hubs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 허브 단건조회 (spokeHubId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hubs/{{spokeHubId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hubs",
+                "{{spokeHubId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Company",
+      "item": [
+        {
+          "name": "01 생성 - PRODUCER (스포크허브 소속)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"producerCompanyId\", json.data.companyId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"스파르타 물류센터\",\n  \"type\": \"PRODUCER\",\n  \"hubId\": \"{{spokeHubId}}\",\n  \"address\": \"서울특별시 강남구\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 생성 - RECEIVER (스포크허브 소속)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"receiverCompanyId\", json.data.companyId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"스파르타 수령업체\",\n  \"type\": \"RECEIVER\",\n  \"hubId\": \"{{spokeHubId}}\",\n  \"address\": \"서울특별시 서초구\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 단건조회 (producerCompanyId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies/{{producerCompanyId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies",
+                "{{producerCompanyId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 목록조회 (hubId 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies?hubId={{spokeHubId}}&page=0&size=10",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "hubId",
+                  "value": "{{spokeHubId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 수정 (producerCompanyId, 주소 변경)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"서울특별시 강남구 (수정)\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies/{{producerCompanyId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies",
+                "{{producerCompanyId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Product",
+      "item": [
+        {
+          "name": "01 생성 (producerCompanyId 소속)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"productId\", json.data.productId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": \"{{producerCompanyId}}\",\n  \"name\": \"택배 상자 세트\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/products",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 단건조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/products/{{productId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 목록조회 (companyId 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/products?companyId={{producerCompanyId}}&page=0&size=10",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "companyId",
+                  "value": "{{producerCompanyId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 수정 (이름 변경)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"택배 상자 세트 (수정)\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/products/{{productId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2b. Inventory (product-service)",
+      "description": "재고 생성 API는 없음 - 상품 생성 시 자동으로 재고 row가 만들어진다는 전제. 없다면 01은 404가 날 수 있음.",
+      "item": [
+        {
+          "name": "01 단건조회 (productId 기준)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/inventories/{{productId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "inventories",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 목록조회 (hubId 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/inventories?hubId={{spokeHubId}}&page=0&size=10",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "inventories"
+              ],
+              "query": [
+                {
+                  "key": "hubId",
+                  "value": "{{spokeHubId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 수량변경 - 입고(INBOUND)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"changeType\": \"INBOUND\",\n  \"quantity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/inventories/{{productId}}/quantity",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "inventories",
+                "{{productId}}",
+                "quantity"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Order",
+      "item": [
+        {
+          "name": "01 생성 (receiverCompanyId + productId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"orderId\", json.data.orderId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverCompanyId\": \"{{receiverCompanyId}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 10,\n  \"requestNotes\": \"파손 주의\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/orders",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 단건조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 수정 (수량/요청사항 변경)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 20,\n  \"requestNotes\": \"파손 주의 (수정)\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Delivery",
+      "description": "생성/단건조회/삭제 API가 없는 스텁 상태 모듈. server.port가 application.yaml에 없어서 deliveryBaseUrl 포트는 실제 값으로 직접 바꿔야 함. deliveryId는 생성 API가 없어 DB에서 직접 확인한 값을 변수에 넣어야 함.",
+      "item": [
+        {
+          "name": "01 목록조회 (스텁 - 항상 data null)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/deliveries?page=1&size=10",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "deliveries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 상태변경 (deliveryId 수동 입력 필요)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"HUB_MOVING\",\n  \"currentHubId\": \"{{spokeHubId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/deliveries/{{deliveryId}}/status",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "deliveries",
+                "{{deliveryId}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Slack",
+      "item": [
+        {
+          "name": "01 생성 (orderId 기준 발송)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"slackMessageId\", json.data.slackMessageId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"hubId\": \"{{spokeHubId}}\",\n  \"receiverId\": \"{{receiverCompanyId}}\",\n  \"message\": \"주문이 접수되었습니다.\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/slack-messages",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "slack-messages"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 단건조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/slack-messages/{{slackMessageId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "slack-messages",
+                "{{slackMessageId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 목록조회 (orderId 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/slack-messages?orderId={{orderId}}&page=0&size=10",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "slack-messages"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 수정 (메시지 내용 변경)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"주문이 접수되었습니다. (수정)\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/slack-messages/{{slackMessageId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "slack-messages",
+                "{{slackMessageId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. AI",
+      "item": [
+        {
+          "name": "01 생성 (orderId 기준 발송 시한 계산 + Slack 알림)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"aiHistoryId\", json.data.historyId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"ordererInfo\": \"스파르타 물류센터\",\n  \"orderTime\": \"2026-08-08T09:00:00\",\n  \"productName\": \"택배 상자 세트\",\n  \"quantity\": 10,\n  \"requestDetails\": \"파손 주의\",\n  \"originHub\": \"경기남부센터\",\n  \"transitHubs\": [],\n  \"destinationHub\": \"서울\",\n  \"deliveryManagerInfo\": \"홍길동\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/ai/generate",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "generate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 단건조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/ai/{{aiHistoryId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "{{aiHistoryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 목록조회 (orderId 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/ai?orderId={{orderId}}&page=0&size=10",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "ai"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Cleanup (선택 - 맨 마지막에만 실행)",
+      "description": "위 폴더들을 순서대로 다 실행해서 시나리오 확인을 끝낸 뒤에만 실행할 것. 도중에 실행하면 이후 단계가 참조하는 리소스가 없어져서 실패함.",
+      "item": [
+        {
+          "name": "01 Order 취소",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}/cancel",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 Order 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 AI 이력 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/ai/{{aiHistoryId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "{{aiHistoryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 Slack 메시지 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/slack-messages/{{slackMessageId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "slack-messages",
+                "{{slackMessageId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 Product 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/products/{{productId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "06 Company 삭제 - PRODUCER",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies/{{producerCompanyId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies",
+                "{{producerCompanyId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "07 Company 삭제 - RECEIVER",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/companies/{{receiverCompanyId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "companies",
+                "{{receiverCompanyId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "08 Hub 삭제 - spokeHub (이제 company 참조 없으니 성공해야 정상)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hubs/{{spokeHubId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hubs",
+                "{{spokeHubId}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
