@@ -99,7 +99,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         log.info("로그인 성공 및 JWT 생성");
         User user = ((UserDetailsImpl) authResult.getPrincipal()).getUser(); // 인증된 사용자 정보를 User Entity로 변환
 
-        String token = jwtUtil.createToken(user.getLoginId(), user.getRole());
+        String token = jwtUtil.createToken(user.getUserId(), user.getLoginId(), user.getRole());
         jwtUtil.addJwtToCookie(token, response); // 로그인 성공하면 cookie에 jwt를 추가한다.
 
         UserLoginResponse loginResponse = UserLoginResponse.of(user, token); // JSON 응답을 위해 생성한다.

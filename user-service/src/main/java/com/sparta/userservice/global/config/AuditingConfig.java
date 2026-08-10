@@ -23,6 +23,7 @@ JPA가 엔티티 저장 준비
  * ──────────────────────────────────────────────────────────────────────────────────────────────────
  */
 
+import com.sparta.userservice.global.security.UserDetailsImpl;
 import lombok.NonNull;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
@@ -30,23 +31,29 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
-public class AuditingConfig implements AuditorAware<String> {
+public class AuditingConfig implements AuditorAware<UUID> {
+
+    private static final UUID SYSTEM_USER_ID =
+            UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Override
-    @NonNull
-    public Optional<String> getCurrentAuditor() {
-        // SecurityContextHolder : 현재 요청을 처리 중인 사용자 Spring Security 인증 정보를 보관하는 곳
+    public Optional<UUID> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null // 인증 정보 X
-                || !authentication.isAuthenticated() // 인증 완료 상태 확인
-                || "anonymousUser".equals(authentication.getPrincipal())) { // Spring Security의 익명 사용자 확인
-            return Optional.of("GUEST");
+        // 인증되지 않은 요청
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+
+            return Optional.of(SYSTEM_USER_ID);
         }
 
-        // 인증된 사용자인 경우, UserDetailsImpl 에서 Override된 함수에 따라 loginId가 반환
-        return Optional.of(authentication.getName());
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // 현재 로그인한 사용자의 UUID 반환
+        return Optional.of(userDetails.getUser().getUserId());
     }
 }

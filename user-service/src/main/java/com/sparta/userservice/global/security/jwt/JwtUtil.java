@@ -29,6 +29,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -36,8 +37,11 @@ public class JwtUtil {
 
     // Header Key
     public static final String AUTHORIZATION_HEADER = "Authorization";
-    // 사용자 권한 Key
-    public static final String AUTHORIZATION_KEY = "auth";
+
+    public static final String USERNAME_KEY = "username";
+
+    public static final String ROLE_KEY = "role";
+
     // Token 식별자
     public static final String BEARER = "Bearer ";
     // Access Token 만료 시간 - 60분
@@ -59,17 +63,17 @@ public class JwtUtil {
     }
 
     // Token 생성
-    public String createToken(String loginId, Role role) {
+    public String createToken(UUID userId, String loginId, Role role) {
         Date now = new Date();
         return BEARER +
                 Jwts.builder()
-                        .subject(loginId)
-                        .claim(AUTHORIZATION_KEY, role) // 사용자 권한
-                        .expiration(new Date(now.getTime() + TOKEN_TIME)) // 만료 시간
-                        .issuedAt(now) // 발급일
-                        .signWith(key, signatureAlgorithm) // 암호화 알고리즘
-                        .compact()
-                ;
+                        .subject(userId.toString())               // sub = 사용자 UUID
+                        .claim(USERNAME_KEY, loginId)             // username = user01
+                        .claim(ROLE_KEY, role.name())             // role = MASTER
+                        .issuedAt(now)                            // iat
+                        .expiration(new Date(now.getTime() + TOKEN_TIME)) // exp
+                        .signWith(key, signatureAlgorithm)
+                        .compact();
     }
 
     // 생성된 JWT를 Cookie에 저장

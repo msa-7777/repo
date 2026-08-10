@@ -174,7 +174,7 @@ public class AdminUserService {
             throw new BusinessException(UserErrorCode.DELETE_FAILURE_LAST_MASTER);
         }
 
-        user.softDelete(loginId);
+        user.softDelete(userId);
 
         log.info("ADMIN_USER_DELETE_SUCCESS: userId = {}, loginId = {}, deletedBy = {}", user.getUserId(), user.getLoginId(), loginId);
 

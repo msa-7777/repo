@@ -65,8 +65,10 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(tokenValue)) { // JWT 토큰 검증
                 Claims info = jwtUtil.getUserInfoFromToken(tokenValue); // JWT payload에서 사용자 정보 추출
 
+                String loginId = info.get(JwtUtil.USERNAME_KEY, String.class);
+
                 try {
-                    setAuthentication(info.getSubject()); // JwtUtil에서 subject에 loginId를 넣어놨었음
+                    setAuthentication(loginId); // JwtUtil에서 subject에 loginId를 넣어놨었음
                 } catch (UsernameNotFoundException e) {
                     log.warn("Authentication Failed: {}", e.getMessage());
                     writeUnauthorized(response, "인증에 실패했습니다.");

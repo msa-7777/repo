@@ -98,7 +98,7 @@ public class UserService {
         }
 
         // Soft Delete 처리
-        user.softDelete(user.getLoginId());
+        user.softDelete(user.getUserId());
 
         log.info("USER_DELETE_SUCCESS: loginId={}", user.getLoginId());
 
