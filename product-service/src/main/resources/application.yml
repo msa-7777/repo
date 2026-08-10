@@ -5,27 +5,44 @@ spring:
   application:
     name: product-service
 
-  datasource:
-    url: jdbc:h2:mem:product-db
-    driver-class-name: org.h2.Driver
-    username: user
-    password: pwd
+#  datasource:
+#    url: jdbc:h2:mem:product-db
+#    driver-class-name: org.h2.Driver
+#    username: user
+#    password: pwd
+#
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
+#      # http://localhost:8081/h2-console
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop
+#      # ddl-auto: update
+#      # 유지할 때 update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      # http://localhost:8081/h2-console
+# 서비스 간 통신을 위해 DB 설정 변경
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5437/logistics_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
-      # ddl-auto: update
-      # 유지할 때 update
-    show-sql: true
+      ddl-auto: update
+
     properties:
       hibernate:
+        default_schema: ${DB_SCHEMA:product_schema}
         format_sql: true
+
 
 # feign timeout
   cloud:
@@ -41,4 +58,4 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:19090/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}
