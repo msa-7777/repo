@@ -8,9 +8,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.msa7.v1.delivery.domain.aggregateDelivery.Delivery;
 import com.msa7.v1.delivery.domain.aggregateDelivery.DeliveryRouteRecord;
+import com.msa7.v1.delivery.domain.aggregateManager.DeliveryManager;
+import com.msa7.v1.delivery.domain.repo.DeliveryManagerRepo;
 import com.msa7.v1.delivery.domain.repo.DeliveryRepo;
-import com.msa7.v1.delivery.domain.vo.DeliveryStatus;
+import com.msa7.v1.delivery.domain.vo.ManagerType;
 import com.msa7.v1.delivery.infra.feign.HubClient;
+import com.msa7.v1.delivery.infra.feign.UserClient;
+import com.msa7.v1.delivery.presentation.dto.HubRouteResponse;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,35 +24,41 @@ import lombok.RequiredArgsConstructor;
 public class DeliveryService {
 
 	private final DeliveryRepo deliveryRepo;
+	private final UserClient userClient;
 	private final HubClient hubClient;
 
-	// 배송 최초 생성 (주문 생성 직후 동기 호출된다고 가정 - Phase 1)
 	@Transactional
-	public UUID createDelivery(UUID orderId, UUID receiverId, String destinationAddress) {
-		// 1 도메인 객체 생성
-		Delivery delivery = Delivery.create(orderId, receiverId, destinationAddress);
+	public UUID createDelivery(UUID orderId, UUID startHubId, UUID endHubId, String destinationAddress,
+		String receiverName, UUID receiverSlackId, UUID companyManagerId) {
 
-		// 2 외부 서비스(HubClient) 호출 등을 통해 경로 계산 (Mock 로직)
+		// 1. 도메인 객체 생성
+		Delivery delivery = Delivery.create(orderId, startHubId, endHubId, receiverName,destinationAddress,receiverSlackId, companyManagerId);
 
-		// 3 경로 설정
+		// 2. 허브 간 경로 생성 및 담당자 순차 배정 (Round-Robin 가정)
+		HubRouteResponse response = hubClient.getRouteInfo(startHubId, endHubId);
+
+		// 순차 배정을 위해 다음 담당자 조회 (예시: 이전 할당 Seq 상태 캐싱/조회 필요)
+		DeliveryManager nextHubManager = managerRepo
+			.findNextAvailableManager(startHubId, ManagerType.HUB_STAFF, -1)
+			.orElseThrow(() -> new IllegalStateException("배정 가능한 허브 담당자가 없습니다."));
+
+		// 3. 경로 기록 생성
 		DeliveryRouteRecord route = DeliveryRouteRecord.create(
-			1, UUID.randomUUID(), UUID.randomUUID(), 100L, 60L, UUID.randomUUID()
+			1, response.startHubId(), response.endHubId(),
+			response.estimatedDistance(), response.estimatedTime(),
+			nextHubManager.getId()
 		);
 		delivery.assignRoutes(List.of(route));
 
-		// 4 저장 (Mapper를 통해 Domain -> Entity 변환 후 JPA save)
-		deliveryRepo.save(delivery);
-		return delivery.getId();
+		// 4. 최종 업체 배송 담당자 배정 (엔티티 필드)
+		DeliveryManager nextCompanyManager = managerRepo
+			.findNextAvailableManager(endHubId, ManagerType.COMPANY_STAFF, -1)
+			.orElseThrow(() -> new IllegalStateException("배정 가능한 업체 담당자가 없습니다."));
+
+		delivery.assignCompanyManager(nextCompanyManager.getId());
+
+		return deliveryRepo.save(delivery).getId();
 	}
 
-	@Transactional
-	public void updateDeliveryStatus(UUID deliveryId, DeliveryStatus status, UUID currentHubId) {
-		Delivery delivery = deliveryRepo.findById(deliveryId)
-			.orElseThrow(() -> new IllegalArgumentException("배송을 찾을 수 없습니다."));
 
-		// 도메인 로직 위임
-		delivery.updateStatus(status, currentHubId);
-
-		deliveryRepo.save(delivery); // 변경 감지(더티 체킹) 또는 Mapper 갱신
-	}
 }
