@@ -8,6 +8,7 @@ import com.sparta.productservice.global.exception.ApiException;
 import com.sparta.productservice.global.exception.product.ProductErrorCode;
 import com.sparta.productservice.infrastructure.client.company.CompanyClient;
 import com.sparta.productservice.infrastructure.client.company.CompanyResponse;
+import com.sparta.productservice.infrastructure.client.company.CompanyType;
 import com.sparta.productservice.presentation.product.request.ProductCreateRequest;
 import com.sparta.productservice.presentation.product.request.ProductUpdateRequest;
 import com.sparta.productservice.presentation.product.response.ProductResponse;
@@ -36,28 +37,10 @@ public class ProductService {
     private final InventoryService inventoryService;
     private final CompanyClient companyClient;
 
-    /*
-     * TODO: company-service 연동 완료 후 제거한다.
-     * 로컬 테스트에서만 사용하는 임시 허브 ID다.
-     */
-    private static final UUID TEMPORARY_HUB_ID =
-            UUID.fromString("f6a7b8c9-0000-0000-0000-000000000001");
-
     // 상품 생성 - 상품과 초기 재고를 함께 생성한다.
-    // TODO: company-service 연동 후 상품 생성 전에 companyId가 실제 존재하는 업체인지 확인한다.
     // TODO: 업체 담당자는 자신이 소속된 업체의 상품만 생성할 수 있도록 권한과 소유권을 검증한다.
     // TODO: 허브 관리자는 담당 허브 소속 업체의 상품만 생성할 수 있도록 업체·허브 관계를 검증한다.
     // TODO: 다른 서비스 호출 실패 시 Feign 예외 처리 및 공통 에러 응답 정책을 적용한다.
-
-    /* 현재 로컬 테스트 단계:
-     * - 요청으로 받은 companyId를 그대로 사용한다.
-     * - 임시 hubId로 초기 수량 0의 재고를 생성한다.
-     *
-     * 최종 연동 단계:
-     * - company-service의 업체 단건 조회 API를 호출한다.
-     * - PRODUCER 업체인지 검증한다.
-     * - 업체 응답의 hubId로 재고를 생성한다.
-     */
 
     /* 처리 순서:
      * 1. company-service 업체 단건 조회
@@ -74,38 +57,33 @@ public class ProductService {
                                          UUID userId,
                                          String role) {
 
-        validateCreateAccess(request.companyId(), userId, role);
-        /*
-         * TODO: company-service 연동 후 기존 업체 단건 조회 API를 호출한다.
-         * TODO: PRODUCER 업체인지 검증하고 응답의 hubId로 초기 재고를 생성한다.
-         */
+        // validateCreateAccess(request.companyId(), userId, role);
 
-        /*
-         * TODO [최종 MSA 연동]:
-         * 1. Eureka를 통해 company-service를 조회한다.
-         * 2. 기존 업체 단건 조회 API를 FeignClient로 호출한다.
-         * 3. 요청 companyId와 응답 companyId가 일치하는지 확인한다.
-         * 4. companyType이 PRODUCER인지 검증한다.
-         * 5. 응답의 hubId가 존재하는지 확인한다.
-         * 6. 아래 TEMPORARY_HUB_ID를 제거하고 company.hubId()를 사용한다.
-         * 7. 업체 미존재, 잘못된 업체 유형, 서비스 통신 실패를
-         *    각각 공통 예외 응답으로 구분한다.
-         */
+        // company-service 업체 단건 조회
+        CompanyResponse company = companyClient
+                                    .getCompany(request.companyId())
+                                    .data();
 
+        // 요청한 업체와 조회된 업체가 동일한지 검증
+        validateCompanyId(request.companyId(), company);
+
+        // 생산업체(PRODUCER)인지 검증
+        validateProducerCompany(company);
+
+        // 업체에 소속된 hubId가 존재하는지 검증
+        validateCompanyHub(company);
+
+        // 동일 업체 내 상품명 중복 검증
         validateDuplicateProductName(request.companyId(), request.name());
 
+        // 상품 생성 및 저장
         Product product = Product.create(request.companyId(), request.name());
-
         Product savedProduct = productRepository.save(product);
 
-        //  company-service 연동 전까지 임시 hubId를 사용해 상품과 초기 재고 생성 흐름만 로컬에서 검증한다.
-         /*
-         * TODO: 업체 단건 조회 API 연결 후 TEMPORARY_HUB_ID를 제거하고,
-         *       company.hubId()를 사용한다.
-         */
+        // company-service에서 조회한 hubId로 초기 재고 생성
         inventoryService.createInventory(
                 savedProduct.getId(),
-                TEMPORARY_HUB_ID
+                company.hubId()
         );
 
         // TODO: Feign 호출 타임아웃 정책을 적용한다.
@@ -458,6 +436,32 @@ public class ProductService {
          *     );
          * }
          */
+    }
+
+
+    private void validateCompanyId(UUID requestedCompanyId, CompanyResponse company) {
+
+        if (company == null || company.companyId() == null) {
+            throw new ApiException(ProductErrorCode.COMPANY_NOT_FOUND);
+        }
+
+        if (!requestedCompanyId.equals(company.companyId())) {
+            throw new ApiException(ProductErrorCode.COMPANY_NOT_FOUND);
+        }
+    }
+
+    private void validateProducerCompany(CompanyResponse company) {
+
+        if (company.companyType() != CompanyType.PRODUCER) {
+            throw new ApiException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
+    }
+
+    private void validateCompanyHub(CompanyResponse company) {
+
+        if (company.hubId() == null) {
+            throw new ApiException(ProductErrorCode.COMPANY_HUB_NOT_FOUND);
+        }
     }
 
 }

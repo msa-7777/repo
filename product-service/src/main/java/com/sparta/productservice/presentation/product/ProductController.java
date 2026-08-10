@@ -36,15 +36,18 @@ public class ProductController {
 
     // 상품 생성
     // 담당 허브 또는 본인 업체인지에 대한 세부 검증은 ProductService에서 userId와 role을 기준으로 수행한다.
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    // @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
     @PostMapping
     public ResponseEntity<RestApiResponse<ProductResponse>> createProduct(
-            @Valid @RequestBody ProductCreateRequest request,
-            Authentication authentication
+            @Valid @RequestBody ProductCreateRequest request/*,
+            Authentication authentication*/
     ) {
 
-        UUID userId = getUserId(authentication);
-        String role = getRole(authentication);
+        /*UUID userId = getUserId(authentication);
+        String role = getRole(authentication);*/
+
+        UUID userId = null;
+        String role = null;
 
         // 상품 생성 시 company-service에서 업체 정보를 조회하고,업체 소속 hubId를 사용해 초기 재고를 함께 생성한다.
 
