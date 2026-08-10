@@ -91,6 +91,4 @@ public class Order {
 	}
 
 	public void clearEvents() { this.domainEvents.clear();}
-
-
 }
