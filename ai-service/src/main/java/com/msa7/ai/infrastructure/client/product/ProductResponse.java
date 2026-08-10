@@ -6,7 +6,7 @@ import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ProductResponse(
-        Long productId,
+        UUID productId,
         String name,
         UUID companyId
 ) {}
