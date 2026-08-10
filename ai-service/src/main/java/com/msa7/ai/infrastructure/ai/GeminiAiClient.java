@@ -1,5 +1,8 @@
 package com.msa7.ai.infrastructure.ai;
 
+import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
+import com.msa7.ai.infrastructure.client.order.OrderResponse;
+import com.msa7.ai.infrastructure.client.product.ProductResponse;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiDeadlineResponse;
 import lombok.RequiredArgsConstructor;
@@ -13,24 +16,35 @@ public class GeminiAiClient {
     // Builder가 아닌, AiConfig에서 생성한 ChatClient 빈을 직접 주입받습니다.
     private final ChatClient geminiChatClient;
 
-    public String buildPrompt(CreateAiHistoryRequest req) {
+    public String buildPrompt(OrderResponse order, ProductResponse product, DeliveryResponse delivery) {
+
+        // 경유지(routeRecords) 포맷팅
+        String routeStr = (delivery.routeRecords() == null || delivery.routeRecords().isEmpty())
+                ? "직송 (경유지 없음)"
+                : delivery.routeRecords().stream()
+                .map(r -> String.format("[순서:%d, 출발:%s -> 도착:%s, 거리:%dkm, 소요:%d분]",
+                        r.sequence(), r.startHubId(), r.endHubId(), r.estimatedDistance(), r.estimatedTime()))
+                .reduce((a, b) -> a + ", " + b).orElse("");
+
         return String.format("""
-            [주문 분석 요청 데이터]
-            - 주문번호: %s
-            - 주문자 정보: %s
-            - 주문시간: %s
-            - 상품 정보: %s %d박스
-            - 요청사항: %s
-            - 발송지: %s
-            - 경유지: %s
-            - 도착지: %s
-            - 배송담당자: %s
-            """,
-                req.orderId(), req.ordererInfo(), req.orderTime(),
-                req.productName(), req.quantity(), req.requestDetails(),
-                req.originHub(),
-                (req.transitHubs() != null && !req.transitHubs().isEmpty()) ? String.join(", ", req.transitHubs()) : "직송(경유지 없음)",
-                req.destinationHub(), req.deliveryManagerInfo());
+                [주문 분석 요청 데이터]
+                - 주문번호: %s
+                - 주문일시: %s
+                - 상품명: %s (수량: %d개)
+                - 요청사항(납기일자 등): %s
+                - 배송상태: %s
+                - 도착지 주소: %s
+                - 배송 경유지 정보: %s
+                """,
+                order.orderId(),
+                order.createdAt(),
+                product.name(),       // ProductResponse의 필드명인 name 사용
+                order.quantity(),
+                order.requestNotes(),
+                delivery.status(),
+                delivery.destinationAddress(),
+                routeStr
+        );
     }
 
     public AiDeadlineResponse getCalculatedDeadline(String prompt) {

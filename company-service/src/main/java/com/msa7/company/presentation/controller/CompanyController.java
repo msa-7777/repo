@@ -1,8 +1,8 @@
 package com.msa7.company.presentation.controller;
 
 import com.msa7.company.application.CompanyApplicationService;
-import com.msa7.company.domain.model.CompanySearchCondition;
-import com.msa7.company.global.common.RestApiResponse;
+import com.msa7.company.presentation.dto.request.CompanySearchCondition;
+import com.msa7.company.global.response.RestApiResponse;
 import com.msa7.company.presentation.dto.request.UpdateCompanyRequest;
 import com.msa7.company.presentation.dto.response.CompanyResponse;
 import com.msa7.company.presentation.dto.request.CreateCompanyRequest;
