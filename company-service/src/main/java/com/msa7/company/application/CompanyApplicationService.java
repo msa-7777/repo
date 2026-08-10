@@ -111,7 +111,7 @@ public class CompanyApplicationService {
         }
 
         // COMPANY 담당자인 경우 본인 업체 검증
-        if ("COMPANY".equals(role)) {
+        if ("SUPPLIER_AGENT".equals(role)) {
             if (userInfo.getSupplierId() == null) {
                 throw new BusinessException(ErrorCode.COMPANY_NOT_FOUND);
             }

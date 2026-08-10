@@ -71,7 +71,7 @@ public class CompanyController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     // 4. 업체 정보 수정
     @PatchMapping("/{companyId}")
     public ResponseEntity<RestApiResponse<CompanyResponse>> updateCompany(
@@ -89,7 +89,7 @@ public class CompanyController {
     }
 
     // 5. 업체 삭제 (200 OK - Soft Delete)
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @DeleteMapping("/{companyId}")
     public ResponseEntity<RestApiResponse<Void>> deleteCompany(
             @PathVariable UUID companyId,
