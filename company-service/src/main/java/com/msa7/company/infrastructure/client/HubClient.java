@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "hub-service", url = "${hub-service.url}")
+@FeignClient(name = "hub-service")
 public interface HubClient {
     // #TODO : hub 확인 후 수정 요망
     @GetMapping("/api/v1/hubs/{hubId}")
