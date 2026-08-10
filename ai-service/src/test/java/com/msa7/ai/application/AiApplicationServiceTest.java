@@ -9,7 +9,6 @@ import com.msa7.ai.infrastructure.client.order.OrderClient;
 import com.msa7.ai.infrastructure.client.order.OrderResponse;
 import com.msa7.ai.infrastructure.client.product.ProductClient;
 import com.msa7.ai.infrastructure.client.product.ProductResponse;
-import com.msa7.ai.infrastructure.client.slack.SlackClient;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiDeadlineResponse;
 import com.msa7.ai.presentation.dto.response.AiHistoryResponse;
@@ -19,10 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,14 +25,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 
-//@SpringBootTest
-//@AutoConfigureMockMvc
-//@ActiveProfiles("test")
+
 @ExtendWith(MockitoExtension.class)
 class AiApplicationServiceTest {
 
