@@ -1,4 +1,7 @@
 package com.sparta.userservice.domain.model;
 
-public class SignupStatus {
+public enum SignupStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
 }
