@@ -12,5 +12,5 @@ include 'eureka-server'
 include 'gateway-service'
 
 include 'hub'
-
+include 'user-service'
 

@@ -1,0 +1,213 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: logistics-postgres
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "${POSTGRES_HOST_PORT}:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  eureka-server:
+    build:
+      context: eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "19090:19090"
+
+
+  company-service:
+    build:
+      context: company-service
+      dockerfile: Dockerfile
+
+    container_name: company-service
+    ports:
+      - "19094:19094"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=company_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SCHEMA: company_schema
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: product-service
+      dockerfile: Dockerfile
+
+    container_name: product-service
+    ports:
+      - "19095:19095"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=product_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SCHEMA: product_schema
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  hub-service:
+    build:
+      context: hub
+      dockerfile: Dockerfile
+
+    container_name: hub-service
+    ports:
+      - "19093:19093"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=hub_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: order
+      dockerfile: Dockerfile
+
+    container_name: order-service
+    ports:
+      - "19096:19096"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=order_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  delivery-service:
+    build:
+      context: delivery
+      dockerfile: Dockerfile
+
+    container_name: delivery-service
+    ports:
+      - "19097:19097"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=delivery_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  slack-service:
+    build:
+      context: slack-service
+      dockerfile: Dockerfile
+
+    container_name: slack-service
+    ports:
+      - "19098:19098"
+
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=slack_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_URL: http://eureka-server:19090/eureka/
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_TEST_USER_ID: ${SLACK_TEST_USER_ID}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ai-service:
+    build:
+      context: ai-service
+      dockerfile: Dockerfile
+
+    container_name: ai-service
+    ports:
+      - "19099:19099"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=ai_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      AI_API_KEY: ${AI_API_KEY}
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  user-service:
+    build:
+      context: user-service
+      dockerfile: Dockerfile
+
+    container_name: user-service
+    ports:
+      - "19092:19092"
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=user_schema
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SECURITY_JWT_SECRET: ${SECURITY_JWT_SECRET}
+      EUREKA_URL: http://eureka-server:19090/eureka/
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  gateway-service:
+    build:
+      context: gateway-service
+      dockerfile: Dockerfile
+
+    container_name: gateway-service
+    ports:
+      - "19091:19091"
+
+    environment:
+      EUREKA_URL: http://eureka-server:19090/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+
+volumes:
+  postgres-data:
