@@ -1,7 +1,7 @@
 package com.msa7.ai.presentation.controller;
 
 import com.msa7.ai.application.AiApplicationService;
-import com.msa7.ai.global.common.RestApiResponse;
+import com.msa7.ai.global.response.RestApiResponse;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiHistoryResponse;
 import jakarta.validation.Valid;

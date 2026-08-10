@@ -1,4 +1,4 @@
-package com.msa7.ai.global.config;
+package com.msa7.ai.global.security;
 
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.stereotype.Component;

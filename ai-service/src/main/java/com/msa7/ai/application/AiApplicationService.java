@@ -2,8 +2,8 @@ package com.msa7.ai.application;
 
 import com.msa7.ai.domain.model.AiHistory;
 import com.msa7.ai.domain.repository.AiHistoryRepository;
-import com.msa7.ai.global.common.BusinessException;
-import com.msa7.ai.global.common.ErrorCode;
+import com.msa7.ai.global.exception.BusinessException;
+import com.msa7.ai.global.exception.ErrorCode;
 import com.msa7.ai.infrastructure.ai.GeminiAiClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
