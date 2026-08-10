@@ -1,4 +1,4 @@
-package com.msa7.company.infrastructure.client;
+package com.msa7.company.infrastructure.client.hub;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

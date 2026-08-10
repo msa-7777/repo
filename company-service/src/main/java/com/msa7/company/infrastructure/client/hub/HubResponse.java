@@ -1,4 +1,4 @@
-package com.msa7.company.infrastructure.client;
+package com.msa7.company.infrastructure.client.hub;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
