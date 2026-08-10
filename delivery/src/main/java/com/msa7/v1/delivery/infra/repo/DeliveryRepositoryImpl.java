@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Repository;
 
 import com.msa7.v1.delivery.domain.aggregateDelivery.Delivery;
@@ -22,12 +23,16 @@ import lombok.RequiredArgsConstructor;
 public class DeliveryRepositoryImpl implements DeliveryRepo {
 
 	private final JpaDeliveryRepository jpaDeliveryRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Override
 	public Delivery save(Delivery delivery) {
 		// Domain Model -> JPA Entity 변환
 		DeliveryEntity entity = toEntity(delivery);
 		DeliveryEntity savedEntity = jpaDeliveryRepository.save(entity);
+
+		delivery.getDomainEvents().forEach(eventPublisher::publishEvent);
+		delivery.clearEvents();
 
 		// JPA Entity -> Domain Model 변환 후 반환
 		return toDomain(savedEntity);

@@ -7,23 +7,26 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.msa7.v1.delivery.domain.aggregateDelivery.Delivery;
 import com.msa7.v1.delivery.domain.aggregateDelivery.DeliveryRouteRecord;
-import com.msa7.v1.delivery.domain.aggregateManager.DeliveryManager;
-import com.msa7.v1.delivery.domain.repo.DeliveryManagerRepo;
 import com.msa7.v1.delivery.domain.repo.DeliveryRepo;
 import com.msa7.v1.delivery.domain.vo.DeliveryStatus;
-import com.msa7.v1.delivery.domain.vo.ManagerType;
 import com.msa7.v1.delivery.domain.vo.RouteStatus;
 import com.msa7.v1.delivery.infra.feign.HubClient;
 import com.msa7.v1.delivery.infra.feign.UserClient;
+import com.msa7.v1.delivery.infra.outobx.DeliveryOutboxEvent;
+import com.msa7.v1.delivery.infra.outobx.DeliveryOutboxEventRepo;
 import com.msa7.v1.delivery.infra.repo.JpaDeliveryRouteRecordRepository;
 import com.msa7.v1.delivery.presentation.dto.HubRouteResponse;
+import com.msa7.v1.delivery.presentation.dto.payload.DeliveryFailedEvent;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryRouteResponse;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeliveryService {
@@ -32,45 +35,47 @@ public class DeliveryService {
 	private final UserClient userClient;
 	private final HubClient hubClient;
 	private final JpaDeliveryRouteRecordRepository routeRepo;
+	private final DeliveryOutboxEventRepo outboxEventRepo;
+	private final ObjectMapper objectMapper;
 
-	@Transactional
-	public UUID createDelivery(UUID orderId, UUID startHubId, UUID endHubId, String destinationAddress,
-		String receiverName, UUID receiverSlackId) {
-
-		// 1. 업체 배송 담당자 할당
-		UUID companyManagerId = userClient.getNextDeliveryManagerId(endHubId);
-
-		// 2. 도메인 객체 생성
-		Delivery delivery = Delivery.create(orderId, startHubId, endHubId, receiverName,destinationAddress,receiverSlackId, companyManagerId);
-
-		// 3. 배송 경로 기록 일괄 생성 (최초 생성 시 전체 경로 세팅)
-		HubRouteResponse hubRoute = hubClient.getRouteInfo(startHubId, endHubId);
-		List<HubRouteResponse> hubRoutes = List.of(hubRoute);
-		List<DeliveryRouteRecord> routes = new ArrayList<>();
-
-		int sequence = 0;
-
-		for (HubRouteResponse res : hubRoutes) {
-			// 각 구간마다 담당할 허브 배송 담당자를 순차 할당 (UserClient 활용)
-			UUID hubDeliveryManagerId = userClient.getNextDeliveryManagerId(res.startHubId());
-
-			DeliveryRouteRecord route = DeliveryRouteRecord.create(
-				sequence++,
-				res.startHubId(),
-				res.endHubId(),
-				res.estimatedDistance(),
-				res.estimatedTime(),
-				hubDeliveryManagerId
-			);
-			routes.add(route);
-		}
-
-		// 4. 경로 할당 및 저장
-		delivery.assignRoutes(routes);
-		deliveryRepo.save(delivery);
-
-		return delivery.getId();
-	}
+	// @Transactional
+	// public UUID createDelivery(UUID orderId, UUID startHubId, UUID endHubId, String destinationAddress,
+	// 	String receiverName, UUID receiverSlackId) {
+	//
+	// 	// 1. 업체 배송 담당자 할당
+	// 	UUID companyManagerId = userClient.getNextDeliveryManagerId(endHubId);
+	//
+	// 	// 2. 도메인 객체 생성
+	// 	Delivery delivery = Delivery.create(orderId, startHubId, endHubId, receiverName,destinationAddress,receiverSlackId, companyManagerId);
+	//
+	// 	// 3. 배송 경로 기록 일괄 생성 (최초 생성 시 전체 경로 세팅)
+	// 	HubRouteResponse hubRoute = hubClient.getRouteInfo(startHubId, endHubId);
+	// 	List<HubRouteResponse> hubRoutes = List.of(hubRoute);
+	// 	List<DeliveryRouteRecord> routes = new ArrayList<>();
+	//
+	// 	int sequence = 0;
+	//
+	// 	for (HubRouteResponse res : hubRoutes) {
+	// 		// 각 구간마다 담당할 허브 배송 담당자를 순차 할당 (UserClient 활용)
+	// 		UUID hubDeliveryManagerId = userClient.getNextDeliveryManagerId(res.startHubId());
+	//
+	// 		DeliveryRouteRecord route = DeliveryRouteRecord.create(
+	// 			sequence++,
+	// 			res.startHubId(),
+	// 			res.endHubId(),
+	// 			res.estimatedDistance(),
+	// 			res.estimatedTime(),
+	// 			hubDeliveryManagerId
+	// 		);
+	// 		routes.add(route);
+	// 	}
+	//
+	// 	// 4. 경로 할당 및 저장
+	// 	delivery.assignRoutes(routes);
+	// 	deliveryRepo.save(delivery);
+	//
+	// 	return delivery.getId();
+	// }
 
 	@Transactional
 	public void updateDeliveryStatus(UUID deliveryId, DeliveryStatus status) {
@@ -112,6 +117,64 @@ public class DeliveryService {
 		);
 	}
 
+	@Transactional
+	public void createDeliveryFromOrder(UUID orderId, UUID receiverSlackId, UUID startHubId, UUID endHubId,  String destinationAddress) {
+		try {
+			// 업체 배송 담당자 할당
+			UUID companyManagerId = userClient.getNextDeliveryManagerId(endHubId);
 
+			// 도메인 객체 생성 (성공 이벤트 내부에 적재)
+			Delivery delivery = Delivery.createFromOrder(
+				orderId,
+				startHubId,
+				endHubId,
+				destinationAddress,
+				receiverSlackId,
+				companyManagerId
+			);
+
+			// 3. 배송 경로 조회 및 기록 일괄 생성
+			HubRouteResponse hubRoute = hubClient.getRouteInfo(startHubId, endHubId);
+			List<HubRouteResponse> hubRoutes = List.of(hubRoute);
+			List<DeliveryRouteRecord> routes = new ArrayList<>();
+
+			int sequence = 0;
+			for (HubRouteResponse res : hubRoutes) {
+				UUID hubDeliveryManagerId = userClient.getNextDeliveryManagerId(res.startHubId());
+
+				DeliveryRouteRecord route = DeliveryRouteRecord.create(
+					sequence++,
+					res.startHubId(),
+					res.endHubId(),
+					res.estimatedDistance(),
+					res.estimatedTime(),
+					hubDeliveryManagerId
+				);
+				routes.add(route);
+			}
+
+			// 경로 할당
+			delivery.assignRoutes(routes);
+
+			// 저장 시 RepositoryImpl 내부 로직을 타고 성공 이벤트가 Outbox 테이블로 자동 기록됨
+			deliveryRepo.save(delivery);
+
+		} catch (Exception e) {
+			// SAGA 실패 보상: 예외를 던져 롤백하지 않고, 실패 내역을 즉시 Outbox에 밀어넣음.
+			// (그래야 Order 서비스가 실패 메시지를 받아 주문을 취소시킬 수 있음)
+			try {
+				DeliveryFailedEvent failedEvent = new DeliveryFailedEvent(orderId, "경로 조회 또는 생성 실패: " + e.getMessage());
+				DeliveryOutboxEvent outboxEvent = new DeliveryOutboxEvent(
+					"Delivery",
+					orderId.toString(),
+					"DeliveryFailedEvent",
+					objectMapper.writeValueAsString(failedEvent)
+				);
+				outboxEventRepo.save(outboxEvent);
+			} catch (Exception parseException) {
+				log.error("Outbox 실패 이벤트 직렬화 중 오류 발생: orderId={}", orderId, parseException);
+			}
+		}
+	}
 
 }

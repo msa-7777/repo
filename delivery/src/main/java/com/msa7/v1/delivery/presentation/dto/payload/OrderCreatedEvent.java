@@ -4,7 +4,12 @@ import java.util.UUID;
 // order -> delivery 배송 생성 요청
 public record OrderCreatedEvent(
 	UUID orderId,
-	UUID receiverId,
-	String requestNotes
+	UUID receiverCompanyId,
+	UUID productId,
+	Integer quantity,
+	UUID receiverSlackId,
+	UUID startHubId,
+	UUID endHubId,
+	String destinationAddress
 ) {
 }

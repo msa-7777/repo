@@ -2,11 +2,13 @@ package com.msa7.v1.delivery.domain.aggregateDelivery;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import com.msa7.v1.delivery.domain.vo.DeliveryStatus;
 import com.msa7.v1.delivery.domain.vo.DestinationAddress;
+import com.msa7.v1.delivery.presentation.dto.payload.DeliveryCreatedEvent;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -26,11 +28,14 @@ public class Delivery {
 	private DeliveryStatus status;
 	private final DestinationAddress destinationAddress;
 
-	// saga Event 버퍼
-	private final List<DeliveryRouteRecord> routes = new ArrayList<>();
+
+	private final List<DeliveryRouteRecord> routes= new ArrayList<>();
 
 	private LocalDateTime deletedAt;
 	private String deletedBy;
+
+	// saga Event 버퍼
+	private final List<Object> domainEvents = new ArrayList<>();
 
 	@Builder
 	public Delivery(UUID id, UUID orderId, DeliveryStatus status, UUID startHubId, UUID endHubId,
@@ -65,6 +70,25 @@ public class Delivery {
 			.build();
 	}
 
+	public static Delivery createFromOrder(UUID orderId,
+		UUID startHubId, UUID endHubId,
+		String destinationAddress,  UUID receiverSlackId,
+		UUID companyDeliveryManagerId) {
+		Delivery delivery = Delivery.builder()
+			.id(UUID.randomUUID())
+			.orderId(orderId)
+			.status(DeliveryStatus.HUB_WAITING)
+			.startHubId(startHubId)
+			.endHubId(endHubId)
+			.destinationAddress(destinationAddress)
+			.receiverSlackId(receiverSlackId)
+			.companyDeliveryManagerId(companyDeliveryManagerId)
+			.build();
+		delivery.domainEvents.add(new DeliveryCreatedEvent(orderId, delivery.getId()));
+		return delivery;
+	}
+
+
 
 	// 전체 경로 최초 일괄 세팅
 	public void assignRoutes(List<DeliveryRouteRecord> newRoutes) {
@@ -93,5 +117,10 @@ public class Delivery {
 			route.delete(deletedBy);
 		}
 	}
+	// 이벤트 방출용 Getter 및 Clear 메서드
+	public List<Object> getDomainEvents() { return Collections.unmodifiableList(domainEvents); }
+	public void clearEvents() { this.domainEvents.clear(); }
 }
+
+
 

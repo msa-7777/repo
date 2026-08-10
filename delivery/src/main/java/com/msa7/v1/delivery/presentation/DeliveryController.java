@@ -56,17 +56,17 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 담당자가 삭제되었습니다.", null));
 	}
 
-	@PostMapping
-	public ResponseEntity<RestApiResponse<UUID>> createDelivery(
-		@RequestHeader("X-User-Id") UUID userId,
-		@RequestBody CreateDeliveryRequest request) {
-
-		UUID id = deliveryService.createDelivery(
-			request.orderId(), request.startHubId(), request.endHubId(), request.destinationAddress(),
-			request.receiverName(), request.receiverSlackId()
-		);
-		return ResponseEntity.ok(RestApiResponse.ok("배송이 생성되었습니다.", id));
-	}
+	// @PostMapping
+	// public ResponseEntity<RestApiResponse<UUID>> createDelivery(
+	// 	@RequestHeader("X-User-Id") UUID userId,
+	// 	@RequestBody CreateDeliveryRequest request) {
+	//
+	// 	UUID id = deliveryService.createDelivery(
+	// 		request.orderId(), request.startHubId(), request.endHubId(), request.destinationAddress(),
+	// 		request.receiverName(), request.receiverSlackId()
+	// 	);
+	// 	return ResponseEntity.ok(RestApiResponse.ok("배송이 생성되었습니다.", id));
+	// }
 
 	// 배송 상태 변경
 	@PatchMapping("/{deliveryId}/status")
