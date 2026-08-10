@@ -1,4 +1,4 @@
-package com.msa7.company.global.common;
+package com.msa7.company.global.response;
 
 import org.springframework.http.HttpStatus;
 

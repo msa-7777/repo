@@ -1,4 +1,4 @@
-package com.msa7.ai.infrastructure.client;
+package com.msa7.ai.infrastructure.client.slack;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
