@@ -2,11 +2,9 @@ package com.msa7.hub.domain.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,4 +39,32 @@ public class Hub extends BaseEntity{
     @Column(nullable = false, length = 100)
     private String address;
 
+
+    private Hub(UUID centralHubId, String name, BigDecimal latitude, BigDecimal longitude, String address) {
+        this.centralHubId = centralHubId;
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.address = address;
+    }
+
+    public boolean isCentral() {
+        return centralHubId == null;
+    }
+
+    public static Hub createHub(UUID centralHubId, String name,  BigDecimal latitude, BigDecimal longitude, String address) {
+        return new Hub(centralHubId, name, latitude, longitude, address);
+    }
+
+    public void updateHub(UUID centralHubId,String name, BigDecimal latitude,  BigDecimal longitude, String address) {
+        this.centralHubId = centralHubId;
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.address = address;
+    }
+
+    public void softDelete(UUID deletedBy) {
+        super.softDelete(deletedBy);
+    }
 }
