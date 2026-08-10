@@ -2,17 +2,14 @@ package com.msa7.hub.application.service;
 
 import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.domain.model.HubRoute;
-import com.msa7.hub.domain.repository.HubRepository;
-import com.msa7.hub.domain.repository.HubRouteRepository;
-import com.msa7.hub.domain.repository.HubRouteSearchRepository;
+import com.msa7.hub.application.dto.HubRoutePathDto;
+import com.msa7.hub.infrastructure.persistence.HubRepository;
+import com.msa7.hub.infrastructure.persistence.HubRouteRepository;
 import com.msa7.hub.global.exception.BusinessException;
 import com.msa7.hub.global.exception.ErrorCode;
 import com.msa7.hub.presentation.request.HubRoutePathRequest;
 import com.msa7.hub.presentation.request.HubRouteRequest;
 import com.msa7.hub.presentation.request.HubRouteSearchRequest;
-import com.msa7.hub.presentation.response.HubRoutePathResponse;
-import com.msa7.hub.presentation.response.HubRouteResponse;
-import com.msa7.hub.presentation.response.HubRouteSegment;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -45,9 +42,6 @@ class HubRouteServiceTest {
 
     @Mock
     private HubRouteRepository hubRouteRepository;
-
-    @Mock
-    private HubRouteSearchRepository hubRouteSearchRepository;
 
     @Mock
     private HubRepository hubRepository;
@@ -92,13 +86,13 @@ class HubRouteServiceTest {
             when(hubRouteRepository.saveAndFlush(any(HubRoute.class))).thenReturn(savedHubRoute);
 
             // when
-            HubRouteResponse response = hubRouteService.createHubRoute(request);
+            HubRoute response = hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance());
 
             // then
-            assertThat(response.fromHubId()).isEqualTo(fromHubId);
-            assertThat(response.toHubId()).isEqualTo(toHubId);
-            assertThat(response.distance()).isEqualTo(request.distance());
-            assertThat(response.duration()).isEqualTo(request.duration());
+            assertThat(response.getFromHubId()).isEqualTo(fromHubId);
+            assertThat(response.getToHubId()).isEqualTo(toHubId);
+            assertThat(response.getDistance()).isEqualTo(request.distance());
+            assertThat(response.getDuration()).isEqualTo(request.duration());
 
             verify(hubRouteRepository).saveAndFlush(any(HubRoute.class));
         }
@@ -114,7 +108,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -136,7 +130,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -157,7 +151,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(hubId, hubId)).thenReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);
@@ -179,7 +173,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_ROUTE_ALREADY_EXISTS);
@@ -206,11 +200,11 @@ class HubRouteServiceTest {
             when(hubRouteRepository.saveAndFlush(any(HubRoute.class))).thenReturn(savedHubRoute);
 
             // when
-            HubRouteResponse response = hubRouteService.createHubRoute(request);
+            HubRoute response = hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance());
 
             // then
-            assertThat(response.fromHubId()).isEqualTo(spokeHubId);
-            assertThat(response.toHubId()).isEqualTo(centralHubId);
+            assertThat(response.getFromHubId()).isEqualTo(spokeHubId);
+            assertThat(response.getToHubId()).isEqualTo(centralHubId);
         }
 
         @Test
@@ -230,7 +224,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
@@ -255,7 +249,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.existsByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
@@ -281,7 +275,7 @@ class HubRouteServiceTest {
                     .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint \"uq_hub_route_from_to\""));
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.createHubRoute(request))
+            assertThatThrownBy(() -> hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_ROUTE_ALREADY_EXISTS);
@@ -312,13 +306,13 @@ class HubRouteServiceTest {
             when(hubRouteRepository.saveAndFlush(any(HubRoute.class))).thenReturn(existingHubRoute);
 
             // when
-            HubRouteResponse response = hubRouteService.updateHubRoute(hubRouteId, request);
+            HubRoute response = hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance());
 
             // then
-            assertThat(response.fromHubId()).isEqualTo(fromHubId);
-            assertThat(response.toHubId()).isEqualTo(toHubId);
-            assertThat(response.distance()).isEqualTo(request.distance());
-            assertThat(response.duration()).isEqualTo(request.duration());
+            assertThat(response.getFromHubId()).isEqualTo(fromHubId);
+            assertThat(response.getToHubId()).isEqualTo(toHubId);
+            assertThat(response.getDistance()).isEqualTo(request.distance());
+            assertThat(response.getDuration()).isEqualTo(request.duration());
 
             verify(hubRouteRepository).saveAndFlush(any(HubRoute.class));
         }
@@ -333,7 +327,7 @@ class HubRouteServiceTest {
 
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.empty());
             // when & then
-            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
@@ -359,7 +353,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(existingHubRoute));
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.empty());
             // when & then
-            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -385,7 +379,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -415,7 +409,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
@@ -445,7 +439,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.of(toHub));
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request))
+            assertThatThrownBy(() -> hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.INVALID_HUB_ROUTE);
@@ -509,14 +503,14 @@ class HubRouteServiceTest {
             when(hubRouteRepository.findByIdAndDeletedAtIsNull(hubRouteId)).thenReturn(Optional.of(hubRoute));
 
             // when
-            HubRouteResponse response = hubRouteService.getHubRoute(hubRouteId);
+            HubRoute response = hubRouteService.getHubRoute(hubRouteId);
 
             // then
-            assertThat(response.hubRouteId()).isEqualTo(hubRouteId);
-            assertThat(response.fromHubId()).isEqualTo(hubRoute.getFromHubId());
-            assertThat(response.toHubId()).isEqualTo(hubRoute.getToHubId());
-            assertThat(response.distance()).isEqualTo(hubRoute.getDistance());
-            assertThat(response.duration()).isEqualTo(hubRoute.getDuration());
+            assertThat(response.getId()).isEqualTo(hubRouteId);
+            assertThat(response.getFromHubId()).isEqualTo(hubRoute.getFromHubId());
+            assertThat(response.getToHubId()).isEqualTo(hubRoute.getToHubId());
+            assertThat(response.getDistance()).isEqualTo(hubRoute.getDistance());
+            assertThat(response.getDuration()).isEqualTo(hubRoute.getDuration());
         }
 
         @Test
@@ -553,15 +547,15 @@ class HubRouteServiceTest {
 
             Page<HubRoute> hubRoutePage = new PageImpl<>(List.of(hubRoute), pageable, 1);
 
-            when(hubRouteSearchRepository.search(fromHubId, toHubId, pageable)).thenReturn(hubRoutePage);
+            when(hubRouteRepository.search(fromHubId, toHubId, pageable)).thenReturn(hubRoutePage);
 
             // when
-            Page<HubRouteResponse> response = hubRouteService.getHubRouteList(request, pageable);
+            Page<HubRoute> response = hubRouteService.getHubRouteList(request.fromHubId(), request.toHubId(), pageable);
 
             // then
             assertThat(response.getTotalElements()).isEqualTo(1);
-            assertThat(response.getContent().get(0).fromHubId()).isEqualTo(fromHubId);
-            assertThat(response.getContent().get(0).toHubId()).isEqualTo(toHubId);
+            assertThat(response.getContent().get(0).getFromHubId()).isEqualTo(fromHubId);
+            assertThat(response.getContent().get(0).getToHubId()).isEqualTo(toHubId);
         }
     }
 
@@ -569,7 +563,7 @@ class HubRouteServiceTest {
     @DisplayName("허브 라우트 최적 경로 조회")
     class GetHubRoutePath {
 
-        private void assertSegment(HubRouteSegment segment, int sequence, UUID fromId, UUID toId, int distance, int duration) {
+        private void assertSegment(HubRoutePathDto.Segment segment, int sequence, UUID fromId, UUID toId, int distance, int duration) {
             assertThat(segment.sequence()).isEqualTo(sequence);
             assertThat(segment.fromHubId()).isEqualTo(fromId);
             assertThat(segment.toHubId()).isEqualTo(toId);
@@ -606,7 +600,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(toCentralId, toHubId)).thenReturn(Optional.of(hubRoute3));
 
             // when
-            HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+            HubRoutePathDto response = hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId());
 
             // then
             assertThat(response.segments()).hasSize(3);
@@ -644,7 +638,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(centralId, toHubId)).thenReturn(Optional.of(hubRoute2));
 
             // when
-            HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+            HubRoutePathDto response = hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId());
 
             // then
             assertThat(response.segments()).hasSize(2);
@@ -676,7 +670,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, toHubId)).thenReturn(Optional.of(hubRoute));
 
             // when
-            HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+            HubRoutePathDto response = hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId());
 
             // then
             assertThat(response.segments()).hasSize(1);
@@ -698,7 +692,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(fromHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -718,7 +712,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(toHubId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_NOT_FOUND);
@@ -736,7 +730,7 @@ class HubRouteServiceTest {
             when(hubRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(hub));
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.SAME_HUB_ROUTE_NOT_ALLOWED);
@@ -763,7 +757,7 @@ class HubRouteServiceTest {
             when(hubRouteRepository.findByFromHubIdAndToHubIdAndDeletedAtIsNull(fromHubId, fromCentralId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request))
+            assertThatThrownBy(() -> hubRouteService.getHubRoutePath(request.fromHubId(), request.toHubId()))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.HUB_ROUTE_NOT_FOUND);
