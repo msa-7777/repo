@@ -15,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -35,6 +37,7 @@ public class HubRouteController {
     private final HubRouteService hubRouteService;
 
     @PostMapping("/hub-routes")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<HubRouteResponse>> createHubRoute(
             @RequestBody @Valid HubRouteRequest request
     ) {
@@ -43,6 +46,7 @@ public class HubRouteController {
     }
 
     @PutMapping("/hub-routes/{hubRouteId}")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<HubRouteResponse>> updateHubRoute(
             @PathVariable UUID hubRouteId,
             @RequestBody @Valid HubRouteRequest request
@@ -52,10 +56,12 @@ public class HubRouteController {
     }
 
     @DeleteMapping("/hub-routes/{hubRouteId}")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<Void>> deleteHubRoute(
-            @PathVariable UUID hubRouteId
+            @PathVariable UUID hubRouteId,
+            @AuthenticationPrincipal UUID userId
     ) {
-        hubRouteService.deleteHubRoute(hubRouteId, null); // TODO: 인증 구현 후 수정
+        hubRouteService.deleteHubRoute(hubRouteId, userId);
         return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
