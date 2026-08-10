@@ -5,8 +5,28 @@ spring:
   application:
     name: slack-service
 
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
 # Eureka 클라이언트
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:19090/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}
+
+slack:
+  api:
+    base-url: https://slack.com/api
+    bot-token: ${SLACK_BOT_TOKEN}
+    test-user-id: ${SLACK_TEST_USER_ID}

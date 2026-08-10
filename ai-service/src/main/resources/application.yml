@@ -41,24 +41,23 @@ spring:
 #          model: gemini-1.5-flash
 #          temperature: 0.2
 
-# Eureka 클라이언트
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:19090/eureka/
+# TODO : 임시 유레카 설정. 추후 수정 요망
+## Eureka Client 설정 (포트 19090)
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:19090/eureka/
+#  instance:
+#    prefer-ip-address: true
 #
-## order 서비스 연동 포트 (19095)
-#order-service:
-#  url: ${ORDER_SERVICE_URL:http://localhost:19095}
-## product 서비스 연동 포트 (8081)
-#product-service:
-#  url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
-## delivery 서비스 연동 포트 (19096)
-#19096-service:
-#  url: ${DELIVERY_SERVICE_URL:http://localhost:19096}
-
-
-
+## Hub 서비스 연동 포트 (19093)
+#hub-service:
+#  url: ${HUB_SERVICE_URL:http://localhost:19093}
 ## 슬랙 연동
 slack:
   webhook-url: ${SLACK_WEBHOOK_URL:https://hooks.slack.com/services/test/test/test}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}

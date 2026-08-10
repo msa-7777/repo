@@ -13,5 +13,5 @@ include 'gateway-service'
 include 'user-service'
 
 include 'hub'
-
+include 'user-service'
 
