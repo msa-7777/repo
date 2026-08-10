@@ -1,0 +1,67 @@
+server:
+  port: 19091
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: product-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/v1/products/**,/api/v1/inventories/**
+
+            - id: slack-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/slack-messages/**
+
+            - id: delivery-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/v1/deliveries/**
+
+            - id: order-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/orders/**
+
+            - id: hub-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/hubs/**,/api/v1/hub-routes/**
+
+            - id: ai-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/v1/ai/**
+
+            - id: company-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/companies/**
+
+# Eureka 클라이언트
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
+# 라우팅
+# http://localhost:19091/actuator/gateway/routes
+management:
+  endpoint:
+    gateway:
+      access: read-only
+  endpoints:
+    web:
+      exposure:
+        include: health,gateway
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET}
