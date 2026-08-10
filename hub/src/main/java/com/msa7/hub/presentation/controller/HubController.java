@@ -1,6 +1,8 @@
 package com.msa7.hub.presentation.controller;
 
+import com.msa7.hub.application.service.HubDeleteFacade;
 import com.msa7.hub.application.service.HubService;
+import com.msa7.hub.domain.model.Hub;
 import com.msa7.hub.global.response.RestApiResponse;
 import com.msa7.hub.presentation.request.HubRequest;
 import com.msa7.hub.presentation.request.HubSearchRequest;
@@ -29,14 +31,15 @@ import java.util.UUID;
 public class HubController {
 
     private final HubService hubService;
+    private final HubDeleteFacade hubDeleteFacade;
 
     @PostMapping("/hubs")
     public ResponseEntity<RestApiResponse<HubResponse>> createHub(
             @RequestBody @Valid HubRequest request
     ) {
 
-        HubResponse response = hubService.createHub(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(response));
+        Hub hub = hubService.createHub(request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
+        return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(HubResponse.from(hub)));
     }
 
     @PutMapping("/hubs/{hubId}")
@@ -45,8 +48,8 @@ public class HubController {
             @PathVariable UUID hubId
     ) {
 
-        HubResponse response = hubService.updateHub(hubId, request);
-        return ResponseEntity.ok(RestApiResponse.ok(response));
+        Hub hub = hubService.updateHub(hubId, request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
+        return ResponseEntity.ok(RestApiResponse.ok(HubResponse.from(hub)));
     }
 
     @DeleteMapping("/hubs/{hubId}")
@@ -54,7 +57,7 @@ public class HubController {
             @PathVariable UUID hubId
     ) {
 
-        hubService.deleteHub(hubId, null); // TODO: 인증 구현 후 userId 값 수정
+        hubDeleteFacade.deleteHub(hubId, null); // TODO: 인증 구현 후 userId 값 수정
         return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
@@ -62,8 +65,8 @@ public class HubController {
     public ResponseEntity<RestApiResponse<HubResponse>> getHub(
             @PathVariable UUID hubId
     ) {
-        HubResponse response = hubService.getHub(hubId);
-        return ResponseEntity.ok(RestApiResponse.ok(response));
+        Hub hub = hubService.getHub(hubId);
+        return ResponseEntity.ok(RestApiResponse.ok(HubResponse.from(hub)));
     }
 
     @GetMapping("/hubs")
@@ -71,7 +74,7 @@ public class HubController {
             @ModelAttribute HubSearchRequest request,
             Pageable pageable
     ) {
-        Page<HubResponse> response = hubService.getHubList(request, pageable);
+        Page<HubResponse> response = hubService.getHubList(request.name(), request.address(), request.isCentral(), pageable).map(HubResponse::from);
         return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 }
