@@ -29,7 +29,6 @@ public class GeminiAiClient {
         return String.format("""
                 [주문 분석 요청 데이터]
                 - 주문번호: %s
-                - 주문일시: %s
                 - 상품명: %s (수량: %d개)
                 - 요청사항(납기일자 등): %s
                 - 배송상태: %s
@@ -37,7 +36,6 @@ public class GeminiAiClient {
                 - 배송 경유지 정보: %s
                 """,
                 order.orderId(),
-                order.createdAt(),
                 product.name(),       // ProductResponse의 필드명인 name 사용
                 order.quantity(),
                 order.requestNotes(),
