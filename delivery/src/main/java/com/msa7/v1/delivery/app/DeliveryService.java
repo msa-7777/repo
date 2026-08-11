@@ -177,4 +177,10 @@ public class DeliveryService {
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public boolean existsActiveDeliveryByHubId(UUID hubId) {
+		return routeRepo.existsActiveRouteByHubId(hubId);
+	}
+
+
 }
