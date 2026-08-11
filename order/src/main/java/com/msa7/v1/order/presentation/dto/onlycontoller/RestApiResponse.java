@@ -1,4 +1,4 @@
-package com.msa7.v1.order.presentation.dto;
+package com.msa7.v1.order.presentation.dto.onlycontoller;
 
 public record RestApiResponse<T>(
 	// Swagger의 @ApiResponse와 충돌 가능성 사전 차단

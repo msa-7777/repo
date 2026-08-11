@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrderJpaEntity extends BaseEntity {
+public class OrderEntity extends BaseEntity {
 	@Id
 	private UUID id;
 
@@ -31,6 +31,9 @@ public class OrderJpaEntity extends BaseEntity {
 	@Column(name = "product_id")
 	private UUID productId;
 
+	@Column(name = "delivery_id")
+	private UUID deliveryId;
+
 	@Column(name = "quantity")
 	private Integer quantity;
 
@@ -38,36 +41,33 @@ public class OrderJpaEntity extends BaseEntity {
 	@Column(name = "status")
 	private OrderStatus status;
 
-	@Column(name = "request_notes")
+	@Column(name = "request_notes", length = 50)
 	private String requestNotes;
 
 	// Domain -> Entity
-	public static OrderJpaEntity from(Order order) {
-		OrderJpaEntity entity = new OrderJpaEntity();
+	public static OrderEntity fromDomain(Order order) {
+		OrderEntity entity = new OrderEntity();
 		entity.id = order.getId();
 		entity.receiverCompanyId = order.getReceiverCompanyId();
 		entity.productId = order.getProductId();
+		entity.deliveryId = order.getDeliveryId();
 		// VO 파싱해서 원시값만 entity에 세팅
 		entity.quantity = order.getQuantity().value();
 		entity.requestNotes = order.getRequestNotes().contents();
 		entity.status = order.getStatus();
-
-		// 도메인 상태가 DELETED면 소프트 삭제 정보도 엔티티에 세팅
-		if (order.getStatus() == OrderStatus.DELETED) {
-			entity.markAsDeleted(null); // 필요 시 삭제자 UUID 전달
-		}
 		return entity;
 	}
 
 	// Entity -> Domain
 	public Order toDomain() {
-		return new Order(
-			this.id,
-			this.receiverCompanyId,
-			this.productId,
-			this.quantity,
-			this.status,
-			this.requestNotes
-		);
+		return Order.builder()
+			.id(this.id)
+			.receiverCompanyId(this.receiverCompanyId)
+			.productId(this.productId)
+			.deliveryId(this.deliveryId)
+			.quantity(this.quantity)
+			.status(this.status)
+			.requestNotes(this.requestNotes)
+			.build();
 	}
 }
