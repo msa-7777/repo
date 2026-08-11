@@ -8,7 +8,7 @@ import com.msa7.ai.infrastructure.ai.GeminiAiClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
 import com.msa7.ai.infrastructure.client.hub.HubRoutePathResponse;
-import com.msa7.ai.infrastructure.client.hub.hubClient;
+import com.msa7.ai.infrastructure.client.hub.HubClient;
 import com.msa7.ai.infrastructure.client.order.OrderClient;
 import com.msa7.ai.infrastructure.client.order.OrderResponse;
 import com.msa7.ai.infrastructure.client.order.OrderWithDeliveryDto;
@@ -42,7 +42,7 @@ public class AiApplicationService {
     private final OrderClient orderClient;         // Order 서비스 Feign
     private final ProductClient productClient;     // Product 서비스 Feign
     private final DeliveryClient deliveryClient;   // Delivery 서비스 Feign
-    private final hubClient hubClient;
+    private final HubClient hubClient;
 
     private final TransactionTemplate transactionTemplate;
 
