@@ -47,15 +47,15 @@ eureka:
     service-url:
       defaultZone: http://localhost:19090/eureka/
 #
-## order 서비스 연동 포트 (19095)
-#order-service:
-#  url: ${ORDER_SERVICE_URL:http://localhost:19095}
-## product 서비스 연동 포트 (8081)
-#product-service:
-#  url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+## order 서비스 연동 포트 (19096)
+order-service:
+  url: ${ORDER_SERVICE_URL:http://localhost:19096}
+## product 서비스 연동 포트 (19095)
+product-service:
+  url: ${PRODUCT_SERVICE_URL:http://localhost:19095}
 ## delivery 서비스 연동 포트 (19096)
-#19096-service:
-#  url: ${DELIVERY_SERVICE_URL:http://localhost:19096}
+19096-service:
+  url: ${DELIVERY_SERVICE_URL:http://localhost:19096}
 
 
 
