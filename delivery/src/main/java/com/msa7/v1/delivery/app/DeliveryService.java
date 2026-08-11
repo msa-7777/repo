@@ -3,6 +3,7 @@ package com.msa7.v1.delivery.app;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import com.msa7.v1.delivery.presentation.dto.HubRouteResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryFailedEvent;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryRouteResponse;
+import com.msa7.v1.delivery.presentation.dto.payload.OrderCreatedEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -118,29 +120,40 @@ public class DeliveryService {
 	}
 
 	@Transactional
-	public void createDeliveryFromOrder(UUID orderId, UUID receiverSlackId, UUID startHubId, UUID endHubId,  String destinationAddress) {
+	public void createDeliveryFromOrder(OrderCreatedEvent event) {
 		try {
 			// 업체 배송 담당자 할당
-			UUID companyManagerId = userClient.getNextDeliveryManagerId(endHubId);
+			List<UUID> companyManagers = userClient.getDeliveryManagersByHubId(event.endHubId());
+
+			if (companyManagers == null || companyManagers.isEmpty()) {
+				throw new IllegalStateException("도착지 허브에 할당 가능한 배송 담당자가 없습니다. hubId: " + event.endHubId());
+			}
+			UUID companyManagerId = companyManagers.get(ThreadLocalRandom.current().nextInt(companyManagers.size()));
 
 			// 도메인 객체 생성 (성공 이벤트 내부에 적재)
 			Delivery delivery = Delivery.createFromOrder(
-				orderId,
-				startHubId,
-				endHubId,
-				destinationAddress,
-				receiverSlackId,
+				event.orderId(),
+				event.startHubId(),
+				event.endHubId(),
+				event.destinationAddress(),
+				event.receiverSlackId(),
 				companyManagerId
 			);
 
 			// 3. 배송 경로 조회 및 기록 일괄 생성
-			HubRouteResponse hubRoute = hubClient.getRouteInfo(startHubId, endHubId);
+			HubRouteResponse hubRoute = hubClient.getRouteInfo(event.startHubId(), event.endHubId());
 			List<HubRouteResponse> hubRoutes = List.of(hubRoute);
 			List<DeliveryRouteRecord> routes = new ArrayList<>();
 
 			int sequence = 0;
 			for (HubRouteResponse res : hubRoutes) {
-				UUID hubDeliveryManagerId = userClient.getNextDeliveryManagerId(res.startHubId());
+				List<UUID> hubManagers = userClient.getDeliveryManagersByHubId(res.startHubId());
+
+				if (hubManagers == null || hubManagers.isEmpty()) {
+					throw new IllegalStateException("출발지 허브에 할당 가능한 배송 담당자가 없습니다. hubId: " + res.startHubId());
+				}
+
+				UUID hubDeliveryManagerId = hubManagers.get(ThreadLocalRandom.current().nextInt(hubManagers.size()));
 
 				DeliveryRouteRecord route = DeliveryRouteRecord.create(
 					sequence++,
@@ -163,16 +176,16 @@ public class DeliveryService {
 			// SAGA 실패 보상: 예외를 던져 롤백하지 않고, 실패 내역을 즉시 Outbox에 밀어넣음.
 			// (그래야 Order 서비스가 실패 메시지를 받아 주문을 취소시킬 수 있음)
 			try {
-				DeliveryFailedEvent failedEvent = new DeliveryFailedEvent(orderId, "경로 조회 또는 생성 실패: " + e.getMessage());
+				DeliveryFailedEvent failedEvent = new DeliveryFailedEvent(event.orderId(), "경로 조회 또는 생성 실패: " + e.getMessage());
 				DeliveryOutboxEvent outboxEvent = new DeliveryOutboxEvent(
 					"Delivery",
-					orderId.toString(),
+					event.orderId().toString(),
 					"DeliveryFailedEvent",
 					objectMapper.writeValueAsString(failedEvent)
 				);
 				outboxEventRepo.save(outboxEvent);
 			} catch (Exception parseException) {
-				log.error("Outbox 실패 이벤트 직렬화 중 오류 발생: orderId={}", orderId, parseException);
+				log.error("Outbox 실패 이벤트 직렬화 중 오류 발생: orderId={}", event.orderId(), parseException);
 			}
 		}
 	}
