@@ -6,6 +6,8 @@ import com.msa7.company.global.response.RestApiResponse;
 import com.msa7.company.presentation.dto.request.UpdateCompanyRequest;
 import com.msa7.company.presentation.dto.response.CompanyResponse;
 import com.msa7.company.presentation.dto.request.CreateCompanyRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import org.springframework.security.core.Authentication;
 
 import java.util.UUID;
 
+@Tag(name = "Company API", description = "업체 관리 API")
 @RestController
 @RequestMapping("/api/v1/companies")
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class CompanyController {
     private final CompanyApplicationService companyApplicationService;
 
     // 1. 업체 등록 (마스터 관리자, 허브 관리자)
+    @Operation(summary = "업체 등록", description = "새로운 업체를 등록합니다.")
     @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER')")
     @PostMapping
     public ResponseEntity<RestApiResponse<CompanyResponse>> createCompany(
@@ -47,6 +51,7 @@ public class CompanyController {
     }
 
     // 2. 업체 단건 조회
+    @Operation(summary = "업체 단건 조회", description = "특정 업체의 정보를 조회합니다.")
     @PreAuthorize("hasAnyRole()")
     @GetMapping("/{companyId}")
     public ResponseEntity<RestApiResponse<CompanyResponse>> getCompany(
@@ -59,6 +64,7 @@ public class CompanyController {
     }
 
     // 3. 업체 목록 동적 검색 및 페이징
+    @Operation(summary = "업체 목록 조회 및 검색", description = "업체 목록을 조회합니다.")
     @PreAuthorize("hasAnyRole()")
     @GetMapping
     public ResponseEntity<RestApiResponse<Page<CompanyResponse>>> getCompanies(
@@ -71,8 +77,9 @@ public class CompanyController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     // 4. 업체 정보 수정
+    @Operation(summary = "업체 정보 수정", description = "업체 정보를 수정합니다.")
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @PatchMapping("/{companyId}")
     public ResponseEntity<RestApiResponse<CompanyResponse>> updateCompany(
             @PathVariable UUID companyId,
@@ -89,6 +96,7 @@ public class CompanyController {
     }
 
     // 5. 업체 삭제 (200 OK - Soft Delete)
+    @Operation(summary = "업체 삭제", description = "업체를 삭제(논리 삭제)합니다.")
     @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @DeleteMapping("/{companyId}")
     public ResponseEntity<RestApiResponse<Void>> deleteCompany(
