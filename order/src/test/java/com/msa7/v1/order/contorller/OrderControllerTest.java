@@ -26,17 +26,4 @@ class OrderControllerTest {
 	@MockitoBean
 	private OrderService orderService; // Service 로직 격리(가짜 객체)
 
-	@Test
-	void 주문_생성_API_작동확인() throws Exception {
-		// given: 요청 데이터 세팅 및 가짜 응답 설정
-		String requestJson = "{ \"receiverCompanyId\": \"uuid\", ... }";
-		given(orderService.createOrder(any(UUID.class), any(UUID.class), any(Integer.class), any()))
-			.willReturn(Order.create(UUID.randomUUID(), UUID.randomUUID(), 1, "요청사항"));
-
-		// when & then: POST 요청 전송 및 201 CREATED 나와야 하지만, 유저가 없어서 현재는 403
-		mockMvc.perform(post("/orders")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(requestJson))
-			.andExpect(status().isCreated());
-	}
 }

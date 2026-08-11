@@ -35,7 +35,14 @@ public enum UserErrorCode implements ErrorCode {
     HUB_REQUIRED(HttpStatus.BAD_REQUEST, "허브 관리자 또는 배송 담당자는 소속 허브가 필요합니다."),
     SUPPLIER_REQUIRED(HttpStatus.BAD_REQUEST, "생산 업체 담당자는 소속 업체가 필요합니다."),
     INVALID_HUB(HttpStatus.NOT_FOUND, "존재하지 않는 허브입니다."),
-    INVALID_SUPPLIER(HttpStatus.NOT_FOUND, "존재하지 않는 생산 업체입니다.")
+    INVALID_SUPPLIER(HttpStatus.NOT_FOUND, "존재하지 않는 생산 업체입니다."),
+
+
+    // 배송 담당자를 찾을 수 없는 경우
+    NOT_FOUND_DELIVERY_MANAGER(HttpStatus.NOT_FOUND,"배송 담당자를 찾을 수 없습니다.")
+
+
+
     ;
 
     private final HttpStatus httpStatus;

@@ -1,6 +1,6 @@
 package com.sparta.gatewayservice.global.security;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,7 +18,7 @@ public class JwtConfig {
 
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder(@Value("${jwt.secret}") String secret) {
-        SecretKey secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(secret), "HmacSHA256");
 
         return NimbusReactiveJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS256)

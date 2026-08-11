@@ -2,7 +2,9 @@ package com.sparta.productservice.global.exception;
 
 import com.sparta.productservice.global.response.RestApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -82,6 +84,28 @@ public class GlobalExceptionHandler {
         log.warn(
                 "요청한 리소스를 찾을 수 없습니다: resourcePath={}",
                 exception.getResourcePath()
+        );
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(RestApiResponse.failure(
+                        errorCode.getStatus(),
+                        errorCode.getMessage(),
+                        errorCode.getCode()
+                ));
+    }
+
+
+    // 권한 부족 처리
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<RestApiResponse<Void>> handleAuthorizationDeniedException(
+            AuthorizationDeniedException exception
+    ) {
+        ErrorCode errorCode = CommonErrorCode.FORBIDDEN;
+
+        log.warn(
+                "접근 권한이 없습니다: message={}",
+                exception.getMessage()
         );
 
         return ResponseEntity
