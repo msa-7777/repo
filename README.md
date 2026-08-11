@@ -46,7 +46,7 @@ Eureka(서비스 디스커버리) + Gateway(API 게이트웨이)로 서비스를
 - 통신: 동기 호출은 OpenFeign, 주문↔배송 간 비동기 이벤트는 RabbitMQ(outbox 패턴)
 - 장애 대응: Resilience4j 서킷브레이커 + Fallback
 
-## 🚀 실행 방법
+## 🚀 실행 방법(로컬)
 
 **0. `.env` 준비**: 레포 루트에 `.env` 필요. 필요한 변수:
 
@@ -59,6 +59,8 @@ Eureka(서비스 디스커버리) + Gateway(API 게이트웨이)로 서비스를
 | `SECURITY_JWT_SECRET` | user-service JWT 발급용 |
 | `SLACK_BOT_TOKEN` | slack-service 봇 토큰 |
 | `SLACK_TEST_USER_ID` | slack-service 테스트 수신자 ID |
+
+가장 간단한 방법은 팀에 공유된 `.env` 파일을 그대로 사용하는 것입니다(위 표는 직접 구성해야 할 경우 참고용).
 
 **1. 빌드+기동**
 ```bash
