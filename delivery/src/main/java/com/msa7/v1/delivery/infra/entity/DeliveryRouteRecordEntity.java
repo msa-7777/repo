@@ -1,6 +1,9 @@
 package com.msa7.v1.delivery.infra.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.hibernate.annotations.SQLDelete;
 
 import com.msa7.v1.delivery.domain.vo.RouteStatus;
 import com.msa7.v1.delivery.infra.persist.BaseEntity;
@@ -15,11 +18,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "p_delivery_route_record")
+@SQLDelete(sql = "UPDATE p_delivery_route_record SET deleted_at = NOW() WHERE id = ?")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DeliveryRouteRecordEntity extends BaseEntity {
@@ -28,9 +34,10 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 	@Column(name = "id")
 	private UUID id;
 
+	@Setter
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "delivery_id")
-	private DeliverJpaEntity delivery; // 같은 애그리거트 참조
+	private DeliveryEntity delivery; // 같은 애그리거트 참조
 
 	@Column(name = "sequence")
 	private Integer sequence;
@@ -47,6 +54,12 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 	@Column(name = "estimated_time")
 	private Long estimatedTime;
 
+	@Column(name = "actual_distance")
+	private Long actualDistance;
+
+	@Column(name = "actual_time")
+	private Long actualTime;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
 	private RouteStatus status;
@@ -54,7 +67,29 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 	@Column(name = "delivery_manager_id")
 	private UUID deliveryManagerId;
 
-	public void setDelivery(DeliverJpaEntity delivery) {
+	//  1. toEntity에서 사용하기 위한 Builder 추가
+	@Builder
+	public DeliveryRouteRecordEntity(UUID id, Integer sequence, UUID startHubId, UUID endHubId,
+		Long estimatedDistance, Long estimatedTime,
+		Long actualDistance, Long actualTime,
+		RouteStatus status, UUID deliveryManagerId,
+		LocalDateTime deletedAt, String deletedBy
+		) {
+		this.id = id;
+		this.sequence = sequence;
+		this.startHubId = startHubId;
+		this.endHubId = endHubId;
+		this.estimatedDistance = estimatedDistance;
+		this.estimatedTime = estimatedTime;
+		this.actualDistance = actualDistance;
+		this.actualTime = actualTime;
+		this.status = status;
+		this.deliveryManagerId = deliveryManagerId;
+		setDeletedInfo(deletedAt, deletedBy);
+	}
+
+	public void setDelivery(DeliveryEntity delivery) {
 		this.delivery = delivery;
 	}
+
 }
