@@ -90,6 +90,12 @@ public class SecurityConfig {
                         )
                         .permitAll() // 'api/v1/auth/'로 시작하는 요청 모두 접근 허용 (회원가입, 로그인)
 
+                        // 서비스 간 내부 API
+                        .requestMatchers("/api/v1/internal/**").permitAll()
+
+                        // 관리자 API
+                        .requestMatchers("/api/v1/admin/**").hasRole("MASTER")
+
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**")
