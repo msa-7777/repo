@@ -12,4 +12,6 @@ public interface DeliveryClient {
 
     @GetMapping("/api/v1/deliveries/order/{orderId}") // 혹은 id 기준
     DeliveryResponse getDeliveryByOrder(@PathVariable("orderId") UUID orderId);
+
+
 }

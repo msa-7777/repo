@@ -13,4 +13,5 @@ public record OrderResponse(
         String requestNotes, // 납기일자 및 시간 등 요청사항
         UUID receiverCompanyId
         //LocalDateTime createdAt
+
 ) {}
