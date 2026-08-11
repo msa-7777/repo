@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,6 +37,7 @@ public class DeliveryController {
 	private final DeliveryManagerService deliveryManagerService;
 
 	// 배송 담당자 등록
+	@PreAuthorize("hasRole('MASTER')")
 	@PostMapping("/managers")
 	public ResponseEntity<RestApiResponse<UUID>> createManager(
 		@RequestHeader("X-User-Id") UUID userId,
@@ -47,6 +49,7 @@ public class DeliveryController {
 	}
 
 	// 배송 담당자 삭제 (논리적 삭제)
+	@PreAuthorize("hasRole('MASTER')")
 	@DeleteMapping("/managers/{id}")
 	public ResponseEntity<RestApiResponse<Void>> deleteManager(
 		@RequestHeader("X-User-Id") UUID deletedBy,
@@ -69,6 +72,7 @@ public class DeliveryController {
 	// }
 
 	// 배송 상태 변경
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT')")
 	@PatchMapping("/{deliveryId}/status")
 	public ResponseEntity<RestApiResponse<Void>> updateStatus(
 		@PathVariable UUID deliveryId,
@@ -79,6 +83,7 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 상태가 업데이트되었습니다." , null));
 	}
 
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER')")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<RestApiResponse<Void>> deleteDelivery(
 		@RequestHeader("X-User-Id") UUID deletedBy,
@@ -88,7 +93,7 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송이 삭제되었습니다.", null));
 	}
 
-	// 우태님 요청사항 api : 허브 ID와 경로 상태 기준 배송 상태가 completed가 아닌 배송 조회
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER')")
 	@GetMapping("/routes")
 	public ResponseEntity<RestApiResponse<List<DeliveryRouteResponse>>> getDeliveryRoutes(
 		@RequestParam UUID hubId,
@@ -98,7 +103,7 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 경로 조회가 완료되었습니다.", responses));
 	}
 
-	// 필규님 요청사항 api: 배송 ID 기준 (상태 포함)
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT', 'SUPPLIER_AGENT')")
 	@GetMapping("/{deliveryId}")
 	public ResponseEntity<RestApiResponse<DeliveryResponse>> getDeliveryInfo(
 		@PathVariable UUID deliveryId) {
