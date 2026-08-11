@@ -21,6 +21,12 @@ public enum CommonErrorCode implements ErrorCode {
             "요청한 리소스를 찾을 수 없습니다."
     ),
 
+    FORBIDDEN(
+            HttpStatus.FORBIDDEN,
+            "FORBIDDEN",
+            "접근 권한이 없습니다."
+    ),
+
     INTERNAL_SERVER_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "INTERNAL_SERVER_ERROR",

@@ -63,6 +63,8 @@ dependencies {
     // Eureka 서버에 product-service 등록  (Eureka client)
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+
     // 다른 마이크로서비스의 내부 API 호출
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
