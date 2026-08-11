@@ -1,4 +1,4 @@
-package com.msa7.ai.global.common;
+package com.msa7.ai.global.exception;
 
 
 import lombok.Getter;

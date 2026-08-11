@@ -1,6 +1,6 @@
 package com.msa7.ai.domain.model;
 
-import com.msa7.ai.global.common.BaseEntity;
+import com.msa7.ai.global.audit.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

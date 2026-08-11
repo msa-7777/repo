@@ -1,5 +1,6 @@
-package com.msa7.ai.global.common;
+package com.msa7.ai.global.exception;
 
+import com.msa7.ai.global.response.RestApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
