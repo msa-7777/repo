@@ -30,9 +30,14 @@ public enum ErrorCode {
 	INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "INVALID_INPUT_VALUE",  "잘못된 입력값입니다."),
 	COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMPANY_NOT_FOUND", "해당 업체를 찾을 수 없습니다."),
 	DUPLICATE_COMPANY_NAME(HttpStatus.BAD_REQUEST, "DUPLICATE_COMPANY_NAME", "업체의 이름이 중복되었습니다."),
-	HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "HUB_NOT_FOUND", "해당 관리 허브를 찾을 수 없거나 유효하지 않습니다.");
+	HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "HUB_NOT_FOUND", "해당 관리 허브를 찾을 수 없거나 유효하지 않습니다."),
 
-    private final HttpStatus status;
+	COMPANY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMPANY_ACCESS_DENIED", "본인 업체만 수정 또는 삭제할 수 있습니다."),
+	HUB_ACCESS_DENIED(HttpStatus.FORBIDDEN, "HUB_ACCESS_DENIED", "본인 허브에 속하는 업체만 수정 또는 삭제할 수 있습니다."),
+	USER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "USER_ACCESS_DENIED", "사용자 정보를 찾을 수 없습니다.");
+
+
+	private final HttpStatus status;
 	private final String code;
 	private final String message;
 }

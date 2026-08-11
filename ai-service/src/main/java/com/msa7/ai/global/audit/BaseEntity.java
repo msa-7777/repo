@@ -1,4 +1,4 @@
-package com.msa7.ai.global.common;
+package com.msa7.ai.global.audit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
