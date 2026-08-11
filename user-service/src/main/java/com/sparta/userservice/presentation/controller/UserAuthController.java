@@ -17,7 +17,9 @@ import com.sparta.userservice.presentation.dto.response.UserSignupResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -73,6 +75,24 @@ public class UserAuthController {
 
         return ResponseEntity.ok(
                 CommonResponse.success("로그인 성공", response)
+        );
+    }
+
+    // 1-13 로그아웃
+    @Operation(
+            summary = "로그아웃",
+            description = "로그인한 사용자의 JWT 인증 쿠키를 삭제하여 로그아웃합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<CommonResponse<Void>> logout(HttpServletResponse response) {
+        userAuthService.logout(response);
+
+        return ResponseEntity.ok(
+                CommonResponse.success("로그아웃 성공", null)
         );
     }
 }

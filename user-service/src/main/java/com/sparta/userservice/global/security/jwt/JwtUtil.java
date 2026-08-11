@@ -87,6 +87,17 @@ public class JwtUtil {
         response.addCookie(cookie);
     }
 
+    // JWT 정보를 담은 Cookie 삭제
+    public void deleteJwtCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie(AUTHORIZATION_HEADER, null); // [이름: Authorization, 값: null] 쿠키 생성
+
+        cookie.setMaxAge(0); // 쿠키를 즉시 만료시키는 설정
+        cookie.setPath("/");
+        cookie.setHttpOnly(true); // 브라우저의 JavaScript에서 그 쿠키를 읽지 못하게 하는 보안 설정
+
+        response.addCookie(cookie); // 브라우저가 같은 쿠키라고 판단하면 새로운 쿠키로 교체한다. 쿠키는 만료하면 삭제된다.
+    }
+
     // JWT에서 "Bearer "를 잘라내고 순수 JWT 문자열만 반환
     public String subStringToken(String tokenValue) {
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER)) {
