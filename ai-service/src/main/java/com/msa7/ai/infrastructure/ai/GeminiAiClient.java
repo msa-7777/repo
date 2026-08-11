@@ -23,8 +23,8 @@ public class GeminiAiClient {
         String routeStr = (delivery.routeRecords() == null || delivery.routeRecords().isEmpty())
                 ? "직송 (경유지 없음)"
                 : delivery.routeRecords().stream()
-                .map(r -> String.format("[순서:%d, 출발:%s -> 도착:%s, 거리:%dkm, 소요:%d분]",
-                        r.sequence(), r.startHubId(), r.endHubId(), r.estimatedDistance(), r.estimatedTime()))
+                .map(r -> String.format("[순서:%d, 출발:%s -> 도착:%s, 도착지:%s", //, 소요:%d분]
+                        r.sequence(), delivery.startHubId(), delivery.endHubId(), delivery.destinationAddress()))   //r.estimatedTime()
                 .reduce((a, b) -> a + ", " + b).orElse("");
 
         return String.format("""

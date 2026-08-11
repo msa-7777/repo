@@ -64,7 +64,7 @@ public class AiApplicationService {
             throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
         }
 
-        DeliveryResponse delivery = deliveryClient.getDeliveryByOrder(request.orderId());
+        DeliveryResponse delivery = deliveryClient.getDeliveryRouteInfo(request.orderId());
 
         // 프롬프트 구성
         String prompt = geminiAiClient.buildPrompt(order, product, delivery, orderWithDelivery);
