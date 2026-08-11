@@ -9,6 +9,7 @@ import com.msa7.ai.infrastructure.client.delivery.DeliveryClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
 import com.msa7.ai.infrastructure.client.order.OrderClient;
 import com.msa7.ai.infrastructure.client.order.OrderResponse;
+import com.msa7.ai.infrastructure.client.order.OrderWithDeliveryDto;
 import com.msa7.ai.infrastructure.client.product.ProductClient;
 import com.msa7.ai.infrastructure.client.product.ProductResponse;
 import com.msa7.ai.infrastructure.client.slack.SlackClient;
@@ -48,12 +49,25 @@ public class AiApplicationService {
     public AiHistoryResponse generateDeadlineAndNotify(CreateAiHistoryRequest request) {
 
         // MSA 서비스 간 동기 통신 (OpenFeign)을 통한 데이터 수집
-        OrderResponse order = orderClient.getOrder(request.orderId());
-        ProductResponse product = productClient.getProduct(order.productId());
+        OrderResponse order = orderClient.getOrderDetail(request.orderId()).getBody();
+        if (order == null || order.productId() == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        OrderWithDeliveryDto orderWithDelivery = orderClient.getOrderWithDeliveryStatus(request.orderId()).getBody();
+        if (orderWithDelivery == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        ProductResponse product = productClient.getProduct(order.productId()).getBody().data();
+        if (product == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
         DeliveryResponse delivery = deliveryClient.getDeliveryByOrder(request.orderId());
 
         // 프롬프트 구성
-        String prompt = geminiAiClient.buildPrompt(order, product, delivery);
+        String prompt = geminiAiClient.buildPrompt(order, product, delivery, orderWithDelivery);
 
         AiDeadlineResponse aiResponse = null;
 

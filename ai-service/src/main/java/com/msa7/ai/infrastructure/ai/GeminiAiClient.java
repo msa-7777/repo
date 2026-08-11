@@ -2,6 +2,7 @@ package com.msa7.ai.infrastructure.ai;
 
 import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
 import com.msa7.ai.infrastructure.client.order.OrderResponse;
+import com.msa7.ai.infrastructure.client.order.OrderWithDeliveryDto;
 import com.msa7.ai.infrastructure.client.product.ProductResponse;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiDeadlineResponse;
@@ -16,7 +17,7 @@ public class GeminiAiClient {
     // Builder가 아닌, AiConfig에서 생성한 ChatClient 빈을 직접 주입받습니다.
     private final ChatClient geminiChatClient;
 
-    public String buildPrompt(OrderResponse order, ProductResponse product, DeliveryResponse delivery) {
+    public String buildPrompt(OrderResponse order, ProductResponse product, DeliveryResponse delivery, OrderWithDeliveryDto orderWithDelivery) {
 
         // 경유지(routeRecords) 포맷팅
         String routeStr = (delivery.routeRecords() == null || delivery.routeRecords().isEmpty())
@@ -29,7 +30,6 @@ public class GeminiAiClient {
         return String.format("""
                 [주문 분석 요청 데이터]
                 - 주문번호: %s
-                - 주문일시: %s
                 - 상품명: %s (수량: %d개)
                 - 요청사항(납기일자 등): %s
                 - 배송상태: %s
@@ -37,11 +37,10 @@ public class GeminiAiClient {
                 - 배송 경유지 정보: %s
                 """,
                 order.orderId(),
-                order.createdAt(),
                 product.name(),       // ProductResponse의 필드명인 name 사용
                 order.quantity(),
                 order.requestNotes(),
-                delivery.status(),
+                orderWithDelivery.deliveryStatus(),
                 delivery.destinationAddress(),
                 routeStr
         );
