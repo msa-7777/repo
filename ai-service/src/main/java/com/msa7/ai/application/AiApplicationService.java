@@ -15,6 +15,7 @@ import com.msa7.ai.infrastructure.client.order.OrderWithDeliveryDto;
 import com.msa7.ai.infrastructure.client.product.ProductClient;
 import com.msa7.ai.infrastructure.client.product.ProductResponse;
 import com.msa7.ai.infrastructure.client.slack.SlackClient;
+import com.msa7.ai.infrastructure.client.slack.SlackMessageCreateRequest;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiDeadlineResponse;
 import com.msa7.ai.presentation.dto.response.AiHistoryResponse;
@@ -35,15 +36,16 @@ import java.util.UUID;
 public class AiApplicationService {
 
     private final GeminiAiClient geminiAiClient;
-    private final SlackClient slackClient;
     private final AiHistoryRepository aiHistoryRepository;
 
+    private final SlackClient slackClient;
     private final OrderClient orderClient;         // Order 서비스 Feign
     private final ProductClient productClient;     // Product 서비스 Feign
     private final DeliveryClient deliveryClient;   // Delivery 서비스 Feign
+    private final hubClient hubClient;
 
     private final TransactionTemplate transactionTemplate;
-    private final hubClient hubClient;
+
 
     /*     #TODO : CreateAiHistoryRequet에 있는
         요청사항(납기일자 및 시간 등), 상품 및 수량정보, 발송지/경유지/도착지 정보, 배송담당자 근무시간 등
@@ -85,14 +87,23 @@ public class AiApplicationService {
             throw new BusinessException(ErrorCode.AI_SERVICE_ERROR);
         }
 
-        // 3. 슬랙 알림 발송
         boolean isNotified = false;
-//        try {
-//            slackClient.sendNotification(aiResponse.generatedMessage());
-//            isNotified = true;
-//        } catch (Exception e) {
-//            log.error("Slack 메시지 발송 실패: {}", e.getMessage());
-//        }
+
+        // Slack 요청 객체 생성 및 알림 발송
+        try {
+            SlackMessageCreateRequest slackRequest = new SlackMessageCreateRequest(
+                    request.orderId(),
+                    delivery.endHubId(),            // 허브 ID
+                    null,                           // receiverId
+                    null,                           // message
+                    aiResponse.calculatedDeadline(),// calculatedDeadline
+                    aiResponse.generatedMessage()   // generatedMessage
+            );
+
+            slackClient.sendNotification(slackRequest);
+        } catch (Exception e) {
+            log.error("Slack 메시지 발송 실패: {}", e.getMessage());
+        }
 
         // AI 이력 저장 (p_ai_histories)
         AiHistory aiHistory = AiHistory.create(
@@ -103,7 +114,7 @@ public class AiApplicationService {
                 isNotified
         );
 
-        // [트랜잭션 안] DB 저장만 트랜잭션 블록으로 감싸기
+        // [트랜잭션 안] p_ai_histories DB 저장만 트랜잭션 블록으로 감싸기
         AiHistory savedHistory = transactionTemplate.execute(status ->
                 aiHistoryRepository.save(aiHistory)
         );
