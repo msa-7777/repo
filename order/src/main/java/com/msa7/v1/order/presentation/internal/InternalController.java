@@ -19,14 +19,18 @@ import lombok.RequiredArgsConstructor;
 public class InternalController {
 	private final OrderService orderService;
 
-	@GetMapping("{orderId}")
-	public ResponseEntity<InternalOrderResponse> getOrderInfo(@PathVariable UUID orderId) {
+	@GetMapping("/{orderId}/status-detail")
+	public ResponseEntity<InternalOrderDetailResponse> getOrderDetail(@PathVariable UUID orderId) {
 		Order order = orderService.getOrder(orderId);
-		InternalOrderResponse response = InternalOrderResponse.builder()
-			.orderId(order.getId())
-			.receiverCompanyId(order.getReceiverCompanyId())
-			.status(order.getStatus())
-			.build();
+		InternalOrderDetailResponse response = new InternalOrderDetailResponse(
+			order.getId(),
+			order.getProductId(),
+			order.getQuantity().value(),
+			order.getRequestNotes().contents(),
+			order.getStatus(),
+			order.getReceiverCompanyId()
+		);
+
 		return ResponseEntity.ok(response);
 	}
 }
