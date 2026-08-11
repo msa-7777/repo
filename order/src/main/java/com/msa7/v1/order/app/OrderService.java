@@ -6,14 +6,12 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.msa7.v1.order.app.feign.DeliveryClient;
+import com.msa7.v1.order.infra.feign.DeliveryClient;
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
-import com.msa7.v1.order.app.feign.InventoryClient;
-import com.msa7.v1.order.infra.publisher.OrderEventPub;
+import com.msa7.v1.order.infra.feign.InventoryClient;
 import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
 import com.msa7.v1.order.presentation.dto.payload.DeliveryResponse;
-import com.msa7.v1.order.presentation.dto.payload.OrderCreatedEvent;
 import com.msa7.v1.order.presentation.dto.payload.OrderWithDeliveryDto;
 
 import lombok.RequiredArgsConstructor;

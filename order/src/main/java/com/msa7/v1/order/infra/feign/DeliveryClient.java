@@ -1,4 +1,4 @@
-package com.msa7.v1.order.app.feign;
+package com.msa7.v1.order.infra.feign;
 
 import java.util.List;
 import java.util.UUID;
