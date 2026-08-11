@@ -43,7 +43,7 @@ public class ProductController {
             summary = "상품 생성",
             description = "새로운 상품을 등록합니다."
     )
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @PostMapping
     public ResponseEntity<RestApiResponse<ProductResponse>> createProduct(
             @Valid @RequestBody ProductCreateRequest request,
@@ -157,7 +157,7 @@ public class ProductController {
             summary = "상품 수정",
             description = "상품의 이름을 수정합니다."
     )
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @PatchMapping("/{productId}")
     public ResponseEntity<RestApiResponse<ProductResponse>> updateProduct(
             @PathVariable UUID productId,
