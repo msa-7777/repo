@@ -4,7 +4,6 @@ import com.sparta.slackservice.application.SlackMessageService;
 import com.sparta.slackservice.domain.SlackMessageSearchCondition;
 import com.sparta.slackservice.domain.SlackMessageStatus;
 import com.sparta.slackservice.global.response.RestApiResponse;
-import com.sparta.slackservice.infrastructure.client.slack.TemporarySlackClient;
 import com.sparta.slackservice.presentation.request.SlackMessageCreateRequest;
 import com.sparta.slackservice.presentation.request.SlackMessageUpdateRequest;
 import com.sparta.slackservice.presentation.response.SlackMessageCreateResponse;
@@ -14,11 +13,12 @@ import com.sparta.slackservice.presentation.response.SlackMessageUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -31,10 +31,13 @@ public class SlackMessageController {
 
     private final SlackMessageService slackMessageService;
 
-    //* Slack 메시지 발송
+    // Slack 메시지 발송
     /*
-     * 요청받은 주문, 허브, 수신자, 메시지 정보를 서비스 계층으로 전달한다.
-     * 현재는 TemporarySlackClient를 사용해 실제 Slack API 호출 없이 로컬에서 발송 성공 흐름을 검증한다.
+     * 주문/배송 처리 흐름에서 다음 값이 모두 준비된 상태로 요청한다.
+     * - orderId
+     * - hubId
+     * - receiverId
+     * - message
      */
     @Operation(
             summary = "Slack 메시지 발송",
@@ -45,11 +48,6 @@ public class SlackMessageController {
     public RestApiResponse<SlackMessageCreateResponse> createSlackMessage(
             @Valid @RequestBody SlackMessageCreateRequest request
     ) {
-        // TODO: Gateway 인증·인가 전달 방식이 확정되면 권한을 검증한다.
-         /* 발송 가능 대상:
-         * - 로그인 사용자
-         * - 내부 시스템
-         */
         SlackMessageCreateResponse response = slackMessageService.createSlackMessage(request);
 
         String message = response.status() == SlackMessageStatus.SENT
@@ -65,17 +63,11 @@ public class SlackMessageController {
             summary = "Slack 메시지 단건 조회",
             description = "Slack 메시지 발송 이력을 조회합니다."
     )
+    @PreAuthorize("hasRole('MASTER')")
     @GetMapping("/{slackMessageId}")
     public RestApiResponse<SlackMessageDetailResponse> getSlackMessage(
             @PathVariable UUID slackMessageId
     ) {
-        // TODO(gateway): Gateway에서 전달한 사용자 ID와 권한 정보를 사용한다.
-        // MASTER 권한 검증 후 처리
-        /*
-         * X-User-Id
-         * X-Role
-         */
-
         SlackMessageDetailResponse response =
                 slackMessageService.getSlackMessage(slackMessageId);
 
@@ -87,17 +79,16 @@ public class SlackMessageController {
     }
 
     // Slack 메시지 목록 및 검색
-    // SlackMessageSearchCondition은 쿼리 파라미터로 바인딩된다.
     @Operation(
             summary = "Slack 메시지 목록 조회",
             description = "검색 조건에 따라 Slack 메시지 발송 이력을 조회합니다."
     )
+    @PreAuthorize("hasRole('MASTER')")
     @GetMapping
     public RestApiResponse<SlackMessagePageResponse> searchSlackMessages(
             @ModelAttribute SlackMessageSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        // TODO: Gateway 권한 전달 방식 확정 후 MASTER 권한 검증
 
         SlackMessagePageResponse response =
                 slackMessageService.searchSlackMessages(
@@ -113,21 +104,17 @@ public class SlackMessageController {
     }
 
     // Slack 메시지 수정
-     /* 수정 가능한 값은 message 하나뿐이다. SENT 또는 MODIFIED 상태의 메시지만 수정할 수 있다.
-     *
-     * TemporarySlackClient 단계에서는 실제 Slack 메시지 대신
-     * 임시 수정 성공 결과를 반환하고, 성공 후 DB 내용을 변경한다.
-     */
+    // 수정 가능한 값은 message 하나뿐이다. SENT 또는 MODIFIED 상태의 메시지만 수정할 수 있다.
     @Operation(
             summary = "Slack 메시지 수정",
             description = "발송된 Slack 메시지 내용을 수정합니다."
     )
+    @PreAuthorize("hasRole('MASTER')")
     @PatchMapping("/{slackMessageId}")
     public RestApiResponse<SlackMessageUpdateResponse> updateSlackMessage(
             @PathVariable UUID slackMessageId,
             @Valid @RequestBody SlackMessageUpdateRequest request
     ) {
-        // TODO: Gateway 권한 전달 방식 확정 후 MASTER 권한 검증
 
         SlackMessageUpdateResponse response =
                 slackMessageService.updateSlackMessage(
@@ -143,32 +130,23 @@ public class SlackMessageController {
     }
 
     // Slack 메시지 발송 이력 삭제
-    /*
-     * DB의 deletedAt, deletedBy만 기록하는 논리 삭제다.
-     * Slack에 이미 발송된 실제 메시지는 삭제하지 않는다.
-     */
+    // Slack에 이미 발송된 실제 메시지는 삭제하지 않는다.
     @Operation(
             summary = "Slack 메시지 삭제",
             description = "Slack 메시지 발송 이력을 논리 삭제합니다."
     )
+    @PreAuthorize("hasRole('MASTER')")
     @DeleteMapping("/{slackMessageId}")
     public RestApiResponse<Void> deleteSlackMessage(
-            @PathVariable UUID slackMessageId
+            @PathVariable UUID slackMessageId,
+            Authentication authentication
     ) {
-        /*
-         * TODO: Gateway 인증 정보에서 실제 요청 사용자 ID를 추출한다.
-         * TODO: MASTER 권한인지 검증한다.
-         *
-         * 현재는 로컬 CRUD 검증을 위해 임시 삭제자 UUID를 사용한다.
-         */
-        UUID temporaryDeletedBy =
-                UUID.fromString(
-                        "00000000-0000-0000-0000-000000000001"
-                );
+        UUID deletedBy =
+                UUID.fromString(authentication.getName());
 
         slackMessageService.deleteSlackMessage(
                 slackMessageId,
-                temporaryDeletedBy
+                deletedBy
         );
 
         return RestApiResponse.success(

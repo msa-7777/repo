@@ -15,6 +15,18 @@ public enum SlackMessageErrorCode implements ErrorCode {
             "Slack 메시지를 찾을 수 없습니다."
     ),
 
+    SLACK_MESSAGE_RECEIVER_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "SLACK_MESSAGE_RECEIVER_NOT_FOUND",
+            "Slack 메시지 수신자 정보를 찾을 수 없습니다."
+    ),
+
+    SLACK_MESSAGE_RECEIVER_SLACK_ID_NOT_FOUND(
+            HttpStatus.BAD_REQUEST,
+            "SLACK_MESSAGE_RECEIVER_SLACK_ID_NOT_FOUND",
+            "Slack 메시지 수신자의 Slack ID가 존재하지 않습니다."
+    ),
+
     SLACK_MESSAGE_NOT_MODIFIABLE(
             HttpStatus.BAD_REQUEST,
             "SLACK_MESSAGE_NOT_MODIFIABLE",
