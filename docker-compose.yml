@@ -209,5 +209,6 @@ services:
       EUREKA_URL: http://eureka-server:19090/eureka/
       JWT_SECRET: ${JWT_SECRET}
 
+
 volumes:
   postgres-data:
