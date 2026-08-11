@@ -54,6 +54,11 @@ public class HubService {
         return hubRepository.search(name, address, isCentral, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsHub(UUID hubId) {
+        return hubRepository.existsByIdAndDeletedAtIsNull(hubId);
+    }
+
     private Hub findExistingHub(UUID hubId) {
         return hubRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HUB_NOT_FOUND));
