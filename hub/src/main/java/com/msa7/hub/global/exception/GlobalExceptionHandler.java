@@ -4,6 +4,7 @@ import com.msa7.hub.global.response.RestApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -75,6 +76,23 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(errorCode.getStatus()).body(response);
+    }
+
+    // 403 - 권한 부족 (@PreAuthorize 실패)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<RestApiResponse<Void>> handleAuthorizationDenied(
+            AccessDeniedException e, HttpServletRequest request
+    ) {
+
+        log.warn("[Authorization Denied] path={}, message={}", request.getRequestURI(), e.getMessage());
+
+        RestApiResponse<Void> response = RestApiResponse.error(
+            403,
+            "접근 권한이 없습니다.",
+            "ACCESS_DENIED"
+        );
+
+        return ResponseEntity.status(403).body(response);
     }
 
     // 500 - Fallback (반드시 있어야 함)

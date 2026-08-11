@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -34,6 +36,7 @@ public class HubController {
     private final HubDeleteFacade hubDeleteFacade;
 
     @PostMapping("/hubs")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<HubResponse>> createHub(
             @RequestBody @Valid HubRequest request
     ) {
@@ -43,6 +46,7 @@ public class HubController {
     }
 
     @PutMapping("/hubs/{hubId}")
+    @PreAuthorize("hasAnyRole('MASTER')")
     public ResponseEntity<RestApiResponse<HubResponse>> updateHub(
             @RequestBody @Valid HubRequest request,
             @PathVariable UUID hubId
@@ -53,11 +57,13 @@ public class HubController {
     }
 
     @DeleteMapping("/hubs/{hubId}")
+    @PreAuthorize("hasAnyRole('MASTER')")
     public ResponseEntity<RestApiResponse<Void>> deleteHub(
-            @PathVariable UUID hubId
+            @PathVariable UUID hubId,
+            @AuthenticationPrincipal UUID userId
     ) {
 
-        hubDeleteFacade.deleteHub(hubId, null); // TODO: 인증 구현 후 userId 값 수정
+        hubDeleteFacade.deleteHub(hubId, userId);
         return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
