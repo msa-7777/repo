@@ -64,8 +64,6 @@ public class AiController {
         return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 이력이 정상 삭제(Soft Delete) 되었습니다.", null));
     }
 
-    @GetMapping("/internal/{userId}")
-
     // --- Helper Methods ---
     private UUID getUserId(Authentication authentication) {
         return UUID.fromString(authentication.getName());
