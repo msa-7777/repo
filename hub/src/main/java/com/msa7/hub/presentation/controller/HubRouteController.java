@@ -1,6 +1,8 @@
 package com.msa7.hub.presentation.controller;
 
 import com.msa7.hub.application.service.HubRouteService;
+import com.msa7.hub.domain.model.HubRoute;
+import com.msa7.hub.application.dto.HubRoutePathDto;
 import com.msa7.hub.global.response.RestApiResponse;
 import com.msa7.hub.presentation.request.HubRoutePathRequest;
 import com.msa7.hub.presentation.request.HubRouteRequest;
@@ -13,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,27 +37,31 @@ public class HubRouteController {
     private final HubRouteService hubRouteService;
 
     @PostMapping("/hub-routes")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<HubRouteResponse>> createHubRoute(
             @RequestBody @Valid HubRouteRequest request
     ) {
-        HubRouteResponse response = hubRouteService.createHubRoute(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(response));
+        HubRoute hubRoute = hubRouteService.createHubRoute(request.fromHubId(), request.toHubId(), request.duration(), request.distance());
+        return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(HubRouteResponse.from(hubRoute)));
     }
 
     @PutMapping("/hub-routes/{hubRouteId}")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<HubRouteResponse>> updateHubRoute(
             @PathVariable UUID hubRouteId,
             @RequestBody @Valid HubRouteRequest request
     ) {
-        HubRouteResponse response = hubRouteService.updateHubRoute(hubRouteId, request);
-        return ResponseEntity.ok(RestApiResponse.ok(response));
+        HubRoute hubRoute = hubRouteService.updateHubRoute(hubRouteId, request.fromHubId(), request.toHubId(), request.duration(), request.distance());
+        return ResponseEntity.ok(RestApiResponse.ok(HubRouteResponse.from(hubRoute)));
     }
 
     @DeleteMapping("/hub-routes/{hubRouteId}")
+    @PreAuthorize("hasRole('MASTER')")
     public ResponseEntity<RestApiResponse<Void>> deleteHubRoute(
-            @PathVariable UUID hubRouteId
+            @PathVariable UUID hubRouteId,
+            @AuthenticationPrincipal UUID userId
     ) {
-        hubRouteService.deleteHubRoute(hubRouteId, null); // TODO: 인증 구현 후 수정
+        hubRouteService.deleteHubRoute(hubRouteId, userId);
         return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
@@ -61,8 +69,8 @@ public class HubRouteController {
     public ResponseEntity<RestApiResponse<HubRouteResponse>> getHubRoute(
             @PathVariable UUID hubRouteId
     ) {
-        HubRouteResponse response = hubRouteService.getHubRoute(hubRouteId);
-        return ResponseEntity.ok(RestApiResponse.ok(response));
+        HubRoute hubRoute = hubRouteService.getHubRoute(hubRouteId);
+        return ResponseEntity.ok(RestApiResponse.ok(HubRouteResponse.from(hubRoute)));
     }
 
     @GetMapping("/hub-routes")
@@ -70,15 +78,8 @@ public class HubRouteController {
             @ModelAttribute HubRouteSearchRequest request,
             Pageable pageable
     ) {
-        Page<HubRouteResponse> response = hubRouteService.getHubRouteList(request, pageable);
-        return ResponseEntity.ok(RestApiResponse.ok(response));
-    }
-
-    @GetMapping("/hub-routes/path")
-    public ResponseEntity<RestApiResponse<HubRoutePathResponse>> getHubRoutePath(
-            @ModelAttribute @Valid HubRoutePathRequest request
-    ) {
-        HubRoutePathResponse response = hubRouteService.getHubRoutePath(request);
+        Page<HubRouteResponse> response = hubRouteService.getHubRouteList(request.fromHubId(), request.toHubId(), pageable)
+                .map(HubRouteResponse::from);
         return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 

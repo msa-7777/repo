@@ -1,7 +1,7 @@
 package com.msa7.company.infrastructure.persistence;
 
 import com.msa7.company.domain.model.Company;
-import com.msa7.company.domain.model.CompanySearchCondition;
+import com.msa7.company.presentation.dto.request.CompanySearchCondition;
 import com.msa7.company.domain.repository.CompanyRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;

@@ -1,16 +1,69 @@
+server:
+  port: 19093 # API GW(보통 8080)와 충돌 방지를 위한 독립 포트
+
 spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
+      circuitbreaker:
+        enabled: true
   application:
     name: hub-service
-#  profiles:
-#    active: dev
+  config:
+    import: optional:classpath:application-secret.yaml
+
+
+  # PostgreSQL DB 설정 (로컬 환경)
   datasource:
-    url: ${HUB_DB_URL}
-    username: ${HUB_DB_USERNAME}
-    password: ${HUB_DB_PASSWORD}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
-      ddl-auto: update
-    open-in-view: false
-server:
-  port: 19093
+      ddl-auto: update # 엔티티 변경 시 DB 스키마 자동 업데이트 (로컬 개발용)
+    show-sql: true # 실행되는 SQL 로그 확인
+    properties:
+      hibernate:
+        format_sql: true # SQL 가독성 향상
+
+# Eureka 클라이언트 설정
+eureka:
+  client:
+    register-with-eureka: true # 서버 등록 임시 비활성화
+    fetch-registry: true # 레지스트리 정보 가져오기 임시 비활성화
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/} # 향후 연결할 유레카 서버 주소
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:  # 기본 구성 이름
+        registerHealthIndicator: true  # 애플리케이션의 헬스 체크에 서킷 브레이커 상태를 추가하여 모니터링 가능
+        # 서킷 브레이커가 동작할 때 사용할 슬라이딩 윈도우의 타입을 설정
+        # COUNT_BASED: 마지막 N번의 호출 결과를 기반으로 상태를 결정
+        slidingWindowType: COUNT_BASED  # 슬라이딩 윈도우의 타입을 호출 수 기반(COUNT_BASED)으로 설정
+        # 슬라이딩 윈도우의 크기를 설정
+        # COUNT_BASED일 경우: 최근 N번의 호출을 저장
+        slidingWindowSize: 5  # 슬라이딩 윈도우의 크기를 5번의 호출로 설정
+        minimumNumberOfCalls: 5  # 서킷 브레이커가 동작하기 위해 필요한 최소한의 호출 수를 5로 설정
+        slowCallRateThreshold: 100  # 느린 호출의 비율이 이 임계값(100%)을 초과하면 서킷 브레이커가 동작
+        slowCallDurationThreshold: 60000  # 느린 호출의 기준 시간(밀리초)으로, 60초 이상 걸리면 느린 호출로 간주
+        failureRateThreshold: 50  # 실패율이 이 임계값(50%)을 초과하면 서킷 브레이커가 동작
+        permittedNumberOfCallsInHalfOpenState: 3  # 서킷 브레이커가 Half-open 상태에서 허용하는 최대 호출 수를 3으로 설정
+        # 서킷 브레이커가 Open 상태에서 Half-open 상태로 전환되기 전에 기다리는 시간
+        waitDurationInOpenState: 20s  # Open 상태에서 Half-open 상태로 전환되기 전에 대기하는 시간을 20초로 설정
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always

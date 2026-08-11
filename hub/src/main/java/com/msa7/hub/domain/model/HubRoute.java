@@ -1,5 +1,6 @@
 package com.msa7.hub.domain.model;
 
+import com.msa7.hub.global.audit.BaseEntity;
 import com.msa7.hub.global.exception.BusinessException;
 import com.msa7.hub.global.exception.ErrorCode;
 import jakarta.persistence.Column;

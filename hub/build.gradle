@@ -28,6 +28,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	// Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// --- Spring Cloud OpenFeign 추가 ---
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	// --- Circuit Breaker (외부 서비스 호출 장애 대응) ---
+	implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
 
 	//querydsl
 	implementation 'io.github.openfeign.querydsl:querydsl-jpa:5.6.1:jakarta'

@@ -1,5 +1,5 @@
-server:
-  port: 8081 # API GW(보통 8080)와 충돌 방지를 위한 독립 포트
+#server:
+#  port: 8081 # API GW(보통 8080)와 충돌 방지를 위한 독립 포트
 
 spring:
   cloud:
@@ -27,10 +27,3 @@ spring:
       hibernate:
         format_sql: true # SQL 가독성 향상
 
-# Eureka 클라이언트 설정 (현재 미구축 상태 대비)
-eureka:
-  client:
-    register-with-eureka: false # 서버 등록 임시 비활성화
-    fetch-registry: false # 레지스트리 정보 가져오기 임시 비활성화
-    service-url:
-      defaultZone: http://localhost:8761/eureka/ # 향후 연결할 유레카 서버 주소
