@@ -42,6 +42,7 @@ public class GeminiAiClient {
                 delivery.status(),
                 delivery.destinationAddress(),
                 routeStr
+
         );
     }
 

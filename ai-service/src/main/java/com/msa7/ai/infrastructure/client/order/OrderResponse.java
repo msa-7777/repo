@@ -11,7 +11,7 @@ public record OrderResponse(
         UUID productId,
         int quantity,
         String requestNotes, // 납기일자 및 시간 등 요청사항
+        OrderStatus orderStatus, //주문 상태
         UUID receiverCompanyId
         //LocalDateTime createdAt
-
 ) {}

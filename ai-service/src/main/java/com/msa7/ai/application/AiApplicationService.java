@@ -48,7 +48,7 @@ public class AiApplicationService {
     public AiHistoryResponse generateDeadlineAndNotify(CreateAiHistoryRequest request) {
 
         // MSA 서비스 간 동기 통신 (OpenFeign)을 통한 데이터 수집
-        OrderResponse order = orderClient.getOrder(request.orderId());
+        OrderResponse order = orderClient.getOrder(request.orderId()).data();
         ProductResponse product = productClient.getProduct(order.productId());
         DeliveryResponse delivery = deliveryClient.getDeliveryByOrder(request.orderId());
 
