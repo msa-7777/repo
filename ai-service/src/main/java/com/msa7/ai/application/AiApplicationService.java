@@ -28,7 +28,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+//@Transactional(readOnly = true)
 public class AiApplicationService {
 
     private final GeminiAiClient geminiAiClient;
@@ -100,12 +100,14 @@ public class AiApplicationService {
         return AiHistoryResponse.from(savedHistory);
     }
 
+    @Transactional(readOnly = true)
     public AiHistoryResponse getAiHistory(UUID historyId) {
         AiHistory aiHistory = aiHistoryRepository.findByHistoryIdAndDeletedAtIsNull(historyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "AI 분석 이력을 찾을 수 없습니다."));
         return AiHistoryResponse.from(aiHistory);
     }
 
+    @Transactional(readOnly = true)
     public Page<AiHistoryResponse> searchAiHistories(UUID orderId, Pageable pageable) {
         return aiHistoryRepository.searchAiHistories(orderId, pageable)
                 .map(AiHistoryResponse::from);
