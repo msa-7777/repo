@@ -17,20 +17,15 @@ spring:
       hibernate:
         format_sql: true
 
-# TODO : 임시 유레카 설정. 추후 수정 요망
-## Eureka Client 설정 (포트 19090)
-#eureka:
-#  client:
-#    service-url:
-#      defaultZone: http://localhost:19090/eureka/
-#  instance:
-#    prefer-ip-address: true
-#
-## Hub 서비스 연동 포트 (19093)
-#hub-service:
-#  url: ${HUB_SERVICE_URL:http://localhost:19093}
-
+# Eureka 클라이언트
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}
+      defaultZone: http://localhost:19090/eureka/
+
+## Hub 서비스 연동 포트 (19093)
+hub-service:
+  url: ${HUB_SERVICE_URL:http://localhost:19093}
+## User 서비스 연동 포트 (19095)
+user-service:
+  url: ${USER_SERVICE_URL:http://localhost:19095}

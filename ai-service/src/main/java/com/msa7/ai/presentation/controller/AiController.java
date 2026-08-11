@@ -1,7 +1,7 @@
 package com.msa7.ai.presentation.controller;
 
 import com.msa7.ai.application.AiApplicationService;
-import com.msa7.ai.global.common.RestApiResponse;
+import com.msa7.ai.global.response.RestApiResponse;
 import com.msa7.ai.presentation.dto.request.CreateAiHistoryRequest;
 import com.msa7.ai.presentation.dto.response.AiHistoryResponse;
 import jakarta.validation.Valid;
@@ -12,6 +12,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -21,8 +24,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AiController {
 
+    private static final String ROLE_PREFIX = "ROLE_";
     private final AiApplicationService aiApplicationService;
 
+    @PreAuthorize("hasAnyRole()")
     @PostMapping("/generate")
     public ResponseEntity<RestApiResponse<AiHistoryResponse>> generateDeadline(
             @Valid @RequestBody CreateAiHistoryRequest request) {
@@ -32,6 +37,7 @@ public class AiController {
                 .body(RestApiResponse.ok(HttpStatus.CREATED, "AI 최종 발송 시한 생성 및 메시지 전송 성공", response));
     }
 
+    @PreAuthorize("hasAnyRole('MASTER')")
     @GetMapping("/{historyId}")
     public ResponseEntity<RestApiResponse<AiHistoryResponse>> getAiHistory(
             @PathVariable UUID historyId) {
@@ -39,6 +45,7 @@ public class AiController {
         return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 분석 이력 조회 성공", response));
     }
 
+    @PreAuthorize("hasAnyRole('MASTER')")
     @GetMapping
     public ResponseEntity<RestApiResponse<Page<AiHistoryResponse>>> searchAiHistories(
             @RequestParam(required = false) UUID orderId,
@@ -47,6 +54,7 @@ public class AiController {
         return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 분석 이력 목록 조회 성공", response));
     }
 
+    @PreAuthorize("hasAnyRole('MASTER')")
     @DeleteMapping("/{historyId}")
     public ResponseEntity<RestApiResponse<Void>> deleteAiHistory(
             @PathVariable UUID historyId,
@@ -54,5 +62,19 @@ public class AiController {
         UUID deletedBy = (userId != null) ? userId : UUID.fromString("11111111-1111-1111-1111-111111111111");
         aiApplicationService.deleteAiHistory(historyId, deletedBy);
         return ResponseEntity.ok(RestApiResponse.ok(HttpStatus.OK, "AI 이력이 정상 삭제(Soft Delete) 되었습니다.", null));
+    }
+
+    // --- Helper Methods ---
+    private UUID getUserId(Authentication authentication) {
+        return UUID.fromString(authentication.getName());
+    }
+
+    private String getRole(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith(ROLE_PREFIX))
+                .findFirst()
+                .map(authority -> authority.substring(ROLE_PREFIX.length()))
+                .orElseThrow(() -> new IllegalArgumentException("권한 정보를 찾을 수 없습니다."));
     }
 }
