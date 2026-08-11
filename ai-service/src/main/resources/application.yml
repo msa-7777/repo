@@ -53,9 +53,9 @@ order-service:
 ## product 서비스 연동 포트 (19095)
 product-service:
   url: ${PRODUCT_SERVICE_URL:http://localhost:19095}
-## delivery 서비스 연동 포트 (19096)
+## delivery 서비스 연동 포트 (19097)
 19096-service:
-  url: ${DELIVERY_SERVICE_URL:http://localhost:19096}
+  url: ${DELIVERY_SERVICE_URL:http://localhost:19097}
 
 
 
