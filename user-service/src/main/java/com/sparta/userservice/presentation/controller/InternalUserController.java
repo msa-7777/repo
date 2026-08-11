@@ -1,0 +1,54 @@
+package com.sparta.userservice.presentation.controller;
+
+/**
+ * ──────────────────────────────────────────────────────────────────────────────────────────────────
+ * 작성자: 장준영
+ * 작성일: 2026-08-11
+ * 설명: 외부 서비스가 사용자 정보를 사용하기 위한 단건 조회 / 존재 유무
+ * ─────────────────────────────────────────────────────────────────────────────────────────────────
+ */
+
+import com.sparta.userservice.application.service.InternalUserService;
+import com.sparta.userservice.global.response.CommonResponse;
+import com.sparta.userservice.presentation.dto.response.InternalUserResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/internal/users")
+@Tag(name = "Internal User", description = "서비스 내부 사용자 조회 API")
+public class InternalUserController {
+
+    private final InternalUserService internalUserService;
+
+    // 1-13 사용자 단건 조회
+    @GetMapping("/{userId}")
+    public ResponseEntity<CommonResponse<InternalUserResponse>> getUser(
+            @PathVariable UUID userId) {
+
+        InternalUserResponse response = internalUserService.getUser(userId);
+
+        return ResponseEntity.ok(CommonResponse.success("내부 사용자 조회 성공", response)
+        );
+    }
+    // 1-14 해당 허브를 참조하고 있는 User 존재 여부 반환
+    @GetMapping("/exists")
+    public boolean existsUserByHubId(@RequestParam UUID hubId) {
+
+        return internalUserService.existsUserByHubId(hubId);
+    }
+
+    // 1-15 다음 순번의 배송 담당자 조회에 필요한
+    // hubId 소속 DELIVERY_AGENT 에 대한 user_id 리스트 반환
+    @GetMapping("/delivery-managers")
+    public List<UUID> getDeliveryManagerIds(@RequestParam UUID hubId) {
+
+        return internalUserService.getDeliveryManagerIds(hubId);
+    }
+}
