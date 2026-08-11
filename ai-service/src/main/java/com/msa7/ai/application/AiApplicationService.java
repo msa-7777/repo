@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.UUID;
 
@@ -38,10 +39,12 @@ public class AiApplicationService {
     private final ProductClient productClient;     // Product 서비스 Feign
     private final DeliveryClient deliveryClient;   // Delivery 서비스 Feign
 
+    private final TransactionTemplate transactionTemplate;
+
 /*     #TODO : CreateAiHistoryRequet에 있는
     요청사항(납기일자 및 시간 등), 상품 및 수량정보, 발송지/경유지/도착지 정보, 배송담당자 근무시간 등
     주문쪽에서 가져오는 것 구현 요망   */
-    @Transactional
+    //@Transactional
     public AiHistoryResponse generateDeadlineAndNotify(CreateAiHistoryRequest request) {
 
         // MSA 서비스 간 동기 통신 (OpenFeign)을 통한 데이터 수집
@@ -85,7 +88,15 @@ public class AiApplicationService {
                 isNotified
         );
 
-        AiHistory savedHistory = aiHistoryRepository.save(aiHistory);
+        // [트랜잭션 안] DB 저장만 트랜잭션 블록으로 감싸기
+        AiHistory savedHistory = transactionTemplate.execute(status ->
+                aiHistoryRepository.save(aiHistory)
+        );
+
+        if (savedHistory == null) {
+            throw new BusinessException(ErrorCode.AI_SERVICE_ERROR, "AI 메시지를 찾을 수 없습니다.");
+        }
+
         return AiHistoryResponse.from(savedHistory);
     }
 
