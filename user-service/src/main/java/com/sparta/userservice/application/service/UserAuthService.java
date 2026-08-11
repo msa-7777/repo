@@ -48,7 +48,7 @@ public class UserAuthService {
             throw new BusinessException(UserErrorCode.INVALID_LOGIN_INFO);
         }
 
-        String accessToken = jwtUtil.createToken(user.getLoginId(), user.getRole());
+        String accessToken = jwtUtil.createToken(user.getUserId(), user.getLoginId(), user.getRole());
 
         return UserLoginResponse.of(user, accessToken); // { accessToken, userId, loginId, name, role }
     }
