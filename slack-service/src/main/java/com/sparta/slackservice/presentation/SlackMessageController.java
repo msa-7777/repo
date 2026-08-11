@@ -11,6 +11,8 @@ import com.sparta.slackservice.presentation.response.SlackMessageCreateResponse;
 import com.sparta.slackservice.presentation.response.SlackMessageDetailResponse;
 import com.sparta.slackservice.presentation.response.SlackMessagePageResponse;
 import com.sparta.slackservice.presentation.response.SlackMessageUpdateResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Tag(name = "Slack Message", description = "Slack 메시지 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/slack-messages")
@@ -33,6 +36,10 @@ public class SlackMessageController {
      * 요청받은 주문, 허브, 수신자, 메시지 정보를 서비스 계층으로 전달한다.
      * 현재는 TemporarySlackClient를 사용해 실제 Slack API 호출 없이 로컬에서 발송 성공 흐름을 검증한다.
      */
+    @Operation(
+            summary = "Slack 메시지 발송",
+            description = "Slack 메시지를 발송하고 발송 이력을 저장합니다."
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RestApiResponse<SlackMessageCreateResponse> createSlackMessage(
@@ -54,6 +61,10 @@ public class SlackMessageController {
 
     // Slack 메시지 단건 조회
     // slackUserId, channelId, slackTs, failureReason 같은 상세 연동 정보는 단건 조회 응답에서만 확인한다.
+    @Operation(
+            summary = "Slack 메시지 단건 조회",
+            description = "Slack 메시지 발송 이력을 조회합니다."
+    )
     @GetMapping("/{slackMessageId}")
     public RestApiResponse<SlackMessageDetailResponse> getSlackMessage(
             @PathVariable UUID slackMessageId
@@ -77,6 +88,10 @@ public class SlackMessageController {
 
     // Slack 메시지 목록 및 검색
     // SlackMessageSearchCondition은 쿼리 파라미터로 바인딩된다.
+    @Operation(
+            summary = "Slack 메시지 목록 조회",
+            description = "검색 조건에 따라 Slack 메시지 발송 이력을 조회합니다."
+    )
     @GetMapping
     public RestApiResponse<SlackMessagePageResponse> searchSlackMessages(
             @ModelAttribute SlackMessageSearchCondition condition,
@@ -103,6 +118,10 @@ public class SlackMessageController {
      * TemporarySlackClient 단계에서는 실제 Slack 메시지 대신
      * 임시 수정 성공 결과를 반환하고, 성공 후 DB 내용을 변경한다.
      */
+    @Operation(
+            summary = "Slack 메시지 수정",
+            description = "발송된 Slack 메시지 내용을 수정합니다."
+    )
     @PatchMapping("/{slackMessageId}")
     public RestApiResponse<SlackMessageUpdateResponse> updateSlackMessage(
             @PathVariable UUID slackMessageId,
@@ -128,6 +147,10 @@ public class SlackMessageController {
      * DB의 deletedAt, deletedBy만 기록하는 논리 삭제다.
      * Slack에 이미 발송된 실제 메시지는 삭제하지 않는다.
      */
+    @Operation(
+            summary = "Slack 메시지 삭제",
+            description = "Slack 메시지 발송 이력을 논리 삭제합니다."
+    )
     @DeleteMapping("/{slackMessageId}")
     public RestApiResponse<Void> deleteSlackMessage(
             @PathVariable UUID slackMessageId

@@ -57,7 +57,7 @@ public class ProductService {
                                          UUID userId,
                                          String role) {
 
-        // validateCreateAccess(request.companyId(), userId, role);
+         validateCreateAccess(request.companyId(), userId, role);
 
         // company-service 업체 단건 조회
         CompanyResponse company = companyClient
