@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "user-service")
 public interface UserClient {
 	// 다음 순번의 배송 담당자 조회
-	@GetMapping("/api/v1/users/delivery-managers")
+	@GetMapping("/api/v1/internal/users/delivery-managers")
 	List<UUID> getDeliveryManagersByHubId(@RequestParam("hubId") UUID hubId);
 }

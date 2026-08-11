@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = "product-service")
 public interface InventoryClient {
-	@GetMapping("/api/v1/inventories/{productId}")
+	@GetMapping("/internal/inventories/{productId}")
 	void verifyInventory(@PathVariable("productId") UUID productId, @RequestParam("quantity") Integer quantity);
 
 	// @PostMapping("/api/v1/products/{productId}/verify-stock")
