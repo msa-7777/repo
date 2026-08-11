@@ -22,13 +22,7 @@ public class DeliveryEventConsumer {
 			OrderCreatedEvent event = objectMapper.readValue(message, OrderCreatedEvent.class);
 
 			// 배송 서비스의 SAGA 전용 메서드 호출
-			deliveryService.createDeliveryFromOrder(
-				event.orderId(),
-				event.startHubId(),
-				event.endHubId(),
-				event.receiverSlackId(),
-				event.destinationAddress()
-			);
+			deliveryService.createDeliveryFromOrder(event);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
