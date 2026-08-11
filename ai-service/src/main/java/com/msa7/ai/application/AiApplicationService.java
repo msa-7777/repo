@@ -7,6 +7,8 @@ import com.msa7.ai.global.exception.ErrorCode;
 import com.msa7.ai.infrastructure.ai.GeminiAiClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryClient;
 import com.msa7.ai.infrastructure.client.delivery.DeliveryResponse;
+import com.msa7.ai.infrastructure.client.hub.HubRoutePathResponse;
+import com.msa7.ai.infrastructure.client.hub.hubClient;
 import com.msa7.ai.infrastructure.client.order.OrderClient;
 import com.msa7.ai.infrastructure.client.order.OrderResponse;
 import com.msa7.ai.infrastructure.client.order.OrderWithDeliveryDto;
@@ -41,33 +43,32 @@ public class AiApplicationService {
     private final DeliveryClient deliveryClient;   // Delivery 서비스 Feign
 
     private final TransactionTemplate transactionTemplate;
+    private final hubClient hubClient;
 
-/*     #TODO : CreateAiHistoryRequet에 있는
-    요청사항(납기일자 및 시간 등), 상품 및 수량정보, 발송지/경유지/도착지 정보, 배송담당자 근무시간 등
-    주문쪽에서 가져오는 것 구현 요망   */
+    /*     #TODO : CreateAiHistoryRequet에 있는
+        요청사항(납기일자 및 시간 등), 상품 및 수량정보, 발송지/경유지/도착지 정보, 배송담당자 근무시간 등
+        주문쪽에서 가져오는 것 구현 요망   */
     //@Transactional
     public AiHistoryResponse generateDeadlineAndNotify(CreateAiHistoryRequest request) {
 
         // MSA 서비스 간 동기 통신 (OpenFeign)을 통한 데이터 수집
         OrderResponse order = orderClient.getOrderDetail(request.orderId()).getBody();
-        if (order == null || order.productId() == null) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-        }
+        validate(order);
 
         OrderWithDeliveryDto orderWithDelivery = orderClient.getOrderWithDeliveryStatus(request.orderId()).getBody();
-        if (orderWithDelivery == null) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-        }
+        validate(orderWithDelivery);
 
         ProductResponse product = productClient.getProduct(order.productId()).getBody().data();
-        if (product == null) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-        }
+        validate(product);
 
         DeliveryResponse delivery = deliveryClient.getDeliveryRouteInfo(request.orderId());
+        validate(delivery);
+
+        HubRoutePathResponse getRouteInfo = hubClient.getRouteInfo(delivery.startHubId(), delivery.endHubId());
+        validate(getRouteInfo);
 
         // 프롬프트 구성
-        String prompt = geminiAiClient.buildPrompt(order, product, delivery, orderWithDelivery);
+        String prompt = geminiAiClient.buildPrompt(order, product, delivery, orderWithDelivery, getRouteInfo);
 
         AiDeadlineResponse aiResponse = null;
 
@@ -133,4 +134,12 @@ public class AiApplicationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "AI 분석 이력을 찾을 수 없습니다."));
         aiHistory.delete(deletedBy);
     }
+
+
+    private void validate(Object obj) {
+        if (obj == null) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+    }
+
 }
