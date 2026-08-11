@@ -70,7 +70,7 @@ public class HubDeleteFacade {
 
     private void ensureNotReferencedByUser(UUID hubId) {
         boolean isExist =  userClient.existsUserByHubId(hubId);
-        if (!isExist) {
+        if (isExist) {
             log.warn("허브 삭제 차단 - hubId={}", hubId);
             throw new BusinessException(ErrorCode.HUB_REFERENCED_BY_USER);
         }
@@ -78,7 +78,7 @@ public class HubDeleteFacade {
 
     private void ensureNotReferenceByDeliveryRoute(UUID hubId) {
         boolean isExist = deliveryClient.existsActiveDeliveryByHubId(hubId);
-        if (!isExist) {
+        if (isExist) {
             log.warn("허브 삭제 차단 - hubId={}", hubId);
             throw new BusinessException(ErrorCode.HUB_REFERENCED_BY_USER);
         }
