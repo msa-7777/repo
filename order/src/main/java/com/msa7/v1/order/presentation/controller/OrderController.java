@@ -3,6 +3,7 @@ package com.msa7.v1.order.presentation.controller;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ public class OrderController {
 	private final OrderService orderService;
 
 	// 주문 생성
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT', 'SUPPLIER_AGENT')")
 	@PostMapping
 	public ResponseEntity<RestApiResponse<OrderResponse>> createOrder(@RequestBody CreateOrderRequest request) {
 		Order order = orderService.createOrder(request.receiverCompanyId(),
@@ -36,12 +38,14 @@ public class OrderController {
 		return ResponseEntity.ok(RestApiResponse.ok(OrderResponse.from(order)));
 	}
 
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT', 'SUPPLIER_AGENT')")
 	@GetMapping("/{orderId}")
 	public ResponseEntity<RestApiResponse<OrderResponse>> getOrder(@PathVariable UUID orderId) {
 		Order order = orderService.getOrder(orderId);
 		return ResponseEntity.ok(RestApiResponse.ok(OrderResponse.from(order)));
 	}
 
+	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT', 'SUPPLIER_AGENT')")
 	@GetMapping("/{orderId}/delivery-status")
 	public ResponseEntity<RestApiResponse<OrderWithDeliveryDto>>
 	getOrderWithDeliveryStatus(@PathVariable UUID orderId) {

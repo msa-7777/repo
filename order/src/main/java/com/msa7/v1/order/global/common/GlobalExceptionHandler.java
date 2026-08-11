@@ -3,6 +3,7 @@ package com.msa7.v1.order.global.common;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -96,9 +97,9 @@ public class GlobalExceptionHandler {
 	}
 
 	// 403 - 권한 없음
-	@ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+	@ExceptionHandler(AccessDeniedException.class)
 	public ResponseEntity<RestApiResponse<Void>> handleAccessDenied(
-		org.springframework.security.access.AccessDeniedException e,
+		AccessDeniedException e,
 		HttpServletRequest request) {
 
 		log.warn("[Forbidden] path={}, message={}", request.getRequestURI(), e.getMessage());
