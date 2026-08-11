@@ -3,6 +3,7 @@ services:
     image: postgres:16
     container_name: logistics-postgres
 
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -24,6 +25,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: logistics-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 
 
   eureka-server:

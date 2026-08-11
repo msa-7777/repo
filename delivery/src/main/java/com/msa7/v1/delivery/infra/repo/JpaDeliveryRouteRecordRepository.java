@@ -7,11 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.msa7.v1.delivery.domain.aggregateDelivery.DeliveryRouteRecord;
 import com.msa7.v1.delivery.domain.vo.RouteStatus;
 import com.msa7.v1.delivery.infra.entity.DeliveryRouteRecordEntity;
 
-public interface JpaDeliveryRouteRecordRepository extends JpaRepository<DeliveryRouteRecord, UUID> {
+public interface JpaDeliveryRouteRecordRepository extends JpaRepository<DeliveryRouteRecordEntity, UUID> {
 
 	List<DeliveryRouteRecordEntity> findAllByStartHubIdAndStatusAndIsDeletedFalse(UUID startHubId, RouteStatus status);
 

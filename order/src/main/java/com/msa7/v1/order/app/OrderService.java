@@ -10,8 +10,10 @@ import com.msa7.v1.order.infra.feign.DeliveryClient;
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
 import com.msa7.v1.order.infra.feign.InventoryClient;
+import com.msa7.v1.order.infra.publisher.OrderEventPub;
 import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
 import com.msa7.v1.order.presentation.dto.payload.DeliveryResponse;
+import com.msa7.v1.order.presentation.dto.payload.OrderCreatedEvent;
 import com.msa7.v1.order.presentation.dto.payload.OrderWithDeliveryDto;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class OrderService {
 	private final OrderRepo orderRepo;
 	private final InventoryClient inventoryClient;
 	private final DeliveryClient deliveryClient;
+	private final OrderEventPub orderEventPub;
 
 	@Transactional
 	public Order createOrder(UUID receiverId, UUID productId, Integer quantity, String requests,
@@ -36,7 +39,12 @@ public class OrderService {
 		// 도메인 생성 (이벤트 등록)
 		Order order = Order.create(receiverId, productId, quantity, requests
 		, receiverSlackId, startHubId, endHubId, destinationAddress);
-		return orderRepo.save(order);
+
+		Order savedOrder = orderRepo.save(order);
+
+		OrderCreatedEvent event = OrderCreatedEvent.from(savedOrder, receiverId, receiverSlackId, startHubId, endHubId, destinationAddress);
+		orderEventPub.publishOrderCreated(event);
+		return savedOrder;
 	}
 
 	@Transactional
