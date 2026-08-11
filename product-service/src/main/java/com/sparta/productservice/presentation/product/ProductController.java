@@ -3,7 +3,6 @@ package com.sparta.productservice.presentation.product;
 import com.sparta.productservice.application.product.ProductService;
 import com.sparta.productservice.domain.product.ProductSearchCondition;
 import com.sparta.productservice.global.response.RestApiResponse;
-import com.sparta.productservice.global.security.HeaderAuthenticationFilter;
 import com.sparta.productservice.presentation.product.request.ProductCreateRequest;
 import com.sparta.productservice.presentation.product.request.ProductUpdateRequest;
 import com.sparta.productservice.presentation.product.response.ProductResponse;
@@ -14,17 +13,14 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-import javax.swing.*;
 import java.util.UUID;
 
 @Tag(name = "Product", description = "상품 관리 API")
@@ -54,19 +50,8 @@ public class ProductController {
         String role = getRole(authentication);
 
         // 상품 생성 시 company-service에서 업체 정보를 조회하고,업체 소속 hubId를 사용해 초기 재고를 함께 생성한다.
-
-        /*
-         * Service에서 다음 작업을 수행한다.
-         *
-         * 1. 요청자의 상품 생성 범위 검증
-         *    - MASTER: 전체 허용
-         *    - HUB_MANAGER: 담당 허브 업체만 허용
-         *    - COMPANY_MANAGER: 본인 업체만 허용
-         * 2. 업체 존재 여부 및 PRODUCER 타입 확인
-         * 3. 업체의 hubId 확인
-         * 4. 상품 생성
-         * 5. 초기 재고 0 생성
-         */
+        // 역할 수준의 1차 인가는 Controller에서 처리하고,
+        // 담당 허브·본인 업체 여부는 ProductService에서 추가 검증한다.
 
         ProductResponse response =
                 productService.createProduct(request, userId, role);
@@ -124,11 +109,7 @@ public class ProductController {
     public ResponseEntity<RestApiResponse<Page<ProductResponse>>> getProducts(
             @ModelAttribute ProductSearchCondition condition,
             @ParameterObject
-            @PageableDefault(
-                    size = 10,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
+            @PageableDefault(size = 10)
             Pageable pageable,
             Authentication authentication
     ) {
