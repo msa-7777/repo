@@ -49,9 +49,12 @@ public class InternalUserController {
             summary = "허브 소속 사용자 존재 여부 조회",
             description = "다른 서비스에서 hubId를 이용해 해당 허브를 참조하는 사용자가 존재하는지 확인합니다."
     )
-    public boolean existsUserByHubId(@RequestParam UUID hubId) {
+    public ResponseEntity<CommonResponse<Boolean>> existsUserByHubId(
+            @RequestParam UUID hubId) {
 
-        return internalUserService.existsUserByHubId(hubId);
+        boolean response = internalUserService.existsUserByHubId(hubId);
+
+        return ResponseEntity.ok(CommonResponse.success("허브 소속 사용자 존재 여부 조회 성공", response));
     }
 
     // 2-3 다음 순번의 배송 담당자 조회에 필요한
@@ -61,9 +64,12 @@ public class InternalUserController {
             summary = "허브 배송 담당자 ID 목록 조회",
             description = "다른 서비스에서 hubId를 이용해 해당 허브에 소속된 DELIVERY_AGENT의 userId 목록을 조회합니다."
     )
-    public List<UUID> getDeliveryManagerIds(@RequestParam UUID hubId) {
+    public ResponseEntity<CommonResponse<List<UUID>>> getDeliveryManagerIds(
+            @RequestParam UUID hubId) {
 
-        return internalUserService.getDeliveryManagerIds(hubId);
+        List<UUID> response = internalUserService.getDeliveryManagerIds(hubId);
+
+        return ResponseEntity.ok(CommonResponse.success("배송 담당자 목록 조회 성공", response));
     }
 
     // 2-4 user_id에 대한 default address 전송
@@ -72,8 +78,11 @@ public class InternalUserController {
             summary = "사용자 기본 주소 내부 조회",
             description = "다른 서비스에서 userId를 이용해 사용자의 기본 주소를 조회합니다."
     )
-    public CommonResponse<UserAddressResponse> getDefaultAddress(@PathVariable UUID userId) {
+    public ResponseEntity<CommonResponse<UserAddressResponse>> getDefaultAddress(
+            @PathVariable UUID userId) {
 
-        return CommonResponse.success("사용자 기본 주소 조회 성공", internalUserService.getDefaultAddress(userId));
+        UserAddressResponse response = internalUserService.getDefaultAddress(userId);
+
+        return ResponseEntity.ok(CommonResponse.success("사용자 기본 주소 조회 성공", response));
     }
 }
