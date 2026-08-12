@@ -14,6 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,37 +34,60 @@ public class HubController implements HubApi {
 
     @Override
     @PreAuthorize("hasRole('MASTER')")
+    @PostMapping("/hubs")
     public ResponseEntity<RestApiResponse<HubResponse>> createHub(HubRequest request) {
 
-        Hub hub = hubService.createHub(request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
+        Hub hub = hubService.createHub(
+                request.centralHubId(),
+                request.name(),
+                request.latitude(),
+                request.longitude(),
+                request.address()
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(RestApiResponse.ok(HubResponse.from(hub)));
     }
 
     @Override
     @PreAuthorize("hasAnyRole('MASTER')")
-    public ResponseEntity<RestApiResponse<HubResponse>> updateHub(HubRequest request, UUID hubId) {
+    @PutMapping("/hubs/{hubId}")
+    public ResponseEntity<RestApiResponse<HubResponse>> updateHub(HubRequest request, @PathVariable UUID hubId) {
 
-        Hub hub = hubService.updateHub(hubId, request.centralHubId(), request.name(), request.latitude(), request.longitude(), request.address());
+        Hub hub = hubService.updateHub(
+                hubId,
+                request.centralHubId(),
+                request.name(),
+                request.latitude(),
+                request.longitude(),
+                request.address()
+        );
         return ResponseEntity.ok(RestApiResponse.ok(HubResponse.from(hub)));
     }
 
     @Override
     @PreAuthorize("hasAnyRole('MASTER')")
-    public ResponseEntity<RestApiResponse<Void>> deleteHub(UUID hubId, UUID userId) {
+    @DeleteMapping("/hubs/{hubId}")
+    public ResponseEntity<RestApiResponse<Void>> deleteHub(@PathVariable UUID hubId, UUID userId) {
 
         hubDeleteFacade.deleteHub(hubId, userId);
         return ResponseEntity.ok(RestApiResponse.ok(null));
     }
 
     @Override
-    public ResponseEntity<RestApiResponse<HubResponse>> getHub(UUID hubId) {
+    @GetMapping("/hubs/{hubId}")
+    public ResponseEntity<RestApiResponse<HubResponse>> getHub(@PathVariable UUID hubId) {
         Hub hub = hubService.getHub(hubId);
         return ResponseEntity.ok(RestApiResponse.ok(HubResponse.from(hub)));
     }
 
     @Override
+    @GetMapping("/hubs")
     public ResponseEntity<RestApiResponse<Page<HubResponse>>> getHubList(HubSearchRequest request, Pageable pageable) {
-        Page<HubResponse> response = hubService.getHubList(request.name(), request.address(), request.isCentral(), pageable).map(HubResponse::from);
+        Page<HubResponse> response = hubService.getHubList(
+                request.name(),
+                request.address(),
+                request.isCentral(),
+                pageable
+        ).map(HubResponse::from);
         return ResponseEntity.ok(RestApiResponse.ok(response));
     }
 }
