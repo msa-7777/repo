@@ -1,6 +1,5 @@
 package com.sparta.userservice.application.service;
 
-import com.sparta.userservice.Infrastructure.persistence.querydsl.UserRepositoryImpl;
 import com.sparta.userservice.application.port.UserFinder;
 import com.sparta.userservice.application.query.UserSearchCondition;
 import com.sparta.userservice.domain.exception.UserErrorCode;

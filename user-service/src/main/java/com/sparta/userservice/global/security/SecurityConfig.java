@@ -102,8 +102,9 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**")
-                        .permitAll() // Swagger UI 허용
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll() // Swagger UI 허용
 
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
         );
