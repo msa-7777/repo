@@ -79,7 +79,7 @@ docker compose logs -f <service-name>
 INSERT INTO user_schema.p_users
   (user_id, login_id, password, name, email, phone, role, signup_status, slack_id, hub_id, supplier_id, created_at, created_by, is_deleted)
 VALUES
-  (gen_random_uuid(), 'master01', '$2a$10$x40MtZAegRML4QTA5EKZhOAGelFkfQS0FpZlNVG3.FoWyrdLYMnK', '마스터관리자', 'master@example.com', '010-0000-0000', 'MASTER', 'APPROVED', NULL, NULL, NULL, now(), gen_random_uuid(), false);
+  (gen_random_uuid(), 'master01', '$2a$10$5Ss.fUoX/OEP4.N7HBhbXu0OG4nMkH7Xy.WvQ28UWx49kPWZXbIba', '마스터관리자', 'master@example.com', '010-0000-0000', 'MASTER', 'APPROVED', NULL, NULL, NULL, now(), gen_random_uuid(), false);
 ```
 로그인: `master01` / `Master1234!`
 
@@ -87,4 +87,4 @@ VALUES
 ## 🗂️ ERD
 
 (작성 예정)
-
+<img width="1272" height="864" alt="Image" src="https://github.com/user-attachments/assets/184ad848-032f-4155-98ce-397205fbef51" />
