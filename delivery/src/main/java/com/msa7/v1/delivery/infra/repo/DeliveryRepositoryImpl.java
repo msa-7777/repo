@@ -55,7 +55,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 
 	@Override
 	public Optional<Delivery> findByOrderId(UUID orderId) {
-		return jpaDeliveryRepository.findByOrderIdAndIsDeletedFalse(orderId)
+		return jpaDeliveryRepository.findByOrderIdAndDeletedAtIsNull(orderId)
 			.map(this::toDomain);
 	}
 

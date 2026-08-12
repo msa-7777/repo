@@ -97,7 +97,7 @@ public class DeliveryService {
 	// API 1: 허브 ID와 상태로 배송 경로 목록 조회
 	@Transactional(readOnly = true)
 	public List<DeliveryRouteResponse> getDeliveryRoutes(UUID hubId, RouteStatus status) {
-		return routeRepo.findAllByStartHubIdAndStatusAndIsDeletedFalse(hubId, status).stream()
+		return routeRepo.findAllByStartHubIdAndStatusAndDeletedAtIsNull(hubId, status).stream()
 			.map(route -> new DeliveryRouteResponse(
 				route.getId(),
 				route.getSequence(),

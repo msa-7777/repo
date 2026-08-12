@@ -12,7 +12,7 @@ import com.msa7.v1.delivery.infra.entity.DeliveryRouteRecordEntity;
 
 public interface JpaDeliveryRouteRecordRepository extends JpaRepository<DeliveryRouteRecordEntity, UUID> {
 
-	List<DeliveryRouteRecordEntity> findAllByStartHubIdAndStatusAndIsDeletedFalse(UUID startHubId, RouteStatus status);
+	List<DeliveryRouteRecordEntity> findAllByStartHubIdAndStatusAndDeletedAtIsNull(UUID startHubId, RouteStatus status);
 
 	@Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
 		"FROM DeliveryRouteRecordEntity r " +
