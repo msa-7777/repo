@@ -26,14 +26,14 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-    jpa:
-      hibernate:
-        ddl-auto: update
+  jpa:
+    hibernate:
+      ddl-auto: update
 
-      properties:
-        hibernate:
-          # default_schema: ${DB_SCHEMA:company_schema}
-          format_sql: true
+    properties:
+      hibernate:
+        # default_schema: ${DB_SCHEMA:company_schema}
+        format_sql: true
 
 logging:
   level:
@@ -49,6 +49,12 @@ logging:
 #  instance:
 #    prefer-ip-address: true
 #
+eureka:
+  client:
+    register-with-eureka: true # 서버 등록 임시 비활성화
+    fetch-registry: true # 레지스트리 정보 가져오기 임시 비활성화
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/} # 향후 연결할 유레카 서버 주소
 
 ## Hub 서비스 연동 포트 (19093)
 hub-service:
