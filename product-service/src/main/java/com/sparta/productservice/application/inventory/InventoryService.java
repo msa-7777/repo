@@ -63,13 +63,19 @@ public class InventoryService {
             UUID productId,
             InventoryQuantityChangeRequest request
     ) {
-        Inventory inventory = findActiveInventory(productId);
+        /*
+         * 재고 수량을 변경하기 전에 비관적 쓰기 락으로 재고를 조회한다.
+         *
+         * 동일 상품의 재고 변경 요청이 동시에 들어오면
+         * 먼저 락을 획득한 트랜잭션이 종료된 후 다음 요청이 처리된다.
+         */
+        Inventory inventory = findActiveInventoryForUpdate(productId);
 
         /*
-         * 수량 증감 규칙은 Inventory 엔티티에 위임한다.
+         * 입고, 주문 차감, 주문 취소 복구는 모두 동일한 quantity를 변경하므로
+         * 모든 수량 변경 작업을 동일한 락 범위 안에서 처리한다.
          *
-         * Service는 어떤 업무 유형이 증가 또는 감소인지 판단하고,
-         * Entity는 실제 수량 변경과 부족 재고 검증을 담당한다.
+         * 실제 수량 증가·감소 및 부족 재고 검증은 Inventory 엔티티가 담당한다.
          */
         switch (request.changeType()) {
             case INBOUND, ORDER_CANCEL_RESTORE ->
@@ -85,9 +91,8 @@ public class InventoryService {
          */
 
         // TODO: 인증 적용 후 INBOUND는 HUB_MANAGER와 MASTER만 허용한다.
-        /* TODO: ORDER_DECREASE와 ORDER_CANCEL_RESTORE는 order-service의 내부 호출만 허용한다.
-        */
-        // TODO: 동시 주문 시 재고 정합성을 위해 비관적 락, 낙관적 락 또는 조건부 UPDATE를 적용한다.
+        // TODO: ORDER_DECREASE와 ORDER_CANCEL_RESTORE는 order-service의 내부 호출만 허용한다.
+
 
         return InventoryResponse.from(inventory);
     }
@@ -99,6 +104,22 @@ public class InventoryService {
                 .orElseThrow(() ->
                         new ApiException(InventoryErrorCode.INVENTORY_NOT_FOUND));
     }
+
+    /*
+     * 재고 수량 변경을 위해 활성 재고를 비관적 쓰기 락으로 조회한다.
+     * 동일 상품에 대한 여러 수량 변경 요청이 동시에 실행되더라도 하나의 트랜잭션씩 순차적으로 재고를 변경하도록 한다.
+     */
+    private Inventory findActiveInventoryForUpdate(UUID productId) {
+        return inventoryRepository
+                .findByProductIdForUpdate(productId)
+                .orElseThrow(() ->
+                        new ApiException(
+                                InventoryErrorCode.INVENTORY_NOT_FOUND
+                        )
+                );
+    }
+
+
 
     // 같은 상품에 활성 재고가 중복 생성되는 것을 방지한다.
     private void validateInventoryNotExists(UUID productId) {
