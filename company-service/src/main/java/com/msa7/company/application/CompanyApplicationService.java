@@ -1,7 +1,10 @@
 package com.msa7.company.application;
 
 import com.msa7.company.domain.model.Company;
-import com.msa7.company.infrastructure.client.HubClient;
+import com.msa7.company.global.response.CommonResponse;
+import com.msa7.company.infrastructure.client.hub.HubClient;
+import com.msa7.company.infrastructure.client.user.UserClient;
+import com.msa7.company.infrastructure.client.user.UserResponse;
 import com.msa7.company.presentation.dto.request.CompanySearchCondition;
 import com.msa7.company.domain.repository.CompanyRepository;
 import com.msa7.company.global.exception.BusinessException;
@@ -12,6 +15,7 @@ import com.msa7.company.presentation.dto.response.CompanyResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +28,13 @@ public class CompanyApplicationService {
 
     private final CompanyRepository companyRepository;
     private final HubClient hubClient;
+    private final UserClient userClient;
 
     // 1. 업체 등록 (Create)
     @Transactional
-    public CompanyResponse createCompany(CreateCompanyRequest request) {
-        // #TODO : hub 확인후 수정 요망
-        if (!hubClient.existsHub(request.hubId())) {
+    public CompanyResponse createCompany(CreateCompanyRequest request, UUID userId, String role) {
+
+        if (!hubClient.checkHubExists(request.hubId())) {
             throw new BusinessException(ErrorCode.HUB_NOT_FOUND);
         }
 
@@ -63,8 +68,10 @@ public class CompanyApplicationService {
 
     // 4. 업체 수정 (Update)
     @Transactional
-    public CompanyResponse updateCompany(UUID companyId, UpdateCompanyRequest request) {
+    public CompanyResponse updateCompany(UUID companyId, UpdateCompanyRequest request, UUID userId, String role) {
         Company company = findActiveCompany(companyId);
+
+        validateCompanyAccess(company, userId, role);
 
         company.update(
                 request.name(),
@@ -78,14 +85,72 @@ public class CompanyApplicationService {
 
     // 5. 업체 삭제 (Delete - Soft Delete)
     @Transactional
-    public void deleteCompany(UUID companyId, UUID deletedBy) {
+    public void deleteCompany(UUID companyId, UUID userId, String role) {
         Company company = findActiveCompany(companyId);
-        company.delete(deletedBy);
+        validateCompanyAccess(company, userId, role);
+        company.delete(userId);
     }
 
     // 내부 공통 메서드: 삭제되지 않은 업체 검증 및 조회
     private Company findActiveCompany(UUID companyId) {
         return companyRepository.findByCompanyIdAndDeletedAtIsNull(companyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMPANY_NOT_FOUND));
+    }
+
+    /**
+     * 허브 관리자 및 업체 담당자의 본인 업체 관리 권한 검증
+     */
+    private void validateCompanyAccess(Company targetCompany, UUID userId, String role) {
+        // MASTER 권한은 전체 관리 가능
+        if ("MASTER".equals(role)) {
+            return;
+        }
+
+        UserResponse userInfo = null;
+
+        // 1. FeignClient 호출
+        ResponseEntity<CommonResponse<UserResponse>> responseEntity = userClient.getUserById(userId);
+
+        // 2. HTTP 상태 코드가 200(OK)인지 확인 후 내부 데이터 추출
+        if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
+            CommonResponse<UserResponse> commonResponse = responseEntity.getBody();
+
+            // 3. CommonResponse 내부의 실제 데이터(InternalUserResponse) 추출
+            // (CommonResponse 내부에 데이터를 가져오는 getter 메서드가 있다고 가정, 예: getData() 또는 getResult())
+            userInfo = commonResponse.getData();
+        }
+
+        // user-service에서 호출한 유저 정보 (hubId, supplierId 포함)
+        //UserResponse userInfo = userClient.getUserById(userId);
+        if (userInfo == null) {
+            throw new BusinessException(ErrorCode.USER_ACCESS_DENIED);
+        }
+
+        // COMPANY 담당자인 경우 본인 업체 검증
+        if ("SUPPLIER_AGENT".equals(role)) {
+            if (userInfo.getSupplierId() == null) {
+                throw new BusinessException(ErrorCode.COMPANY_NOT_FOUND);
+            }
+
+            if (targetCompany.getCompanyId() == null || !userInfo.getSupplierId().equals(targetCompany.getCompanyId())) {
+                throw new BusinessException(ErrorCode.COMPANY_ACCESS_DENIED);
+            }
+            return;
+        }
+
+        // HUB_MANAGER: 본인 허브에 속한 업체인지 검증
+        if ("HUB_MANAGER".equals(role)) {
+            if (userInfo.getHubId() == null) {
+                throw new BusinessException(ErrorCode.HUB_NOT_FOUND);
+            }
+
+            // 업체의 hubId와 허브 관리자의 hubId 비교
+            if (targetCompany.getHubId() == null || !userInfo.getHubId().equals(targetCompany.getHubId())) {
+                throw new BusinessException(ErrorCode.HUB_ACCESS_DENIED);
+            }
+            return;
+        }
+
+        throw new BusinessException(ErrorCode.FORBIDDEN);
     }
 }

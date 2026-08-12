@@ -3,28 +3,27 @@ package com.sparta.productservice.presentation.product;
 import com.sparta.productservice.application.product.ProductService;
 import com.sparta.productservice.domain.product.ProductSearchCondition;
 import com.sparta.productservice.global.response.RestApiResponse;
-import com.sparta.productservice.global.security.HeaderAuthenticationFilter;
 import com.sparta.productservice.presentation.product.request.ProductCreateRequest;
 import com.sparta.productservice.presentation.product.request.ProductUpdateRequest;
 import com.sparta.productservice.presentation.product.response.ProductResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-import javax.swing.*;
 import java.util.UUID;
 
+@Tag(name = "Product", description = "상품 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/products")
@@ -36,7 +35,11 @@ public class ProductController {
 
     // 상품 생성
     // 담당 허브 또는 본인 업체인지에 대한 세부 검증은 ProductService에서 userId와 role을 기준으로 수행한다.
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    @Operation(
+            summary = "상품 생성",
+            description = "새로운 상품을 등록합니다."
+    )
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @PostMapping
     public ResponseEntity<RestApiResponse<ProductResponse>> createProduct(
             @Valid @RequestBody ProductCreateRequest request,
@@ -47,19 +50,8 @@ public class ProductController {
         String role = getRole(authentication);
 
         // 상품 생성 시 company-service에서 업체 정보를 조회하고,업체 소속 hubId를 사용해 초기 재고를 함께 생성한다.
-
-        /*
-         * Service에서 다음 작업을 수행한다.
-         *
-         * 1. 요청자의 상품 생성 범위 검증
-         *    - MASTER: 전체 허용
-         *    - HUB_MANAGER: 담당 허브 업체만 허용
-         *    - COMPANY_MANAGER: 본인 업체만 허용
-         * 2. 업체 존재 여부 및 PRODUCER 타입 확인
-         * 3. 업체의 hubId 확인
-         * 4. 상품 생성
-         * 5. 초기 재고 0 생성
-         */
+        // 역할 수준의 1차 인가는 Controller에서 처리하고,
+        // 담당 허브·본인 업체 여부는 ProductService에서 추가 검증한다.
 
         ProductResponse response =
                 productService.createProduct(request, userId, role);
@@ -79,6 +71,10 @@ public class ProductController {
     /* 상품 조회 자체는 모든 로그인 사용자가 가능하다.
     * HUB_MANAGER의 경우 담당 허브 상품인지 여부는 Service에서 검증한다.
     */
+    @Operation(
+            summary = "상품 단건 조회",
+            description = "상품 ID로 상품 정보를 조회합니다."
+    )
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{productId}")
     public ResponseEntity<RestApiResponse<ProductResponse>> getProduct(
@@ -104,16 +100,16 @@ public class ProductController {
     /* 모든 로그인 사용자가 호출할 수 있다.
     * HUB_MANAGER인 경우 담당 허브 상품만 조회되도록 Service/Querydsl에서 검색 조건을 추가한다.
     */
+    @Operation(
+            summary = "상품 목록 조회",
+            description = "검색 조건에 따라 상품 목록을 조회합니다."
+    )
     @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<RestApiResponse<Page<ProductResponse>>> getProducts(
             @ModelAttribute ProductSearchCondition condition,
             @ParameterObject
-            @PageableDefault(
-                    size = 10,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
+            @PageableDefault(size = 10)
             Pageable pageable,
             Authentication authentication
     ) {
@@ -138,7 +134,11 @@ public class ProductController {
     }
 
     // 상품명 수정
-    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+    @Operation(
+            summary = "상품 수정",
+            description = "상품의 이름을 수정합니다."
+    )
+    @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'SUPPLIER_AGENT')")
     @PatchMapping("/{productId}")
     public ResponseEntity<RestApiResponse<ProductResponse>> updateProduct(
             @PathVariable UUID productId,
@@ -167,6 +167,10 @@ public class ProductController {
 
     // 상품 논리 삭제
     // HUB_MANAGER가 실제 담당 허브의 상품을 삭제하는지는 ProductService에서 추가 검증
+    @Operation(
+            summary = "상품 삭제",
+            description = "상품을 논리 삭제합니다."
+    )
     @PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER')")
     @DeleteMapping("/{productId}")
     public ResponseEntity<RestApiResponse<Void>> deleteProduct(
@@ -207,18 +211,5 @@ public class ProductController {
                 .orElseThrow(() ->
                         new IllegalStateException("인증된 사용자의 권한 정보를 찾을 수 없습니다.")
                 );
-    }
-
-
-    // Gateway가 전달한 내부 헤더와 Spring Security 권한 검증이 정상 동작하는지 확인하기 위한 임시 API다.
-    @PreAuthorize("hasRole('MASTER')")
-    @GetMapping("/test-user-header")
-    public ResponseEntity<String> testUserHeader(
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Role") String role
-    ) {
-        return ResponseEntity.ok(
-                "userId=" + userId + ", role=" + role
-        );
     }
 }

@@ -8,5 +8,4 @@ import com.msa7.v1.order.domain.aggregate.Order;
 public interface OrderRepo {
 	Order save(Order order);
 	Optional<Order> findById(UUID id);
-	void delete(Order order);
 }

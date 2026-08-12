@@ -1,6 +1,7 @@
 package com.sparta.productservice.infrastructure.client.company;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CompanyResponse(
         UUID companyId,
+
+        @JsonProperty("type")
         CompanyType companyType,
         UUID hubId
 ) {

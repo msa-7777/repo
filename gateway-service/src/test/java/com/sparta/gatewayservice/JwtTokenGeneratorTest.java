@@ -20,7 +20,7 @@ class JwtTokenGeneratorTest {
                 /*.subject(UUID.randomUUID().toString())*/
                 .subject("550e8400-e29b-41d4-a716-446655440000")
                 .claim("username", "user01")
-                .claim("role", "MASTER")
+                .claim("role", "COMPANY_MANAGER")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000))
                 .signWith(key, Jwts.SIG.HS256)

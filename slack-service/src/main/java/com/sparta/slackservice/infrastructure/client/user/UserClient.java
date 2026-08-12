@@ -10,10 +10,9 @@ import java.util.UUID;
 @FeignClient(name = "user-service")
 public interface UserClient {
 
-    // TODO: user-service 내부 Slack 정보 조회 API 경로와 응답 형식 확정 후 수정
-    // 사용자관리 API 중에 개별 회원 조회 API 재활용
-    @GetMapping("/api/v1/admin/users/{userId}")
-    RestApiResponse<UserResponse> getUser(
+    // Slack 수신자 정보를 조회하기 위한 user-service 내부 API
+    @GetMapping("/api/v1/internal/users/{userId}")
+    UserApiResponse<UserResponse> getUser(
             @PathVariable("userId") UUID userId
     );
 }
