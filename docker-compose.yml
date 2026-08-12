@@ -61,6 +61,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_SCHEMA: company_schema
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -81,6 +82,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_SCHEMA: product_schema
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
 
@@ -102,6 +104,7 @@ services:
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -121,6 +124,7 @@ services:
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -140,6 +144,7 @@ services:
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -162,6 +167,7 @@ services:
       EUREKA_URL: http://eureka-server:19090/eureka/
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       SLACK_TEST_USER_ID: ${SLACK_TEST_USER_ID}
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -182,6 +188,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       AI_API_KEY: ${AI_API_KEY}
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -202,6 +209,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       SECURITY_JWT_SECRET: ${SECURITY_JWT_SECRET}
       EUREKA_URL: http://eureka-server:19090/eureka/
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
 
     depends_on:
       postgres:
@@ -219,6 +227,14 @@ services:
     environment:
       EUREKA_URL: http://eureka-server:19090/eureka/
       JWT_SECRET: ${JWT_SECRET}
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
 
 
 volumes:
