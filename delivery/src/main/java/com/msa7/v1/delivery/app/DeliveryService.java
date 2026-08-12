@@ -24,6 +24,7 @@ import com.msa7.v1.delivery.presentation.dto.payload.DeliveryFailedEvent;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryRouteResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.OrderCreatedEvent;
+import com.msa7.v1.delivery.presentation.internal.dto.DeliveryRouteInfoResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -195,5 +196,28 @@ public class DeliveryService {
 		return routeRepo.existsActiveRouteByHubId(hubId);
 	}
 
+	@Transactional(readOnly = true)
+	public DeliveryRouteInfoResponse getDeliveryInfoByOrderId(UUID orderId) {
+		Delivery delivery = deliveryRepo.findByOrderId(orderId).orElseThrow(
+			() -> new IllegalArgumentException("해당 주문 배송 정보 x")
+		);
+		List<DeliveryRouteInfoResponse.DeliveryRouteInfoDetails> routes =
+			delivery.getRoutes().stream().map(
+				x -> new
+					DeliveryRouteInfoResponse.DeliveryRouteInfoDetails(
+						x.getSequence(),
+						x.getDeliveryManagerId(),
+						x.getStatus().name()
+				)
+			).toList();
+		return new DeliveryRouteInfoResponse(
+			delivery.getId(),
+			delivery.getStartHubId(),
+			delivery.getEndHubId(),
+			delivery.getDestinationAddress().address(),
+			delivery.getCompanyDeliveryManagerId(),
+			routes
+		);
+	}
 
 }
