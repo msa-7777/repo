@@ -9,6 +9,8 @@ import com.sparta.productservice.global.exception.product.ProductErrorCode;
 import com.sparta.productservice.infrastructure.client.company.CompanyClient;
 import com.sparta.productservice.infrastructure.client.company.CompanyResponse;
 import com.sparta.productservice.infrastructure.client.company.CompanyType;
+import com.sparta.productservice.infrastructure.client.user.UserClient;
+import com.sparta.productservice.infrastructure.client.user.UserResponse;
 import com.sparta.productservice.presentation.product.request.ProductCreateRequest;
 import com.sparta.productservice.presentation.product.request.ProductUpdateRequest;
 import com.sparta.productservice.presentation.product.response.ProductResponse;
@@ -36,10 +38,9 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
     private final CompanyClient companyClient;
+    private final UserClient userClient;
 
     // 상품 생성 - 상품과 초기 재고를 함께 생성한다.
-    // TODO: 업체 담당자는 자신이 소속된 업체의 상품만 생성할 수 있도록 권한과 소유권을 검증한다.
-    // TODO: 허브 관리자는 담당 허브 소속 업체의 상품만 생성할 수 있도록 업체·허브 관계를 검증한다.
     // TODO: 다른 서비스 호출 실패 시 Feign 예외 처리 및 공통 에러 응답 정책을 적용한다.
 
     /* 처리 순서:
@@ -57,9 +58,7 @@ public class ProductService {
                                          UUID userId,
                                          String role) {
 
-        // validateCreateAccess(request.companyId(), userId, role);
-
-        // company-service 업체 단건 조회
+        // 상품을 등록할 업체 정보를 company-service에서 조회한다.
         CompanyResponse company = companyClient
                                     .getCompany(request.companyId())
                                     .data();
@@ -73,6 +72,9 @@ public class ProductService {
         // 업체에 소속된 hubId가 존재하는지 검증
         validateCompanyHub(company);
 
+        // 요청 사용자가 해당 업체의 상품을 생성할 권한이 있는지 확인
+        validateCreateAccess(company, userId, role);
+
         // 동일 업체 내 상품명 중복 검증
         validateDuplicateProductName(request.companyId(), request.name());
 
@@ -81,6 +83,7 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         // company-service에서 조회한 hubId로 초기 재고 생성
+        // 업체의 관리 허브를 기준으로 초기 수량 0의 재고를 함께 생성
         inventoryService.createInventory(
                 savedProduct.getId(),
                 company.hubId()
@@ -90,8 +93,6 @@ public class ProductService {
 
         return ProductResponse.from(savedProduct);
     }
-
-    // 업체 단건 조회 API를 호출하고 상품 생성에 필요한 업체 정보를 검증한다.
 
     // 상품 단건 조회
     public ProductResponse getProduct(UUID productId,
@@ -107,7 +108,6 @@ public class ProductService {
     }
 
     // 상품 목록 조회 - 삭제되지 않은 상품만 조회
-    // TODO: 로그인 사용자의 역할과 소속에 따라 조회 가능한 상품 범위를 Querydsl 조건에 추가한다.
     public Page<ProductResponse> getProducts(
             ProductSearchCondition condition,
             Pageable pageable,
@@ -116,19 +116,10 @@ public class ProductService {
     ) {
         Pageable normalizedPageable = normalizePageable(pageable);
 
-        /*
-         * TODO [역할별 조회 범위]:
-         *
-         * HUB_MANAGER
-         * - userId의 담당 hubId를 조회
-         * - Inventory.hubId와 연결해서 해당 허브 상품만 조회
-         *
-         * MASTER / DELIVERY_MANAGER / COMPANY_MANAGER
-         * - 전체 조회 허용
-         */
+        UUID accessibleHubId = resolveAccessibleHubId(userId, role);
 
         return productRepository
-                .searchProducts(condition, normalizedPageable)
+                .searchProducts(condition, normalizedPageable, accessibleHubId)
                 .map(ProductResponse::from);
     }
 
@@ -140,34 +131,26 @@ public class ProductService {
             UUID userId,
             String role
     ) {
+        // 삭제되지 않은 상품을 조회한다.
         Product product = findActiveProduct(productId);
 
-        /*
-         * TODO [리소스 권한 검증]:
-         *
-         * MASTER
-         * - 모든 상품 수정 가능
-         *
-         * HUB_MANAGER
-         * - 해당 상품의 Inventory hubId가 본인의 담당 hubId인지 확인
-         *
-         * COMPANY_MANAGER
-         * - product.companyId와 본인 companyId가 동일한지 확인
-         */
-
+        // 역할과 소속을 기준으로 해당 상품을 수정할 수 있는지 확인한다.
         validateUpdateAccess(product, userId, role);
 
+        // 동일 업체 내 다른 상품과 이름이 중복되지 않는지 확인한다.
         validateDuplicateProductNameForUpdate(
                 product.getCompanyId(),
                 request.name(),
                 productId
         );
 
+        // 현재 정책상 수정 가능한 필드는 상품명뿐이다.
         product.updateName(request.name());
 
-        /* product는 영속 상태이므로 별도의 save()를 호출하지 않아도
-        * 트랜잭션이 종료될 때 변경 감지로 UPDATE 쿼리가 실행
-        */
+        /*
+         * Product는 영속 상태이므로 별도의 save()를 호출하지 않아도
+         * 트랜잭션 종료 시 변경 감지로 UPDATE 쿼리가 실행된다.
+         */
         return ProductResponse.from(product);
     }
 
@@ -179,29 +162,22 @@ public class ProductService {
             UUID userId,
             String role
     ) {
+        // 삭제되지 않은 상품을 조회한다.
         Product product = findActiveProduct(productId);
 
-        /*
-         * TODO [리소스 권한 검증]:
-         *
-         * MASTER
-         * - 모든 상품 삭제 가능
-         *
-         * HUB_MANAGER
-         * - 해당 상품의 Inventory hubId와
-         *   본인의 담당 hubId가 동일한지 확인
-         */
+        // 해당 상품을 삭제할 수 있는 사용자인지 확인한다.
         validateDeleteAccess(product, userId, role);
 
+        // 상품과 연결된 재고를 함께 논리 삭제한다.
         /*
-         * 상품과 재고는 같은 product-service에서 관리하므로
-         * 하나의 로컬 트랜잭션 안에서 함께 논리 삭제한다.
+         * Product와 Inventory는 같은 product-service에서 관리하므로
+         * 하나의 로컬 트랜잭션 안에서 처리한다.
          */
         product.delete(userId);
-        inventoryService.deleteInventoryIfExists(productId, userId);
-
-        // TODO: 주문 등 다른 서비스의 연관 데이터 비활성화 정책을 확정한다.
-        // TODO: MSA 연동 시 다른 서비스의 삭제 처리는 이벤트 또는 API 호출로 전달한다.
+        inventoryService.deleteInventoryIfExists(
+                productId,
+                userId
+        );
     }
 
     // 삭제되지 않은 상품 조회 - 상품이 없거나 이미 삭제된 경우 모두 PRODUCT_NOT_FOUND로 처리
@@ -260,7 +236,7 @@ public class ProductService {
                 : DEFAULT_PAGE_SIZE;
 
 
-        // 요청한 page 번호는 유지하고 검증된 size와 sort로 새로운 Pageable을 생성한다.
+        // 요청한 page 번호는 유지하고 검증된 size로 새로운 Pageable을 생성한다.
         return PageRequest.of(
                 pageable.getPageNumber(),
                 pageSize
@@ -272,37 +248,34 @@ public class ProductService {
     // 상품 생성 리소스 접근 검증
     // "해당 사용자가 요청한 업체/허브 범위까지 접근 가능한가"를 검증한다.
     private void validateCreateAccess(
-            UUID companyId,
+            CompanyResponse company,
             UUID userId,
             String role
     ) {
+        // MASTER는 모든 업체의 상품을 생성할 수 있다.
         if ("MASTER".equals(role)) {
             return;
         }
 
+        // HUB_MANAGER는 자신이 담당하는 허브에 소속된 업체의 상품만 생성할 수 있다.
         if ("HUB_MANAGER".equals(role)) {
-            /*
-             * TODO [user-service 연동]:
-             * userId로 HUB_MANAGER의 담당 hubId를 조회한다.
-             *
-             * TODO [company-service 연동]:
-             * companyId로 업체를 조회하고 해당 업체의 hubId를 확인한다.
-             * 담당 hubId와 업체 hubId가 다르면 접근 거부한다.
-             */
-            validateHubManagerCompanyAccess(companyId, userId);
+            validateHubManagerCompanyAccess(
+                    company.hubId(),
+                    userId
+            );
             return;
         }
 
-        if ("COMPANY_MANAGER".equals(role)) {
-            /*
-             * TODO [user-service 연동]:
-             * userId로 COMPANY_MANAGER의 소속 companyId를 조회한다.
-             * 요청 companyId와 본인 companyId가 다르면 접근 거부한다.
-             */
-            validateCompanyManagerCompanyAccess(companyId, userId);
+        // SUPPLIER_AGENT는 자신이 소속된 생산 업체의 상품만 생성할 수 있다.
+        if ("SUPPLIER_AGENT".equals(role)) {
+            validateSupplierAgentCompanyAccess(
+                    company.companyId(),
+                    userId
+            );
             return;
         }
 
+        // DELIVERY_AGENT 등 상품 생성 권한이 없는 역할은 차단한다.
         throw new ApiException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
     }
 
@@ -313,17 +286,61 @@ public class ProductService {
             UUID userId,
             String role
     ) {
+        // MASTER, SUPPLIER_AGENT, DELIVERY_AGENT는 모든 활성 상품을 조회할 수 있다.
+
+        // HUB_MANAGER만 담당 허브의 상품인지 추가로 확인한다.
         if ("HUB_MANAGER".equals(role)) {
-            /*
-             * TODO [user-service 연동]:
-             * userId로 담당 hubId 조회
-             *
-             * TODO [Inventory 조회]:
-             * product.getId()로 Inventory 조회
-             * 두 hubId가 다르면 접근 거부
-             */
-            validateHubManagerProductAccess(product.getId(), userId);
+            validateHubManagerProductAccess(
+                    product.getId(),
+                    userId
+            );
         }
+
+        if ("MASTER".equals(role)
+                || "SUPPLIER_AGENT".equals(role)
+                || "DELIVERY_AGENT".equals(role)) {
+            return;
+        }
+
+        throw new ApiException(
+                ProductErrorCode.PRODUCT_ACCESS_DENIED
+        );
+    }
+
+
+    // 상품 목록 조회 리소스 접근 검증
+    private UUID resolveAccessibleHubId(
+            UUID userId,
+            String role
+    ) {
+        /*
+         * HUB_MANAGER만 담당 허브 범위를 제한한다.
+         *
+         * MASTER, SUPPLIER_AGENT, DELIVERY_AGENT는
+         * 전체 활성 상품을 조회할 수 있으므로 null을 전달한다.
+         */
+
+        if ("HUB_MANAGER".equals(role)) {
+            UserResponse user = getUser(userId);
+
+            if (user.hubId() == null) {
+                throw new ApiException(
+                        ProductErrorCode.PRODUCT_ACCESS_DENIED
+                );
+            }
+
+            return user.hubId();
+        }
+
+        if ("MASTER".equals(role)
+                || "SUPPLIER_AGENT".equals(role)
+                || "DELIVERY_AGENT".equals(role)) {
+            return null;
+        }
+
+        throw new ApiException(
+                ProductErrorCode.PRODUCT_ACCESS_DENIED
+        );
     }
 
 
@@ -333,17 +350,23 @@ public class ProductService {
             UUID userId,
             String role
     ) {
+        // MASTER는 모든 상품을 수정할 수 있다.
         if ("MASTER".equals(role)) {
             return;
         }
 
+        // HUB_MANAGER는 담당 허브의 상품만 수정할 수 있다.
         if ("HUB_MANAGER".equals(role)) {
-            validateHubManagerProductAccess(product.getId(), userId);
+            validateHubManagerProductAccess(
+                    product.getId(),
+                    userId
+            );
             return;
         }
 
-        if ("COMPANY_MANAGER".equals(role)) {
-            validateCompanyManagerCompanyAccess(
+        // SUPPLIER_AGENT는 본인 업체의 상품만 수정할 수 있다.
+        if ("SUPPLIER_AGENT".equals(role)) {
+            validateSupplierAgentCompanyAccess(
                     product.getCompanyId(),
                     userId
             );
@@ -374,23 +397,22 @@ public class ProductService {
 
 
     // 공통 세부 검증
-    // COMPANY_MANAGER가 실제 본인 업체에 접근하는지 검증한다.
-    private void validateCompanyManagerCompanyAccess(
+    // SUPPLIER_AGENT가 실제 본인 업체에 접근하는지 검증한다.
+    private void validateSupplierAgentCompanyAccess(
             UUID targetCompanyId,
             UUID userId
     ) {
-        /*
-         * TODO [user-service 연동]:
-         *
-         * UUID managerCompanyId =
-         *         userClient.getUser(userId).companyId();
-         *
-         * if (!targetCompanyId.equals(managerCompanyId)) {
-         *     throw new ApiException(
-         *             ProductErrorCode.PRODUCT_ACCESS_DENIED
-         *     );
-         * }
-         */
+        // user-service에서 사용자의 소속 정보를 조회한다.
+        UserResponse user = getUser(userId);
+
+         // supplierId가 없거나 요청 대상 companyId와 다르면 다른 업체의 상품에 접근하려는 요청이므로 거부한다.
+        if (user.supplierId() == null
+                || !targetCompanyId.equals(user.supplierId())) {
+
+            throw new ApiException(
+                    ProductErrorCode.PRODUCT_ACCESS_DENIED
+            );
+        }
     }
 
     // HUB_MANAGER가 해당 상품이 속한 허브를 담당하는지 검증한다.
@@ -398,44 +420,52 @@ public class ProductService {
             UUID productId,
             UUID userId
     ) {
+        // user-service에서 허브 관리자의 담당 허브를 조회한다.
+        UserResponse user = getUser(userId);
+
         /*
-         * TODO [user-service 연동]:
-         * UUID managerHubId =
-         *         userClient.getUser(userId).hubId();
-         *
-         * TODO [Inventory 조회]:
-         * Inventory inventory =
-         *         inventoryService.getActiveInventory(productId);
-         *
-         * if (!inventory.getHubId().equals(managerHubId)) {
-         *     throw new ApiException(
-         *             ProductErrorCode.PRODUCT_ACCESS_DENIED
-         *     );
-         * }
+         * HUB_MANAGER라면 정상적으로 담당 hubId가 존재해야 한다.
+         * hubId가 없다면 상품 접근 권한을 판단할 수 없으므로 거부한다.
          */
+        if (user.hubId() == null) {
+            throw new ApiException(
+                    ProductErrorCode.PRODUCT_ACCESS_DENIED
+            );
+        }
+
+        // 상품에 연결된 활성 재고의 관리 허브를 조회한다.
+        /*
+         * 상품의 hubId는 Product가 아니라 Inventory에서 관리하므로
+         * productId를 기준으로 Inventory의 hubId를 가져온다.
+         */
+        UUID productHubId =
+                inventoryService.getHubIdByProductId(productId);
+
+        // 담당 허브와 상품 관리 허브가 다르면 접근을 거부한다.
+        if (!user.hubId().equals(productHubId)) {
+            throw new ApiException(
+                    ProductErrorCode.PRODUCT_ACCESS_DENIED
+            );
+        }
     }
 
     // HUB_MANAGER가 해당 업체가 속한 허브를 담당하는지 검증한다.
-    // 상품 생성 전에는 아직 Inventory가 없으므로company-service의 hubId를 기준으로 검증한다.
+    // 상품 생성 전에는 아직 Inventory가 없으므로 company-service의 hubId를 기준으로 검증한다.
     private void validateHubManagerCompanyAccess(
-            UUID companyId,
+            UUID companyHubId,
             UUID userId
     ) {
-        /*
-         * TODO [user-service 연동]:
-         * UUID managerHubId =
-         *         userClient.getUser(userId).hubId();
-         *
-         * TODO [company-service 연동]:
-         * CompanyResponse company =
-         *         companyClient.getCompany(companyId).getData();
-         *
-         * if (!company.hubId().equals(managerHubId)) {
-         *     throw new ApiException(
-         *             ProductErrorCode.PRODUCT_ACCESS_DENIED
-         *     );
-         * }
-         */
+        // user-service에서 HUB_MANAGER의 담당 허브 정보를 조회한다.
+        UserResponse user = getUser(userId);
+
+        // 사용자의 담당 hubId와 업체의 관리 hubId가 같아야 해당 업체의 상품을 생성할 수 있다.
+        if (user.hubId() == null
+                || !companyHubId.equals(user.hubId())) {
+
+            throw new ApiException(
+                    ProductErrorCode.PRODUCT_ACCESS_DENIED
+            );
+        }
     }
 
 
@@ -462,6 +492,21 @@ public class ProductService {
         if (company.hubId() == null) {
             throw new ApiException(ProductErrorCode.COMPANY_HUB_NOT_FOUND);
         }
+    }
+
+    // 사용자 조회
+    private UserResponse getUser(UUID userId) {
+        UserResponse user = userClient
+                .getUser(userId)
+                .data();
+
+        if (user == null || user.userId() == null) {
+            throw new ApiException(
+                    ProductErrorCode.PRODUCT_ACCESS_DENIED
+            );
+        }
+
+        return user;
     }
 
 }

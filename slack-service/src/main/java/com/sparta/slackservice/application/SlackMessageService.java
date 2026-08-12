@@ -8,6 +8,9 @@ import com.sparta.slackservice.global.exception.ApiException;
 import com.sparta.slackservice.global.exception.SlackMessageErrorCode;
 import com.sparta.slackservice.infrastructure.client.slack.SlackClient;
 import com.sparta.slackservice.infrastructure.client.slack.SlackSendResult;
+import com.sparta.slackservice.infrastructure.client.user.UserApiResponse;
+import com.sparta.slackservice.infrastructure.client.user.UserClient;
+import com.sparta.slackservice.infrastructure.client.user.UserResponse;
 import com.sparta.slackservice.presentation.request.SlackMessageCreateRequest;
 import com.sparta.slackservice.presentation.request.SlackMessageUpdateRequest;
 import com.sparta.slackservice.presentation.response.SlackMessageCreateResponse;
@@ -34,42 +37,34 @@ public class SlackMessageService {
 
     private final SlackMessageRepository slackMessageRepository;
 
-    /*
-     * SlackClient 인터페이스를 통해 환경별 구현체를 주입받는다.
-     *
-     * local, dev:
-     * - SlackApiClient
-     * - 실제 Slack Web API 호출
-     *
-     * test:
-     * - TemporarySlackClient
-     * - 외부 API를 호출하지 않고 임시 성공 결과 반환
-     */
+    // 실제 Slack Web API 호출
     private final SlackClient slackClient;
 
-    @Value("${slack.api.test-user-id}")
-    private String temporarySlackUserId;
+    // receiverId로 사용자 이름과 실제 Slack 사용자 ID를 조회한다.
+    private final UserClient userClient;
 
     /*
-     * Slack 메시지를 발송하고 결과를 저장한다.
+     * Slack 메시지 발송 흐름
      *
-     * 현재 로컬 흐름:
-     * 1. 요청 정보로 SlackMessage 엔티티 생성
-     * 2. 환경변수에서 실제 테스트용 Slack 사용자 ID 조회
-     * 3. SlackApiClient가 chat.postMessage 호출
-     * 4. 성공하면 SENT, 실패하면 FAILED로 저장
+     * 1. 주문/배송 처리 흐름에서 SlackMessageCreateRequest를 전달받는다.
+     * 2. receiverId로 user-service 내부 API를 호출한다.
+     * 3. receiverName과 slackId를 조회한다.
+     * 4. Slack API를 호출한다.
+     * 5. 발송 성공 시 SENT, 실패 시 FAILED 상태로 발송 이력을 저장한다.
      *
-     * TODO: user-service 연동 후 테스트 사용자 정보 생성 로직 제거
+     * SlackMessageCreateRequest 값의 출처:
+     * - orderId    : Delivery.orderId
+     * - hubId      : DeliveryRouteRecord.startHubId
+     * - receiverId : DeliveryRouteRecord.deliveryManagerId (= User.userId)
+     * - message    : AI 서비스가 생성한 메시지를 주문/배송 처리 흐름에서 전달
+     *
+     * Slack 서비스는 Delivery 또는 AI 서비스를 직접 호출하지 않는다.
      */
-     // TODO: order-service 주문 생성/상태 변경 이벤트 또는 내부 API를 통해 Slack 메시지 생성 요청을 받도록 연동
-     // 현재는 Swagger를 통한 직접 호출만 지원한다.
     @Transactional
     public SlackMessageCreateResponse createSlackMessage(
             SlackMessageCreateRequest request
     ) {
         /*
-         * 발송 요청에 포함된 업무 정보로 엔티티를 생성한다.
-         *
          * 같은 orderId와 receiverId에 대한 중복 발송도 허용하므로
          * 중복 검사 없이 요청마다 새로운 SlackMessage를 생성한다.
          */
@@ -78,22 +73,10 @@ public class SlackMessageService {
                 request.hubId(),
                 request.receiverId(),
                 request.message()
-                // TODO: ai-service 연동 후에는 AI가 생성한 메시지를 전달받아 Slack 메시지로 사용한다.
-                // 현재는 요청 메시지를 그대로 사용한다.
         );
 
-        // TODO: user-service 연동
-        /* receiverId로 user-service를 조회하여 receiverName과 slackUserId(slackId)를 조회
-         * 실제 MSA 연동 시에는 receiverId로 아래 API를 호출한다.
-         * GET /api/v1/admin/users/{userId}
-         *
-         * 공통 응답의 data에서 다음 값을 사용한다.
-         * - name -> receiverName
-         * - slackId  -> slackUserId
-         *
-         * 현재는 로컬 CRUD 검증을 위해 임시 사용자 정보를 사용한다.
-         */
-        TemporaryReceiverInfo receiverInfo = createTemporaryReceiverInfo(request.receiverId());
+        // receiverId는 배송 담당자의 userId와 동일하다.
+        ReceiverInfo receiverInfo = getReceiverInfo(request.receiverId());
 
         slackMessage.assignReceiver(
                 receiverInfo.receiverName(),
@@ -113,7 +96,8 @@ public class SlackMessageService {
 
             slackMessage.markAsSent(sendResult.channelId(),
                                     sendResult.slackTs(),
-                                    sendResult.sentAt());
+                                    sendResult.sentAt()
+            );
         } catch (SlackApiException exception) {
             // 발송에 실패해도 발송 요청 이력은 삭제하지 않는다.
             /*
@@ -163,28 +147,12 @@ public class SlackMessageService {
         SlackMessage slackMessage =
                 findSlackMessage(slackMessageId);
 
-        /* 단건 조회 응답에서는 운영 확인을 위해
-         * slackUserId, channelId, slackTs, failureReason을 포함한다.
-         */
+        // 단건 조회 응답에서는 운영 확인을 위해 slackUserId, channelId, slackTs, failureReason을 포함한다.
         return SlackMessageDetailResponse.from(slackMessage);
     }
 
 
     // Slack 메시지 발송 이력을 조건별로 검색한다.
-    /* 검색 조건:
-     * - orderId
-     * - hubId
-     * - receiverId
-     * - receiverName
-     * - status
-     * - startDate, endDate(createdAt 기준)
-     *
-     * 정렬:
-     * - createdAt DESC
-     *
-     * 공통 조건:
-     * - deletedAt IS NULL
-     */
     public SlackMessagePageResponse searchSlackMessages(
             SlackMessageSearchCondition condition,
             Pageable pageable
@@ -199,14 +167,6 @@ public class SlackMessageService {
 
 
     // 이미 발송된 Slack 메시지의 내용만 수정한다.
-    /*
-     * 수정 가능 상태:
-     * - SENT
-     * - MODIFIED
-     *
-     * 수정 불가능 상태:
-     * - FAILED
-     */
     @Transactional
     public SlackMessageUpdateResponse updateSlackMessage(
             UUID slackMessageId,
@@ -231,10 +191,6 @@ public class SlackMessageService {
         }
 
         try {
-            /*
-             * local, dev 환경에서는 SlackApiClient가 chat.update를 호출한다.
-             * test 환경에서는 TemporarySlackClient가 임시 성공 결과를 반환한다.
-             */
             slackClient.updateMessage(
                     slackMessage.getChannelId(),
                     slackMessage.getSlackTs(),
@@ -264,13 +220,6 @@ public class SlackMessageService {
         SlackMessage updatedSlackMessage =
                 slackMessageRepository.saveAndFlush(slackMessage);
 
-        /*
-         * TODO: Slack 수정 성공 후 DB 저장 실패 보완
-         *
-         * Slack에서는 수정됐지만 DB 수정이 실패하는 불일치 상황에 대해
-         * 추후 보상 요청 또는 이벤트 기반 처리 도입을 검토한다.
-         */
-
         return SlackMessageUpdateResponse.from(updatedSlackMessage);
     }
 
@@ -288,8 +237,6 @@ public class SlackMessageService {
          * DELETE API의 의미:
          * - DB 발송 이력만 논리 삭제
          * - Slack에 발송된 실제 메시지는 유지
-         *
-         * TODO: Gateway 인증 방식 확정 후 deletedBy에 실제 요청 사용자 ID를 전달한다.
          */
         slackMessage.delete(deletedBy);
     }
@@ -305,20 +252,58 @@ public class SlackMessageService {
     }
 
 
-    // 로컬 CRUD 검증을 위한 임시 수신자 정보를 생성한다.
-    // receiverId는 요청값을 그대로 사용하고, receiverName과 slackUserId만 임시값으로 만든다.
-    private TemporaryReceiverInfo createTemporaryReceiverInfo(UUID receiverId) {
-        /*
-         * TODO: user-service FeignClient 연동 후 제거
-         * TemporaryReceiverInfo 제거하고 UserClient(FeignClient)로 실제 사용자 정보를 조회하도록 변경
-         *
-         * 현재는 실제 Slack API 연동을 로컬에서 확인하기 위해
-         * 환경변수에 등록한 테스트 사용자의 실제 Slack Member ID를 사용한다.
-         */
-        String receiverName = "임시 담당자-" + receiverId.toString().substring(0, 8);
+    /* receiverId로 user-service 내부 API를 호출해  Slack 발송에 필요한 사용자 정보를 조회한다.
+     *
+     * GET /api/v1/internal/users/{userId}
+     */
+    private ReceiverInfo getReceiverInfo(UUID receiverId) {
 
-        return new TemporaryReceiverInfo(receiverName, temporarySlackUserId);
+        UserApiResponse<UserResponse> response = userClient.getUser(receiverId);
+
+        if (response == null || !response.success()) {
+            throw new ApiException(
+                    SlackMessageErrorCode.SLACK_MESSAGE_RECEIVER_NOT_FOUND
+            );
+        }
+
+        UserResponse user = response.data();
+
+        validateUserResponse(receiverId, user);
+
+        return new ReceiverInfo(
+                user.name(),
+                user.slackId()
+        );
     }
+
+    // user-service 응답에서 Slack 발송에 필요한 값이 정상인지 검증한다.
+    private void validateUserResponse(
+            UUID receiverId,
+            UserResponse user
+    ) {
+
+        if (user == null
+                || user.userId() == null
+                || !receiverId.equals(user.userId())) {
+
+            throw new ApiException(
+                    SlackMessageErrorCode.SLACK_MESSAGE_RECEIVER_NOT_FOUND
+            );
+        }
+
+        if (user.name() == null || user.name().isBlank()) {
+            throw new ApiException(
+                    SlackMessageErrorCode.SLACK_MESSAGE_RECEIVER_NOT_FOUND
+            );
+        }
+
+        if (user.slackId() == null || user.slackId().isBlank()) {
+            throw new ApiException(
+                    SlackMessageErrorCode.SLACK_MESSAGE_RECEIVER_SLACK_ID_NOT_FOUND
+            );
+        }
+    }
+
 
     // Slack 발송 예외를 DB에 저장할 실패 사유로 변환한다.
     private SlackFailureReason resolveSendFailureReason(
@@ -331,10 +316,8 @@ public class SlackMessageService {
         };
     }
 
-    /**
-     * user-service 연동 전까지만 사용하는 내부 임시 데이터 구조다.
-     */
-    private record TemporaryReceiverInfo(
+    // user-service에서 조회한 사용자 정보를 Slack 발송에 필요한 값으로 한정하여 사용한다.
+    private record ReceiverInfo(
             String receiverName,
             String slackUserId
     ) {

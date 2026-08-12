@@ -140,4 +140,10 @@ public class InventoryService {
                         inventory.delete(deletedBy)
                 );
     }
+
+
+    // 상품 접근 권한 검증을 위해 해당 상품의 활성 재고가 속한 허브 ID를 반환한다.
+    public UUID getHubIdByProductId(UUID productId) {
+        return findActiveInventory(productId).getHubId();
+    }
 }

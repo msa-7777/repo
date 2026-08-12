@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClientException;
 import java.time.LocalDateTime;
 
 @Component
-@Profile({"local", "dev"})
+/*@Profile({"local", "dev"})*/
 @RequiredArgsConstructor
 public class SlackApiClient implements SlackClient {
 

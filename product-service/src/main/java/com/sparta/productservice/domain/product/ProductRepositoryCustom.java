@@ -3,6 +3,8 @@ package com.sparta.productservice.domain.product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface ProductRepositoryCustom {
     // 커스텀 Repository 인터페이스
 
@@ -15,6 +17,7 @@ public interface ProductRepositoryCustom {
      */
     Page<Product> searchProducts(
             ProductSearchCondition condition,
-            Pageable pageable
+            Pageable pageable,
+            UUID accessibleHubId
     );
 }
