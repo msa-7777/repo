@@ -67,13 +67,18 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 	@Column(name = "delivery_manager_id")
 	private UUID deliveryManagerId;
 
+	@Column(name = "destination_address")
+	private String destinationAddress;
+
+
 	//  1. toEntity에서 사용하기 위한 Builder 추가
 	@Builder
 	public DeliveryRouteRecordEntity(UUID id, Integer sequence, UUID startHubId, UUID endHubId,
 		Long estimatedDistance, Long estimatedTime,
 		Long actualDistance, Long actualTime,
 		RouteStatus status, UUID deliveryManagerId,
-		LocalDateTime deletedAt, String deletedBy
+		LocalDateTime deletedAt, String deletedBy,
+		String destinationAddress
 		) {
 		this.id = id;
 		this.sequence = sequence;
@@ -84,6 +89,8 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 		this.actualDistance = actualDistance;
 		this.actualTime = actualTime;
 		this.status = status;
+		this.destinationAddress = destinationAddress;
+
 		this.deliveryManagerId = deliveryManagerId;
 		setDeletedInfo(deletedAt, deletedBy);
 	}

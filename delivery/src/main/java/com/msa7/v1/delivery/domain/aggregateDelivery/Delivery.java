@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import com.msa7.v1.delivery.domain.vo.DeliveryStatus;
 import com.msa7.v1.delivery.domain.vo.DestinationAddress;
+import com.msa7.v1.delivery.domain.vo.RouteStatus;
+import com.msa7.v1.delivery.presentation.dto.payload.DeliveryCompletedEvent;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryCreatedEvent;
 
 import lombok.Builder;
@@ -106,6 +108,21 @@ public class Delivery {
 		this.status = newStatus;
 	}
 
+	public void updateRouteStatus(UUID routeId, RouteStatus newStatus) {
+		DeliveryRouteRecord targetRoute = this.routes.stream()
+			.filter(r -> r.getId().equals(routeId))
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("해당 경로를 찾을 수 없습니다."));
+		targetRoute.updateStatus(newStatus);
+		boolean isAllCompleted = this.routes.stream()
+			.allMatch(r -> r.getStatus() == RouteStatus.ARRIVED);
+		if (isAllCompleted) {
+			this.status = DeliveryStatus.COMPLETED;
+			// Spring Data @DomainEvents를 통해 Outbox로 자동 발행됨
+			registerEvent(new DeliveryCompletedEvent(this.orderId, this.id, "배송이 최종 완료되었습니다."));
+		}
+	}
+
 	public void assignCompanyManager(UUID managerId) {
 		this.companyDeliveryManagerId = managerId;
 	}
@@ -118,6 +135,7 @@ public class Delivery {
 		}
 	}
 	// 이벤트 방출용 Getter 및 Clear 메서드
+	public void registerEvent(Object event) {this.domainEvents.add(event);}
 	public List<Object> getDomainEvents() { return Collections.unmodifiableList(domainEvents); }
 	public void clearEvents() { this.domainEvents.clear(); }
 }
