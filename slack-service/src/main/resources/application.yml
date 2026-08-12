@@ -30,3 +30,12 @@ slack:
     base-url: https://slack.com/api
     bot-token: ${SLACK_BOT_TOKEN}
     test-user-id: ${SLACK_TEST_USER_ID}
+
+# Zipkin 적용
+management:
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+  tracing:
+    sampling:
+      probability: 1.0
