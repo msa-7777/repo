@@ -1,6 +1,7 @@
 package com.msa7.company.application;
 
 import com.msa7.company.domain.model.Company;
+import com.msa7.company.global.response.CommonResponse;
 import com.msa7.company.infrastructure.client.hub.HubClient;
 import com.msa7.company.infrastructure.client.user.UserClient;
 import com.msa7.company.infrastructure.client.user.UserResponse;
@@ -14,6 +15,7 @@ import com.msa7.company.presentation.dto.response.CompanyResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +34,7 @@ public class CompanyApplicationService {
     @Transactional
     public CompanyResponse createCompany(CreateCompanyRequest request, UUID userId, String role) {
 
-        if (!hubClient.existsHub(request.hubId())) {
+        if (!hubClient.checkHubExists(request.hubId())) {
             throw new BusinessException(ErrorCode.HUB_NOT_FOUND);
         }
 
@@ -104,8 +106,22 @@ public class CompanyApplicationService {
             return;
         }
 
+        UserResponse userInfo = null;
+
+        // 1. FeignClient 호출
+        ResponseEntity<CommonResponse<UserResponse>> responseEntity = userClient.getUserById(userId);
+
+        // 2. HTTP 상태 코드가 200(OK)인지 확인 후 내부 데이터 추출
+        if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
+            CommonResponse<UserResponse> commonResponse = responseEntity.getBody();
+
+            // 3. CommonResponse 내부의 실제 데이터(InternalUserResponse) 추출
+            // (CommonResponse 내부에 데이터를 가져오는 getter 메서드가 있다고 가정, 예: getData() 또는 getResult())
+            userInfo = commonResponse.getData();
+        }
+
         // user-service에서 호출한 유저 정보 (hubId, supplierId 포함)
-        UserResponse userInfo = userClient.getUserById(userId);
+        //UserResponse userInfo = userClient.getUserById(userId);
         if (userInfo == null) {
             throw new BusinessException(ErrorCode.USER_ACCESS_DENIED);
         }

@@ -6,13 +6,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(name = "slackClient", url = "${slack.webhook-url}")
+@FeignClient(name = "slack-service")
 public interface SlackClient {
 
-    @PostMapping
-    void sendSlackWebhook(@RequestBody Map<String, Object> body);
-
-    default void sendNotification(String message) {
-        sendSlackWebhook(Map.of("text", message));
-    }
+    @PostMapping("/api/v1/slack-messages") // SlackMessageController의 매핑 URL
+    void sendNotification(@RequestBody SlackMessageCreateRequest request);
 }

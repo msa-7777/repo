@@ -30,7 +30,9 @@ public enum ErrorCode {
 	INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "INVALID_INPUT_VALUE",  "잘못된 입력값입니다."),
 	COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMPANY_NOT_FOUND", "해당 업체를 찾을 수 없습니다."),
 	DUPLICATE_COMPANY_NAME(HttpStatus.BAD_REQUEST, "DUPLICATE_COMPANY_NAME", "업체의 이름이 중복되었습니다."),
+	ORDER_NOT_FOUND(HttpStatus.BAD_REQUEST, "ORDER_NOT_FOUND", "해당 주문을 찾을 수 없습니다."),
 	HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "HUB_NOT_FOUND", "해당 관리 허브를 찾을 수 없거나 유효하지 않습니다."),
+
 
 	// AI
 	AI_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_SERVICE_ERROR", "AI 배송 시한 계산 및 메시지 생성 실패"),
