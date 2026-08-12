@@ -107,6 +107,14 @@
     {
       "key": "adminCreatedUserId",
       "value": ""
+    },
+    {
+      "key": "hubRouteId",
+      "value": ""
+    },
+    {
+      "key": "deliveryManagerId",
+      "value": ""
     }
   ],
   "item": [
@@ -179,10 +187,15 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -190,8 +203,13 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/auth/signup",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["auth", "signup"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
             }
           }
         },
@@ -213,8 +231,15 @@
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/signup-requests/{{testUserId}}/approve",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "signup-requests", "{{testUserId}}", "approve"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "signup-requests",
+                "{{testUserId}}",
+                "approve"
+              ]
             }
           }
         },
@@ -235,10 +260,15 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -246,8 +276,13 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/auth/login",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -257,15 +292,24 @@
             "auth": {
               "type": "bearer",
               "bearer": [
-                { "key": "token", "value": "{{testUserAccessToken}}", "type": "string" }
+                {
+                  "key": "token",
+                  "value": "{{testUserAccessToken}}",
+                  "type": "string"
+                }
               ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/users/me",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             }
           }
         },
@@ -275,12 +319,19 @@
             "auth": {
               "type": "bearer",
               "bearer": [
-                { "key": "token", "value": "{{testUserAccessToken}}", "type": "string" }
+                {
+                  "key": "token",
+                  "value": "{{testUserAccessToken}}",
+                  "type": "string"
+                }
               ]
             },
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -288,8 +339,13 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/users/me",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             }
           }
         },
@@ -300,8 +356,14 @@
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/users/{{testUserId}}",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "users", "{{testUserId}}"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{testUserId}}"
+              ]
             }
           }
         },
@@ -312,12 +374,26 @@
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/users?role=SUPPLIER_AGENT&page=0&size=10",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "users"],
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
               "query": [
-                { "key": "role", "value": "SUPPLIER_AGENT" },
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "10" }
+                {
+                  "key": "role",
+                  "value": "SUPPLIER_AGENT"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
               ]
             }
           }
@@ -327,7 +403,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -335,8 +414,14 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/users/{{testUserId}}",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "users", "{{testUserId}}"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{testUserId}}"
+              ]
             }
           }
         },
@@ -358,7 +443,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -366,8 +454,13 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/users",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "users"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
             }
           }
         },
@@ -387,10 +480,15 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -398,8 +496,13 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/auth/signup",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["auth", "signup"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
             }
           }
         },
@@ -410,8 +513,14 @@
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/signup-requests/{{pendingUserId}}",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "signup-requests", "{{pendingUserId}}"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "signup-requests",
+                "{{pendingUserId}}"
+              ]
             }
           }
         },
@@ -422,11 +531,22 @@
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/signup-requests?page=0&size=10",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "signup-requests"],
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "signup-requests"
+              ],
               "query": [
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "10" }
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
               ]
             }
           }
@@ -438,8 +558,15 @@
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/signup-requests/{{pendingUserId}}/reject",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "signup-requests", "{{pendingUserId}}", "reject"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "signup-requests",
+                "{{pendingUserId}}",
+                "reject"
+              ]
             }
           }
         }
@@ -447,7 +574,7 @@
     },
     {
       "name": "0. Hub (최소 - centralHubId/spokeHubId 생성용)",
-      "description": "체이닝에 필요한 hub만 최소로 생성. 전체 Hub/HubRoute 시나리오는 hub/postman/hub-service.postman_collection.json 참고.",
+      "description": "체이닝에 필요한 hub만 최소로 생성. 라우트는 바로 다음 폴더(0b. HubRoute) 참고.",
       "item": [
         {
           "name": "01 중앙허브 생성",
@@ -538,6 +665,66 @@
               "path": [
                 "hubs",
                 "{{spokeHubId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "0b. HubRoute (허브 라우트 - 최소, spokeHubId->centralHubId 경로 생성용)",
+      "item": [
+        {
+          "name": "01 허브 라우트 생성 (스포크 -> 중앙)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"hubRouteId\", json.data.hubRouteId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromHubId\": \"{{spokeHubId}}\",\n  \"toHubId\": \"{{centralHubId}}\",\n  \"distance\": 100,\n  \"duration\": 60\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hub-routes",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hub-routes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 허브 라우트 단건조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hub-routes/{{hubRouteId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hub-routes",
+                "{{hubRouteId}}"
               ]
             }
           }
@@ -922,7 +1109,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"receiverCompanyId\": \"{{receiverCompanyId}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 10,\n  \"requestNotes\": \"파손 주의\"\n}"
+              "raw": "{\n  \"receiverCompanyId\": \"{{receiverCompanyId}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 10,\n  \"requestNotes\": \"파손 주의\",\n  \"receiverSlackId\": \"11111111-1111-1111-1111-111111111111\",\n  \"startHubId\": \"{{spokeHubId}}\",\n  \"endHubId\": \"{{centralHubId}}\",\n  \"destinationAddress\": \"서울특별시 강남구\"\n}"
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/orders",
@@ -953,27 +1140,19 @@
           }
         },
         {
-          "name": "03 수정 (수량/요청사항 변경)",
+          "name": "03 배송상태 포함 조회",
           "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quantity\": 20,\n  \"requestNotes\": \"파손 주의 (수정)\"\n}"
-            },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}",
+              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}/delivery-status",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
                 "orders",
-                "{{orderId}}"
+                "{{orderId}}",
+                "delivery-status"
               ]
             }
           }
@@ -982,36 +1161,93 @@
     },
     {
       "name": "4. Delivery",
-      "description": "생성/단건조회/삭제 API가 없는 스텁 상태 모듈. server.port가 application.yaml에 없어서 deliveryBaseUrl 포트는 실제 값으로 직접 바꿔야 함. deliveryId는 생성 API가 없어 DB에서 직접 확인한 값을 변수에 넣어야 함.",
+      "description": "배송 담당자 생성/삭제, 배송 단건조회/삭제 API가 추가됨(2026-08-10 이후). 주문->배송 자동 생성 흐름은 hub-service getRouteInfo 응답 DTO 불일치 버그로 현재 항상 실패하므로, deliveryId는 DB에서 직접 확인한 값을 변수에 넣어야 함.",
       "item": [
         {
-          "name": "01 목록조회 (스텁 - 항상 data null)",
+          "name": "01 배송 담당자 생성 (허브 소속)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"deliveryManagerId\", json.data);"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\",\n  \"hubId\": \"{{spokeHubId}}\",\n  \"slackId\": \"22222222-2222-2222-2222-222222222222\",\n  \"type\": \"HUB_STAFF\"\n}"
+            },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/deliveries?page=1&size=10",
+              "raw": "{{gatewayBaseUrl}}/deliveries/managers",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
-                "deliveries"
+                "deliveries",
+                "managers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 배송 경로 목록조회 (hubId, status 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/deliveries/routes?hubId={{spokeHubId}}&status=WAITING",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "deliveries",
+                "routes"
               ],
               "query": [
                 {
-                  "key": "page",
-                  "value": "1"
+                  "key": "hubId",
+                  "value": "{{spokeHubId}}"
                 },
                 {
-                  "key": "size",
-                  "value": "10"
+                  "key": "status",
+                  "value": "WAITING"
                 }
               ]
             }
           }
         },
         {
-          "name": "02 상태변경 (deliveryId 수동 입력 필요)",
+          "name": "03 배송 단건조회 (deliveryId 수동 입력 필요)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/deliveries/{{deliveryId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "deliveries",
+                "{{deliveryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 상태변경 (deliveryId 수동 입력 필요)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1022,7 +1258,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"HUB_MOVING\",\n  \"currentHubId\": \"{{spokeHubId}}\"\n}"
+              "raw": "{\n  \"status\": \"IN_TRANSIT\"\n}"
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/deliveries/{{deliveryId}}/status",
@@ -1033,6 +1269,41 @@
                 "deliveries",
                 "{{deliveryId}}",
                 "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 배송 삭제 (deliveryId 수동 입력 필요)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/deliveries/{{deliveryId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "deliveries",
+                "{{deliveryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "06 배송 담당자 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/deliveries/managers/{{deliveryManagerId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "deliveries",
+                "managers",
+                "{{deliveryManagerId}}"
               ]
             }
           }
@@ -1251,42 +1522,7 @@
       "description": "위 폴더들을 순서대로 다 실행해서 시나리오 확인을 끝낸 뒤에만 실행할 것. 도중에 실행하면 이후 단계가 참조하는 리소스가 없어져서 실패함.",
       "item": [
         {
-          "name": "01 Order 취소",
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "url": {
-              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}/cancel",
-              "host": [
-                "{{gatewayBaseUrl}}"
-              ],
-              "path": [
-                "orders",
-                "{{orderId}}",
-                "cancel"
-              ]
-            }
-          }
-        },
-        {
-          "name": "02 Order 삭제",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}",
-              "host": [
-                "{{gatewayBaseUrl}}"
-              ],
-              "path": [
-                "orders",
-                "{{orderId}}"
-              ]
-            }
-          }
-        },
-        {
-          "name": "03 AI 이력 삭제",
+          "name": "01 AI 이력 삭제",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1303,7 +1539,7 @@
           }
         },
         {
-          "name": "04 Slack 메시지 삭제",
+          "name": "02 Slack 메시지 삭제",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1320,7 +1556,7 @@
           }
         },
         {
-          "name": "05 Product 삭제",
+          "name": "03 Product 삭제",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1337,7 +1573,7 @@
           }
         },
         {
-          "name": "06 Company 삭제 - PRODUCER",
+          "name": "04 Company 삭제 - PRODUCER",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1354,7 +1590,7 @@
           }
         },
         {
-          "name": "07 Company 삭제 - RECEIVER",
+          "name": "05 Company 삭제 - RECEIVER",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1371,7 +1607,24 @@
           }
         },
         {
-          "name": "08 Hub 삭제 - spokeHub (이제 company 참조 없으니 성공해야 정상)",
+          "name": "06 허브 라우트 삭제 (hub 삭제보다 먼저 실행되어야 함)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/hub-routes/{{hubRouteId}}",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "hub-routes",
+                "{{hubRouteId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "07 Hub 삭제 - spokeHub (이제 company 참조 없으니 성공해야 정상)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1388,17 +1641,24 @@
           }
         },
         {
-          "name": "09 회원 탈퇴 (testuser1 본인)",
+          "name": "08 회원 탈퇴 (testuser1 본인)",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
-                { "key": "token", "value": "{{testUserAccessToken}}", "type": "string" }
+                {
+                  "key": "token",
+                  "value": "{{testUserAccessToken}}",
+                  "type": "string"
+                }
               ]
             },
             "method": "DELETE",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1406,20 +1666,31 @@
             },
             "url": {
               "raw": "{{gatewayBaseUrl}}/users/me",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             }
           }
         },
         {
-          "name": "10 회원 삭제 (testuser2, 관리자)",
+          "name": "09 회원 삭제 (testuser2, 관리자)",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{gatewayBaseUrl}}/admin/users/{{adminCreatedUserId}}",
-              "host": ["{{gatewayBaseUrl}}"],
-              "path": ["admin", "users", "{{adminCreatedUserId}}"]
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{adminCreatedUserId}}"
+              ]
             }
           }
         }
