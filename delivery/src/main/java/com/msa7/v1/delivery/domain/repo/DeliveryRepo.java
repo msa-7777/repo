@@ -8,6 +8,6 @@ import com.msa7.v1.delivery.domain.aggregateDelivery.Delivery;
 public interface DeliveryRepo {
 	Delivery save(Delivery delivery);
 	Optional<Delivery> findById(UUID id);
-
 	void deleteById(UUID id, UUID deletedBy);
+	Optional<Delivery> findByOrderId(UUID orderId);
 }

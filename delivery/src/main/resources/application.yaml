@@ -4,6 +4,16 @@ server:
 spring:
   application:
     name: delivery-service
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/postgres}
@@ -23,3 +33,4 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:19090/eureka/}
+

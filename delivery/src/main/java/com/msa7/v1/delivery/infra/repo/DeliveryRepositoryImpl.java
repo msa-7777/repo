@@ -53,6 +53,12 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 		});
 	}
 
+	@Override
+	public Optional<Delivery> findByOrderId(UUID orderId) {
+		return jpaDeliveryRepository.findByOrderIdAndIsDeletedFalse(orderId)
+			.map(this::toDomain);
+	}
+
 	// Mapper 로직 (MapStruct 등을 활용할 수 있음)
 	private DeliveryEntity toEntity(Delivery domain) {
 		// 1. 부모 엔티티 생성

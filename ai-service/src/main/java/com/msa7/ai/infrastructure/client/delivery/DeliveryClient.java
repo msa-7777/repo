@@ -10,6 +10,6 @@ import java.util.UUID;
 @FeignClient(name = "delivery-service")
 public interface DeliveryClient {
 
-    @GetMapping("/api/v1/deliveries/order/{orderId}") // 혹은 id 기준
-    DeliveryResponse getDeliveryByOrder(@PathVariable("orderId") UUID orderId);
+    @GetMapping("/api/v1/internal/deliveries/{orderId}/info") // 혹은 id 기준
+    DeliveryResponse getDeliveryRouteInfo(@PathVariable("orderId") UUID orderId);
 }
