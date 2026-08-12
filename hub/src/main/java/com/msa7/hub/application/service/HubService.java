@@ -1,6 +1,7 @@
 package com.msa7.hub.application.service;
 
 import com.msa7.hub.domain.model.Hub;
+import com.msa7.hub.domain.model.HubState;
 import com.msa7.hub.global.exception.BusinessException;
 import com.msa7.hub.global.exception.ErrorCode;
 import com.msa7.hub.infrastructure.persistence.HubRepository;
@@ -44,6 +45,14 @@ public class HubService {
         hubRepository.save(hub);
     }
 
+    // 허브 삭제 시작. 허브 상태 변경. (ACTIVE -> DELETING)
+    @Transactional
+    Hub startDeleting(UUID hubId) {
+        Hub hub = getHub(hubId);
+        hub.startDeleting();
+        return hub;
+    }
+
     @Transactional(readOnly = true)
     public Hub getHub(UUID hubId) {
         return findExistingHub(hubId);
@@ -54,9 +63,11 @@ public class HubService {
         return hubRepository.search(name, address, isCentral, pageable);
     }
 
+    // 내부 서비스 호출 api 에 사용되는 메서드
+    // 존재 여부 확인 시 삭제 중 상태인 허브는 조회하지 않는다
     @Transactional(readOnly = true)
     public boolean existsHub(UUID hubId) {
-        return hubRepository.existsByIdAndDeletedAtIsNull(hubId);
+        return hubRepository.existsByIdAndHubStateAndDeletedAtIsNull(hubId, HubState.ACTIVE);
     }
 
     private Hub findExistingHub(UUID hubId) {
@@ -76,5 +87,11 @@ public class HubService {
         if (hubRepository.existsByCentralHubIdAndDeletedAtIsNull(hubId)) {
             throw new BusinessException(ErrorCode.HUB_REFERENCED_BY_CHILD_HUB);
         }
+    }
+
+    @Transactional
+    public void cancelDeleting(Hub hub) {
+        hub.cancelDeleting();
+        hubRepository.save(hub);
     }
 }

@@ -5,6 +5,8 @@ import com.msa7.hub.application.service.HubService;
 import com.msa7.hub.presentation.api.InternalHubApi;
 import com.msa7.hub.presentation.response.HubRoutePathResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,12 +22,14 @@ public class InternalController implements InternalHubApi {
     private final HubRouteService hubRouteService;
 
     @Override
-    public boolean checkHubExists(UUID hubId) {
+    @GetMapping("/{hubId}/exists")
+    public boolean checkHubExists(@PathVariable UUID hubId) {
         return hubService.existsHub(hubId);
     }
 
     @Override
-    public HubRoutePathResponse getRouteInfo(UUID startHubId, UUID endHubId) {
+    @GetMapping("/{startHubId}/routes/{endHubId}")
+    public HubRoutePathResponse getRouteInfo(@PathVariable UUID startHubId, @PathVariable UUID endHubId) {
         return HubRoutePathResponse.from(hubRouteService.getHubRoutePath(startHubId, endHubId));
     }
 }

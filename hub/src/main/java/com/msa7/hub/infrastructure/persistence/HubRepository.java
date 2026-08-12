@@ -1,6 +1,7 @@
 package com.msa7.hub.infrastructure.persistence;
 
 import com.msa7.hub.domain.model.Hub;
+import com.msa7.hub.domain.model.HubState;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -12,5 +13,5 @@ public interface HubRepository extends JpaRepository<Hub, UUID>, HubRepositoryCu
 
     boolean existsByCentralHubIdAndDeletedAtIsNull(UUID centralHubId);
 
-    boolean existsByIdAndDeletedAtIsNull(UUID hubId);
+    boolean existsByIdAndHubStateAndDeletedAtIsNull(UUID hubId, HubState hubState);
 }

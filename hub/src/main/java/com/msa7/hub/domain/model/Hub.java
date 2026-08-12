@@ -1,12 +1,17 @@
 package com.msa7.hub.domain.model;
 
 import com.msa7.hub.global.audit.BaseEntity;
+import com.msa7.hub.global.exception.BusinessException;
+import com.msa7.hub.global.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,13 +45,20 @@ public class Hub extends BaseEntity{
     @Column(nullable = false, length = 100)
     private String address;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private HubState hubState;
 
-    private Hub(UUID centralHubId, String name, BigDecimal latitude, BigDecimal longitude, String address) {
+    @Version
+    private Long version;
+
+    private Hub(UUID centralHubId, String name, BigDecimal latitude, BigDecimal longitude, String address, HubState hubState) {
         this.centralHubId = centralHubId;
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
         this.address = address;
+        this.hubState = hubState;
     }
 
     public boolean isCentral() {
@@ -54,7 +66,7 @@ public class Hub extends BaseEntity{
     }
 
     public static Hub createHub(UUID centralHubId, String name,  BigDecimal latitude, BigDecimal longitude, String address) {
-        return new Hub(centralHubId, name, latitude, longitude, address);
+        return new Hub(centralHubId, name, latitude, longitude, address, HubState.ACTIVE);
     }
 
     public void updateHub(UUID centralHubId,String name, BigDecimal latitude,  BigDecimal longitude, String address) {
@@ -65,7 +77,24 @@ public class Hub extends BaseEntity{
         this.address = address;
     }
 
+    public void startDeleting() {
+        if (this.hubState != HubState.ACTIVE) {
+            throw new BusinessException(ErrorCode.HUB_ALREADY_DELETING);
+        }
+        this.hubState = HubState.DELETING;
+    }
+
     public void softDelete(UUID deletedBy) {
+        this.hubState = HubState.DELETED;
         super.softDelete(deletedBy);
+    }
+
+    public void cancelDeleting() {
+        if (this.hubState != HubState.DELETING) {
+            throw new IllegalStateException(
+                    "DELETING 상태가 아닌 허브는 삭제를 취소할 수 없습니다. hubId=" + this.id + ", hubState=" + this.hubState
+            );
+        }
+        this.hubState = HubState.ACTIVE;
     }
 }
