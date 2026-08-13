@@ -62,7 +62,6 @@ public class CompanyController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "업체를 찾을 수 없음")
     })
-    @PreAuthorize("hasAnyRole()")
     @GetMapping("/{companyId}")
     public ResponseEntity<RestApiResponse<CompanyResponse>> getCompany(
             @PathVariable UUID companyId
@@ -78,7 +77,6 @@ public class CompanyController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "목록 조회 성공")
     })
-    @PreAuthorize("hasAnyRole()")
     @GetMapping
     public ResponseEntity<RestApiResponse<Page<CompanyResponse>>> getCompanies(
             @ModelAttribute CompanySearchCondition condition,
