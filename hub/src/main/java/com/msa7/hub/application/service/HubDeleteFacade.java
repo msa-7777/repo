@@ -30,16 +30,23 @@ public class HubDeleteFacade {
     private final HubRouteService hubRouteService;
 
     public void deleteHub(UUID hubId, UUID deletedBy) {
-        // 허브 조회 (짧은 readOnly 트랜잭션)
-        Hub hub = hubService.getHub(hubId);
+        // 허브 조회 + 상태 변경(Active -> DELETING)
+        Hub hub = hubService.startDeleting(hubId);
 
-        // HubRoute 참조 확인(짧은 readOnly 트랜잭션)
-        hubRouteService.ensureNotReferencedByHub(hubId);
+        try {
+            // HubRoute 참조 확인(짧은 readOnly 트랜잭션)
+            hubRouteService.ensureNotReferencedByHub(hubId);
 
-        // 참조 확인. 외부 api 호출 (트랜잭션 바깥)
-        checkExternalHubReference(hubId);
+            // 참조 확인. 외부 api 호출 (트랜잭션 바깥)
+            checkExternalHubReference(hubId);
+        } catch (BusinessException e) {
+            // 실패 시 상태 변경 (DELETING -> ACTIVE)
+            hubService.cancelDeleting(hub);
+            throw e;
+        }
 
-        // hub 삭제 (짧은 트랜잭션, soft delete)
+
+        // hub 삭제 (짧은 트랜잭션, soft delete, 상태 변경 (DELETING -> DELETED))
         hubService.softDelete(hub, deletedBy);
     }
 

@@ -14,12 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.UUID;
@@ -33,7 +28,6 @@ public interface HubRouteApi {
             @ApiResponse(responseCode = "400", description = "요청값 검증 실패"),
             @ApiResponse(responseCode = "403", description = "권한 없음(MASTER 아님)")
     })
-    @PostMapping("/hub-routes")
     ResponseEntity<RestApiResponse<HubRouteResponse>> createHubRoute(
             @RequestBody @Valid HubRouteRequest request
     );
@@ -45,9 +39,8 @@ public interface HubRouteApi {
             @ApiResponse(responseCode = "403", description = "권한 없음(MASTER 아님)"),
             @ApiResponse(responseCode = "404", description = "라우트를 찾을 수 없음")
     })
-    @PutMapping("/hub-routes/{hubRouteId}")
     ResponseEntity<RestApiResponse<HubRouteResponse>> updateHubRoute(
-            @Parameter(description = "허브 라우트 ID") @PathVariable UUID hubRouteId,
+            @Parameter(description = "허브 라우트 ID") UUID hubRouteId,
             @RequestBody @Valid HubRouteRequest request
     );
 
@@ -57,9 +50,8 @@ public interface HubRouteApi {
             @ApiResponse(responseCode = "403", description = "권한 없음(MASTER 아님)"),
             @ApiResponse(responseCode = "404", description = "라우트를 찾을 수 없음")
     })
-    @DeleteMapping("/hub-routes/{hubRouteId}")
     ResponseEntity<RestApiResponse<Void>> deleteHubRoute(
-            @Parameter(description = "허브 라우트 ID") @PathVariable UUID hubRouteId,
+            @Parameter(description = "허브 라우트 ID") UUID hubRouteId,
             @AuthenticationPrincipal UUID userId
     );
 
@@ -68,14 +60,12 @@ public interface HubRouteApi {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "라우트를 찾을 수 없음")
     })
-    @GetMapping("/hub-routes/{hubRouteId}")
     ResponseEntity<RestApiResponse<HubRouteResponse>> getHubRoute(
-            @Parameter(description = "허브 라우트 ID") @PathVariable UUID hubRouteId
+            @Parameter(description = "허브 라우트 ID") UUID hubRouteId
     );
 
     @Operation(summary = "허브 라우트 목록 조회", description = "출발/도착 허브 ID로 검색 가능")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @GetMapping("/hub-routes")
     ResponseEntity<RestApiResponse<Page<HubRouteResponse>>> getHubRouteList(
             @ModelAttribute HubRouteSearchRequest request,
             Pageable pageable

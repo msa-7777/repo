@@ -4,6 +4,7 @@ import com.msa7.hub.global.response.RestApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -93,6 +94,23 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(403).body(response);
+    }
+
+    // 409 - 낙관적 락 충돌 (동시 요청 경쟁)
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<RestApiResponse<Void>> handleObjectOptimisticLockingFailureException(
+            ObjectOptimisticLockingFailureException e, HttpServletRequest request
+    ) {
+        log.warn("[Optimistic Locking Fail] path={}, message={}", request.getRequestURI(), e.getMessage());
+
+        ErrorCode errorCode = ErrorCode.CONCURRENT_MODIFICATION;
+        RestApiResponse<Void> response = RestApiResponse.error(
+                errorCode.getStatus().value(),
+                errorCode.getMessage(),
+                errorCode.name()
+        );
+
+        return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 
     // 500 - Fallback (반드시 있어야 함)

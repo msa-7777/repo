@@ -32,6 +32,8 @@ public enum ErrorCode {
     HUB_REFERENCED_BY_CHILD_HUB(HttpStatus.CONFLICT, "해당 허브를 중앙 허브로 참조하는 소속 허브가 존재하여 삭제할 수 없습니다."),
     HUB_REFERENCED_BY_HUB_ROUTE(HttpStatus.CONFLICT, "해당 허브를 참조하는 허브 경로가 존재하여 삭제할 수 없습니다."),
     HUB_REFERENCED_BY_USER(HttpStatus.CONFLICT, "해당 허브를 참조하는 유저가 존재하여 삭제할 수 없습니다."),
+    HUB_ALREADY_DELETING(HttpStatus.CONFLICT, "이미 삭제 처리중인 허브입니다"),
+    CONCURRENT_MODIFICATION(HttpStatus.CONFLICT, "다른 요청이 먼저 처리되었습니다. 다시 시도해주세요."),
 
     // 500
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),

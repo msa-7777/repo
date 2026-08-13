@@ -13,7 +13,7 @@ import com.msa7.v1.delivery.presentation.dto.payload.HubResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.HubRoutePathRequest;
 import com.msa7.v1.delivery.presentation.dto.payload.HubRoutePathResponse;
 
-@FeignClient(name = "hub-service", path = "/api/v1/hubs")
+@FeignClient(name = "hub-service", path = "/api/v1/internal/hubs")
 public interface HubClient {
 	// // 특정 허브 존재 여부 확인
 	// @GetMapping("/api/v1/hubs/{hubId}")

@@ -14,12 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.UUID;
@@ -33,7 +28,6 @@ public interface HubApi {
             @ApiResponse(responseCode = "400", description = "요청값 검증 실패"),
             @ApiResponse(responseCode = "403", description = "권한 없음(MASTER 아님)")
     })
-    @PostMapping("/hubs")
     ResponseEntity<RestApiResponse<HubResponse>> createHub(
             @RequestBody @Valid HubRequest request
     );
@@ -45,10 +39,9 @@ public interface HubApi {
             @ApiResponse(responseCode = "403", description = "권한 없음(MASTER 아님)"),
             @ApiResponse(responseCode = "404", description = "허브를 찾을 수 없음")
     })
-    @PutMapping("/hubs/{hubId}")
     ResponseEntity<RestApiResponse<HubResponse>> updateHub(
             @RequestBody @Valid HubRequest request,
-            @Parameter(description = "허브 ID") @PathVariable UUID hubId
+            @Parameter(description = "허브 ID") UUID hubId
     );
 
     @Operation(summary = "허브 삭제", description = "허브를 soft delete한다. 참조 중인 업체/재고/사용자/배송이 있으면 차단된다. MASTER 권한 필요.")
@@ -58,9 +51,8 @@ public interface HubApi {
             @ApiResponse(responseCode = "404", description = "허브를 찾을 수 없음"),
             @ApiResponse(responseCode = "409", description = "다른 리소스가 참조 중이라 삭제 불가")
     })
-    @DeleteMapping("/hubs/{hubId}")
     ResponseEntity<RestApiResponse<Void>> deleteHub(
-            @Parameter(description = "허브 ID") @PathVariable UUID hubId,
+            @Parameter(description = "허브 ID") UUID hubId,
             @AuthenticationPrincipal UUID userId
     );
 
@@ -69,14 +61,12 @@ public interface HubApi {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "허브를 찾을 수 없음")
     })
-    @GetMapping("/hubs/{hubId}")
     ResponseEntity<RestApiResponse<HubResponse>> getHub(
-            @Parameter(description = "허브 ID") @PathVariable UUID hubId
+            @Parameter(description = "허브 ID") UUID hubId
     );
 
     @Operation(summary = "허브 목록 조회", description = "이름/주소/중앙허브 여부로 검색 가능")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @GetMapping("/hubs")
     ResponseEntity<RestApiResponse<Page<HubResponse>>> getHubList(
             @ModelAttribute HubSearchRequest request,
             Pageable pageable
