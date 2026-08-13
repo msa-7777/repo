@@ -1,8 +1,13 @@
+networks:
+  v1_network:
+    driver: bridge
+
 services:
   postgres:
     image: postgres:16
     container_name: logistics-postgres
-
+    networks:
+      - v1_network
 
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -29,6 +34,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: logistics-rabbitmq
+    networks:
+      - v1_network
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -42,6 +49,8 @@ services:
       context: eureka-server
       dockerfile: Dockerfile
     container_name: eureka-server
+    networks:
+      - v1_network
     ports:
       - "19090:19090"
 
@@ -52,6 +61,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: company-service
+    networks:
+      - v1_network
     ports:
       - "19094:19094"
 
@@ -73,6 +84,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: product-service
+    networks:
+      - v1_network
     ports:
       - "19095:19095"
 
@@ -96,6 +109,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: hub-service
+    networks:
+      - v1_network
     ports:
       - "19093:19093"
 
@@ -116,6 +131,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: order-service
+    networks:
+      - v1_network
     ports:
       - "19096:19096"
 
@@ -136,6 +153,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: delivery-service
+    networks:
+      - v1_network
     ports:
       - "19097:19097"
 
@@ -156,6 +175,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: slack-service
+    networks:
+      - v1_network
     ports:
       - "19098:19098"
 
@@ -179,6 +200,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: ai-service
+    networks:
+      - v1_network
     ports:
       - "19099:19099"
 
@@ -200,6 +223,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: user-service
+    networks:
+      - v1_network
     ports:
       - "19092:19092"
 
@@ -221,6 +246,8 @@ services:
       dockerfile: Dockerfile
 
     container_name: gateway-service
+    networks:
+      - v1_network
     ports:
       - "19091:19091"
 
@@ -233,6 +260,8 @@ services:
   zipkin:
     image: openzipkin/zipkin
     container_name: zipkin
+    networks:
+      - v1_network
     ports:
       - "9411:9411"
 

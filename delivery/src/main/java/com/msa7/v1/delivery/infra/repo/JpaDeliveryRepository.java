@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.msa7.v1.delivery.infra.entity.DeliveryEntity;
 
 public interface JpaDeliveryRepository extends JpaRepository<DeliveryEntity, UUID> {
-	Optional<DeliveryEntity> findByOrderIdAndIsDeletedFalse(UUID orderId);
+	Optional<DeliveryEntity> findByOrderIdAndDeletedAtIsNull(UUID orderId);
 }

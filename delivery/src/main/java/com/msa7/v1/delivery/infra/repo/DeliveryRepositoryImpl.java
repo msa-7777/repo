@@ -55,7 +55,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 
 	@Override
 	public Optional<Delivery> findByOrderId(UUID orderId) {
-		return jpaDeliveryRepository.findByOrderIdAndIsDeletedFalse(orderId)
+		return jpaDeliveryRepository.findByOrderIdAndDeletedAtIsNull(orderId)
 			.map(this::toDomain);
 	}
 
@@ -88,6 +88,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 					.actualTime(route.getActualMetrics() != null ? route.getActualMetrics().actualTime() : null)
 					.status(route.getStatus())
 					.deliveryManagerId(route.getDeliveryManagerId())
+					.destinationAddress(route.getDestinationAddress())
 					.deletedAt(route.getDeletedAt())
 					.deletedBy(route.getDeletedBy())
 					.build();
@@ -126,6 +127,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 			.receiverName(entity.getReceiverName())
 			.receiverSlackId(entity.getReceiverSlackId())
 			.companyDeliveryManagerId(entity.getCompanyDeliveryManagerId())
+			.destinationAddress(entity.getDestinationAddress())
 			.deletedAt(entity.getDeletedAt())
 			.deletedBy(entity.getDeletedBy())
 			.build();
