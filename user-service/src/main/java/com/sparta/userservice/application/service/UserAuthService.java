@@ -20,6 +20,7 @@ import com.sparta.userservice.presentation.dto.request.UserLoginRequest;
 import com.sparta.userservice.presentation.dto.request.UserSignupRequest;
 import com.sparta.userservice.presentation.dto.response.UserLoginResponse;
 import com.sparta.userservice.presentation.dto.response.UserSignupResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -82,5 +83,11 @@ public class UserAuthService {
         log.info("SIGNUP_SUCCESS: loginId = {}, role = {}", savedUser.getLoginId(), savedUser.getRole());
 
         return UserSignupResponse.of(savedUser); // { userId, loginId, name, email, role, signupStatus }
+    }
+
+    // 로그아웃
+    // @Transactional // DB 수정이 있다면 활성화 해야함
+    public void logout(HttpServletResponse response) {
+        jwtUtil.deleteJwtCookie(response);
     }
 }

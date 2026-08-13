@@ -86,9 +86,13 @@ public class SecurityConfig {
                         ).permitAll() // resources 접근 허용
 
                         .requestMatchers(
-                                "/api/v1/auth/**"
-                        )
-                        .permitAll() // 'api/v1/auth/'로 시작하는 요청 모두 접근 허용 (회원가입, 로그인)
+                                "/api/v1/auth/signup",
+                                "/api/v1/auth/login"
+                        ).permitAll() // 회원가입, 로그인 요청 모두 접근 허용
+
+                        .requestMatchers(
+                                "/api/v1/auth/logout"
+                        ).authenticated() // 로그아웃 요청은 인증 필요
 
                         // 서비스 간 내부 API
                         .requestMatchers("/api/v1/internal/**").permitAll()
@@ -98,8 +102,9 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**")
-                        .permitAll() // Swagger UI 허용
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll() // Swagger UI 허용
 
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
         );
