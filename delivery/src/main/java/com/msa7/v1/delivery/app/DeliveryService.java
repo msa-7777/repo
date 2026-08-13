@@ -79,7 +79,7 @@ public class DeliveryService {
 	//
 	// 	return delivery.getId();
 	// }
-
+	// 주믄한 사람이 배송을 확인하고 싶을때
 	@Transactional
 	public void updateDeliveryStatus(UUID deliveryId, DeliveryStatus status) {
 		Delivery delivery = deliveryRepo.findById(deliveryId)
@@ -88,13 +88,27 @@ public class DeliveryService {
 		delivery.updateStatus(status);
 		deliveryRepo.save(delivery);
 	}
+	// 배송기사가 배송상태를 변경할때의 메서드
+	@Transactional
+	public void updateDeliveryRouteStatus(UUID deliveryId, UUID routeId, RouteStatus newStatus) {
+		// 1. 배송 엔티티 조회
+		Delivery delivery = deliveryRepo.findById(deliveryId)
+			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 배송입니다."));
+
+		delivery.updateRouteStatus(routeId, newStatus);
+
+		// 영속화
+		// 전체 완료 시 내부적으로 DeliveryCompletedEvent가 Outbox에 자동 적재됨
+		deliveryRepo.save(delivery);
+	}
+
 
 	@Transactional
 	public void deleteDelivery(UUID id, UUID deletedBy) {
 		deliveryRepo.deleteById(id, deletedBy);
 	}
 
-	// API 1: 허브 ID와 상태로 배송 경로 목록 조회
+	// 요청사항
 	@Transactional(readOnly = true)
 	public List<DeliveryRouteResponse> getDeliveryRoutes(UUID hubId, RouteStatus status) {
 		return routeRepo.findAllByStartHubIdAndStatusAndDeletedAtIsNull(hubId, status).stream()
@@ -123,15 +137,15 @@ public class DeliveryService {
 	@Transactional
 	public void createDeliveryFromOrder(OrderCreatedEvent event) {
 		try {
-			// 업체 배송 담당자 할당
+			// 업체 배송 담당자 랜덤 할당
 			List<UUID> companyManagers = userClient.getDeliveryManagersByHubId(event.endHubId());
 
 			if (companyManagers == null || companyManagers.isEmpty()) {
-				throw new IllegalStateException("도착지 허브에 할당 가능한 배송 담당자가 없습니다. hubId: " + event.endHubId());
+				throw new IllegalStateException("도착지 허브에 할당 가능한 업체 배송 담당자가 없습니다. hubId: " + event.endHubId());
 			}
 			UUID companyManagerId = companyManagers.get(ThreadLocalRandom.current().nextInt(companyManagers.size()));
 
-			// 도메인 객체 생성 (성공 이벤트 내부에 적재)
+			// 도메인 객체 생성
 			Delivery delivery = Delivery.createFromOrder(
 				event.orderId(),
 				event.startHubId(),
@@ -141,25 +155,26 @@ public class DeliveryService {
 				companyManagerId
 			);
 
-			// 3. 배송 경로 조회 및 기록 일괄 생성
+			// 허브 간 경로(간선) 조회 및 기록 생성
 			HubRouteResponse hubRoute = hubClient.getRouteInfo(event.startHubId(), event.endHubId());
 			List<HubRouteResponse> hubRoutes = List.of(hubRoute);
 			List<DeliveryRouteRecord> routes = new ArrayList<>();
 
 			int sequence = 0;
 			for (HubRouteResponse res : hubRoutes) {
+				// TODO: UserClient에 파라미터로 type="HUB_STAFF" 넘겨서 필터링 받는 것을 권장
 				List<UUID> hubManagers = userClient.getDeliveryManagersByHubId(res.startHubId());
 
 				if (hubManagers == null || hubManagers.isEmpty()) {
-					throw new IllegalStateException("출발지 허브에 할당 가능한 배송 담당자가 없습니다. hubId: " + res.startHubId());
+					throw new IllegalStateException("출발지 허브에 할당 가능한 허브 배송 담당자가 없습니다. hubId: " + res.startHubId());
 				}
-
 				UUID hubDeliveryManagerId = hubManagers.get(ThreadLocalRandom.current().nextInt(hubManagers.size()));
 
 				DeliveryRouteRecord route = DeliveryRouteRecord.create(
 					sequence++,
 					res.startHubId(),
 					res.endHubId(),
+					null, // 허브 간 이동이므로 목적지 주소 없음
 					res.estimatedDistance(),
 					res.estimatedTime(),
 					hubDeliveryManagerId
@@ -167,15 +182,23 @@ public class DeliveryService {
 				routes.add(route);
 			}
 
-			// 경로 할당
-			delivery.assignRoutes(routes);
 
-			// 저장 시 RepositoryImpl 내부 로직을 타고 성공 이벤트가 Outbox 테이블로 자동 기록됨
+			DeliveryRouteRecord lastMileRoute = DeliveryRouteRecord.create(
+				sequence, // ++
+				event.endHubId(), // 출발: 도착 허브
+				null,             // 도착: 허브가 아니므로 ID는 null
+				event.destinationAddress(), // 도착: 고객 최종 주소
+				0L, 0L,           // 예상 거리/시간
+				companyManagerId
+			);
+			routes.add(lastMileRoute);
+
+			// 4. 경로 할당 및 영속화 (Outbox 이벤트 자동 발행)
+			delivery.assignRoutes(routes);
 			deliveryRepo.save(delivery);
 
 		} catch (Exception e) {
 			// SAGA 실패 보상: 예외를 던져 롤백하지 않고, 실패 내역을 즉시 Outbox에 밀어넣음.
-			// (그래야 Order 서비스가 실패 메시지를 받아 주문을 취소시킬 수 있음)
 			try {
 				DeliveryFailedEvent failedEvent = new DeliveryFailedEvent(event.orderId(), "경로 조회 또는 생성 실패: " + e.getMessage());
 				DeliveryOutboxEvent outboxEvent = new DeliveryOutboxEvent(
@@ -196,6 +219,7 @@ public class DeliveryService {
 		return routeRepo.existsActiveRouteByHubId(hubId);
 	}
 
+	// 요청사항 2
 	@Transactional(readOnly = true)
 	public DeliveryRouteInfoResponse getDeliveryInfoByOrderId(UUID orderId) {
 		Delivery delivery = deliveryRepo.findByOrderId(orderId).orElseThrow(

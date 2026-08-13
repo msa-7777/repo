@@ -16,6 +16,7 @@ public class DeliveryRouteRecord {
 	private final Integer sequence;
 	private final UUID startHubId;
 	private final UUID endHubId;
+	private final String destinationAddress;
 
 	private final RouteMetrics metrics;
 	private  ActualRouteMetrics actualMetrics;
@@ -29,7 +30,7 @@ public class DeliveryRouteRecord {
 	public DeliveryRouteRecord(UUID id, Integer sequence, UUID startHubId, UUID endHubId,
 		RouteMetrics metrics, ActualRouteMetrics actualMetrics,
 		RouteStatus status, UUID deliveryManagerId,
-		LocalDateTime deletedAt, String deletedBy
+		LocalDateTime deletedAt, String deletedBy, String destinationAddress
 		) {
 		this.id = id;
 		this.sequence = sequence;
@@ -41,10 +42,11 @@ public class DeliveryRouteRecord {
 		this.deliveryManagerId = deliveryManagerId;
 		this.deletedAt = deletedAt;
 		this.deletedBy = deletedBy;
+		this.destinationAddress = destinationAddress;
 	}
 
 	public static DeliveryRouteRecord create(Integer sequence, UUID startHubId, UUID endHubId,
-		Long estimatedDistance, Long estimatedTime, UUID deliveryManagerId) {
+		String destinationAddress, Long estimatedDistance, Long estimatedTime, UUID deliveryManagerId) {
 		return DeliveryRouteRecord.builder()
 			.id(UUID.randomUUID())
 			.sequence(sequence)
@@ -54,6 +56,7 @@ public class DeliveryRouteRecord {
 			.actualMetrics(new ActualRouteMetrics(0L, 0L))
 			.status(RouteStatus.WAITING)
 			.deliveryManagerId(deliveryManagerId)
+			.destinationAddress(destinationAddress)
 			.build();
 	}
 

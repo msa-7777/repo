@@ -8,13 +8,16 @@ package com.sparta.userservice.application.service;
  * ─────────────────────────────────────────────────────────────────────────────────────────────────
  */
 
+import com.sparta.userservice.application.port.UserAddressFinder;
 import com.sparta.userservice.application.port.UserFinder;
 import com.sparta.userservice.domain.exception.UserErrorCode;
 import com.sparta.userservice.domain.model.Role;
 import com.sparta.userservice.domain.model.User;
+import com.sparta.userservice.domain.model.UserAddress;
 import com.sparta.userservice.domain.repository.UserRepository;
 import com.sparta.userservice.global.exception.BusinessException;
 import com.sparta.userservice.presentation.dto.response.InternalUserResponse;
+import com.sparta.userservice.presentation.dto.response.UserAddressResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +32,8 @@ public class InternalUserService {
     private final UserFinder userFinder;
 
     private final UserRepository userRepository;
+
+    private final UserAddressFinder userAddressFinder;
 
     @Transactional(readOnly = true)
     public InternalUserResponse getUser(UUID userId) {
@@ -56,5 +61,16 @@ public class InternalUserService {
         return users.stream()
                 .map(User::getUserId)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public UserAddressResponse getDefaultAddress(UUID userId) {
+
+        // userId가 실제 존재하는 사용자여야 함
+        userFinder.getUserById(userId);
+
+        UserAddress userAddress = userAddressFinder.getDefaultAddress(userId);
+
+        return UserAddressResponse.of(userAddress);
     }
 }

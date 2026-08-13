@@ -39,8 +39,10 @@ public enum UserErrorCode implements ErrorCode {
 
 
     // 배송 담당자를 찾을 수 없는 경우
-    NOT_FOUND_DELIVERY_MANAGER(HttpStatus.NOT_FOUND,"배송 담당자를 찾을 수 없습니다.")
+    NOT_FOUND_DELIVERY_MANAGER(HttpStatus.NOT_FOUND,"배송 담당자를 찾을 수 없습니다."),
 
+    // 기본 배송지가 없는 경우
+    NOT_FOUND_DEFAULT_ADDRESS(HttpStatus.NOT_FOUND,"기본 배송지를 찾을 수 없습니다.")
 
 
     ;

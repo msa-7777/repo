@@ -22,6 +22,7 @@ import com.msa7.v1.delivery.domain.vo.RouteStatus;
 import com.msa7.v1.delivery.presentation.dto.CreateDeliveryRequest;
 import com.msa7.v1.delivery.presentation.dto.CreateManagerRequest;
 import com.msa7.v1.delivery.presentation.dto.RestApiResponse;
+import com.msa7.v1.delivery.presentation.dto.RouteStatusUpdateRequest;
 import com.msa7.v1.delivery.presentation.dto.UpdateDeliveryStatusRequest;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryResponse;
 import com.msa7.v1.delivery.presentation.dto.payload.DeliveryRouteResponse;
@@ -59,17 +60,16 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 담당자가 삭제되었습니다.", null));
 	}
 
-	// @PostMapping
-	// public ResponseEntity<RestApiResponse<UUID>> createDelivery(
-	// 	@RequestHeader("X-User-Id") UUID userId,
-	// 	@RequestBody CreateDeliveryRequest request) {
-	//
-	// 	UUID id = deliveryService.createDelivery(
-	// 		request.orderId(), request.startHubId(), request.endHubId(), request.destinationAddress(),
-	// 		request.receiverName(), request.receiverSlackId()
-	// 	);
-	// 	return ResponseEntity.ok(RestApiResponse.ok("배송이 생성되었습니다.", id));
-	// }
+	@PatchMapping("/{deliveryId}/routes/{routeId}/status")
+	public ResponseEntity<RestApiResponse<Void>> updateRouteStatus(
+		@PathVariable UUID deliveryId,
+		@PathVariable UUID routeId,
+		@RequestBody RouteStatusUpdateRequest request
+	) {
+		deliveryService.updateDeliveryRouteStatus(deliveryId, routeId, request.status());
+		return ResponseEntity.ok(RestApiResponse.ok("배송상태 업데이트", null));
+	}
+
 
 	// 배송 상태 변경
 	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT')")
