@@ -111,7 +111,7 @@ public class DeliveryService {
 	// 요청사항
 	@Transactional(readOnly = true)
 	public List<DeliveryRouteResponse> getDeliveryRoutes(UUID hubId, RouteStatus status) {
-		return routeRepo.findAllByStartHubIdAndStatusAndIsDeletedFalse(hubId, status).stream()
+		return routeRepo.findAllByStartHubIdAndStatusAndDeletedAtIsNull(hubId, status).stream()
 			.map(route -> new DeliveryRouteResponse(
 				route.getId(),
 				route.getSequence(),

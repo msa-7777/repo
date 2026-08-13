@@ -95,8 +95,5 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 		setDeletedInfo(deletedAt, deletedBy);
 	}
 
-	public void setDelivery(DeliveryEntity delivery) {
-		this.delivery = delivery;
-	}
 
 }
