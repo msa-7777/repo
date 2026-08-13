@@ -30,7 +30,7 @@ Eureka(서비스 디스커버리) + Gateway(API 게이트웨이)로 서비스를
 |---|---|
 | gateway-service | WebFlux, OAuth2 Resource Server(JWT 검증) |
 | eureka-server | 서비스 디스커버리 전용 |
-| ai-service | Spring AI(Gemini/OpenAI), pgvector(RAG) |
+| ai-service | Spring AI(Gemini/OpenAI)|
 | order-service, delivery-service | RabbitMQ(이벤트 연동) |
 | user-service | JWT 발급(jjwt) |
 | hub-service | Resilience4j 서킷브레이커 |
