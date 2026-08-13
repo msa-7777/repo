@@ -36,7 +36,7 @@ Eureka(서비스 디스커버리) + Gateway(API 게이트웨이)로 서비스를
 | hub-service | Resilience4j 서킷브레이커 |
 
 **아키텍처**
-
+<img width="900" alt="아키텍처 구성도" src="https://github.com/user-attachments/assets/f405eb85-c925-4912-890e-8eb9ac885cfe" />
 서비스 구성:
 - 인프라: `eureka-server`, `gateway-service`
 - 비즈니스: `hub-service`, `company-service`, `product-service`(재고 포함), `order-service`, `delivery-service`, `slack-service`, `user-service`, `ai-service`
