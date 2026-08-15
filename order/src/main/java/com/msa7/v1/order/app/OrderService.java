@@ -10,7 +10,6 @@ import com.msa7.v1.order.infra.feign.DeliveryClient;
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
 import com.msa7.v1.order.infra.feign.InventoryClient;
-import com.msa7.v1.order.infra.publisher.OrderEventPub;
 import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
 import com.msa7.v1.order.presentation.dto.payload.DeliveryResponse;
 import com.msa7.v1.order.presentation.dto.payload.OrderCreatedEvent;

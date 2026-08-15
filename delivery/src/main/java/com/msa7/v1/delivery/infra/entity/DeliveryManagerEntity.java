@@ -38,12 +38,11 @@ public class DeliveryManagerEntity extends BaseEntity {
 
 
 	public DeliveryManagerEntity(UUID id, UUID hubId, UUID slackId, ManagerType type,
-		Integer assignmentSeq, LocalDateTime deletedAt, UUID deletedBy) { // String -> UUID 변경
+		Integer assignmentSeq) { // String -> UUID 변경
 		this.id = id;
 		this.hubId = hubId;
 		this.slackId = slackId;
 		this.type = type;
 		this.assignmentSeq = assignmentSeq;
 	}
-
 }

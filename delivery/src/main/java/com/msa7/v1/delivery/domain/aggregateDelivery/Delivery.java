@@ -1,6 +1,5 @@
 package com.msa7.v1.delivery.domain.aggregateDelivery;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +22,7 @@ public class Delivery {
 	private final UUID endHubId;
 	private final String receiverName;
 	private final UUID receiverSlackId;
-	private  UUID companyDeliveryManagerId;
+	private final UUID companyDeliveryManagerId;
 
 	private DeliveryStatus status;
 	private final DestinationAddress destinationAddress;
@@ -48,21 +47,20 @@ public class Delivery {
 
 	}
 
-	// 최초 배송 생성
-	public static Delivery create(UUID orderId, UUID startHubId, UUID endHubId,
-		String destinationAddress, String receiverName, UUID receiverSlackId, UUID companyDeliveryManagerId) {
-		return Delivery.builder()
-			.id(UUID.randomUUID())
-			.orderId(orderId)
-			.status(DeliveryStatus.HUB_WAITING)
-			.startHubId(startHubId)
-			.endHubId(endHubId)
-			.destinationAddress(destinationAddress)
-			.receiverName(receiverName)
-			.receiverSlackId(receiverSlackId)
-			.companyDeliveryManagerId(companyDeliveryManagerId)
-			.build();
-	}
+	// public static Delivery create(UUID orderId, UUID startHubId, UUID endHubId,
+	// 	String destinationAddress, String receiverName, UUID receiverSlackId, UUID companyDeliveryManagerId) {
+	// 	return Delivery.builder()
+	// 		.id(UUID.randomUUID())
+	// 		.orderId(orderId)
+	// 		.status(DeliveryStatus.HUB_WAITING)
+	// 		.startHubId(startHubId)
+	// 		.endHubId(endHubId)
+	// 		.destinationAddress(destinationAddress)
+	// 		.receiverName(receiverName)
+	// 		.receiverSlackId(receiverSlackId)
+	// 		.companyDeliveryManagerId(companyDeliveryManagerId)
+	// 		.build();
+	// }
 
 	public static Delivery createFromOrder(UUID orderId,
 		UUID startHubId, UUID endHubId,
@@ -113,10 +111,6 @@ public class Delivery {
 			// Spring Data @DomainEvents를 통해 Outbox로 자동 발행됨
 			registerEvent(new DeliveryCompletedEvent(this.orderId, this.id, "배송이 최종 완료되었습니다."));
 		}
-	}
-
-	public void assignCompanyManager(UUID managerId) {
-		this.companyDeliveryManagerId = managerId;
 	}
 
 

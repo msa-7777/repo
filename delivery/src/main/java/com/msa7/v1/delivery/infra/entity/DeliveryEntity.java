@@ -90,14 +90,4 @@ public class DeliveryEntity extends BaseEntity {
 		}
 	}
 
-	public void delete(UUID deletedBy){
-		LocalDateTime now = LocalDateTime.now();
-		this.setDeletedInfo(now, deletedBy);
-		for(DeliveryRouteRecordEntity route : this.routes){
-			route.delete(deletedBy);
-		}
-	}
-
-
-
 }

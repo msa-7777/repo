@@ -42,4 +42,13 @@ public abstract class BaseEntity {
 		this.deletedAt = deletedAt;
 		this.deletedBy = deletedBy;
 	}
+
+	public void delete(UUID deletedBy) {
+		setDeletedInfo(LocalDateTime.now(), deletedBy);
+	}
+
+	public boolean isDeleted() {
+		return this.deletedAt != null;
+	}
+
 }

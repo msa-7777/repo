@@ -95,9 +95,4 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 		setDeletedInfo(deletedAt, deletedBy);
 	}
 
-	public void delete(UUID deletedBy){
-		this.setDeletedInfo(LocalDateTime.now(), deletedBy);
-	}
-
-
 }
