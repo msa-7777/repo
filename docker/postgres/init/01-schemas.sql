@@ -13,6 +13,8 @@ CREATE SCHEMA product_schema;
 CREATE SCHEMA order_schema;
 CREATE SCHEMA delivery_schema;
 
+-- 주석된 처리 부분만 해제하시고 위 코드는 제거해주세요
+
 
 -- CREATE SCHEMA IF NOT EXISTS hub_schema;
 -- CREATE SCHEMA IF NOT EXISTS company_schema;
