@@ -23,14 +23,12 @@ public class DeliveryRouteRecord {
 	private RouteStatus status;
 	private final UUID deliveryManagerId;
 
-	private LocalDateTime deletedAt;
-	private String deletedBy;
 
 	@Builder
 	public DeliveryRouteRecord(UUID id, Integer sequence, UUID startHubId, UUID endHubId,
 		RouteMetrics metrics, ActualRouteMetrics actualMetrics,
 		RouteStatus status, UUID deliveryManagerId,
-		LocalDateTime deletedAt, String deletedBy, String destinationAddress
+		 String destinationAddress
 		) {
 		this.id = id;
 		this.sequence = sequence;
@@ -40,8 +38,7 @@ public class DeliveryRouteRecord {
 		this.actualMetrics = actualMetrics;
 		this.status = status;
 		this.deliveryManagerId = deliveryManagerId;
-		this.deletedAt = deletedAt;
-		this.deletedBy = deletedBy;
+
 		this.destinationAddress = destinationAddress;
 	}
 
@@ -70,10 +67,5 @@ public class DeliveryRouteRecord {
 		this.actualMetrics = new ActualRouteMetrics(actualDistance, actualTime);
 	}
 
-	public void delete(String deletedBy) {
-		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = deletedBy;
-	}
+
 }
-
-

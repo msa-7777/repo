@@ -51,7 +51,7 @@ public class DeliveryManagerService {
 
 
 	@Transactional
-	public void deleteDeliveryManager(UUID managerId, String deletedBy) {
+	public void deleteDeliveryManager(UUID managerId, UUID deletedBy) { // String -> UUID 변경
 		DeliveryManager manager = managerRepo.findById(managerId)
 			.orElseThrow(() -> new IllegalArgumentException("담당자를 찾을 수 없습니다."));
 

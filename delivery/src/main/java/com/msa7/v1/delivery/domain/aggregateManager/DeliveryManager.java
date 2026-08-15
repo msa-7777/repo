@@ -18,20 +18,17 @@ public class DeliveryManager {
 	private  ManagerType type;
 	private Integer assignmentSeq;
 
-	private LocalDateTime deletedAt;
-	private String deletedBy;
 
 	@Builder
 	public DeliveryManager(UUID id, UUID hubId, UUID slackId,
-		ManagerType type, Integer assignmentSeq,
-		LocalDateTime deletedAt, String deletedBy) {
+		ManagerType type, Integer assignmentSeq
+		) {
 		this.id = id;
 		this.hubId = hubId;
 		this.slackId = slackId;
 		this.type = type;
 		this.assignmentSeq = assignmentSeq;
-		this.deletedAt = deletedAt;
-		this.deletedBy = deletedBy;
+
 	}
 
 	public static DeliveryManager create(UUID userId, UUID hubId, UUID slackId, ManagerType type, Integer lastAssignmentSeq) {
@@ -49,9 +46,5 @@ public class DeliveryManager {
 		this.type = type;
 	}
 
-	public void delete(String deletedBy) {
-		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = deletedBy;
-	}
 
 }

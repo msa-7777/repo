@@ -1,5 +1,6 @@
 package com.msa7.v1.delivery.infra.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -86,6 +87,14 @@ public class DeliveryEntity extends BaseEntity {
 		for (DeliveryRouteRecordEntity route : routes) {
 			this.routes.add(route);
 			route.setDelivery(this);
+		}
+	}
+
+	public void delete(UUID deletedBy){
+		LocalDateTime now = LocalDateTime.now();
+		this.setDeletedInfo(now, deletedBy);
+		for(DeliveryRouteRecordEntity route : this.routes){
+			route.delete(deletedBy);
 		}
 	}
 

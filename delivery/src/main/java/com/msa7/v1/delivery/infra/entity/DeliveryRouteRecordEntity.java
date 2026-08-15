@@ -77,7 +77,7 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 		Long estimatedDistance, Long estimatedTime,
 		Long actualDistance, Long actualTime,
 		RouteStatus status, UUID deliveryManagerId,
-		LocalDateTime deletedAt, String deletedBy,
+		LocalDateTime deletedAt, UUID deletedBy,
 		String destinationAddress
 		) {
 		this.id = id;
@@ -93,6 +93,10 @@ public class DeliveryRouteRecordEntity extends BaseEntity {
 
 		this.deliveryManagerId = deliveryManagerId;
 		setDeletedInfo(deletedAt, deletedBy);
+	}
+
+	public void delete(UUID deletedBy){
+		this.setDeletedInfo(LocalDateTime.now(), deletedBy);
 	}
 
 

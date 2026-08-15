@@ -21,20 +21,13 @@ public class Delivery {
 	private final UUID orderId;
 	private final UUID startHubId;
 	private final UUID endHubId;
-
 	private final String receiverName;
 	private final UUID receiverSlackId;
-
 	private  UUID companyDeliveryManagerId;
 
 	private DeliveryStatus status;
 	private final DestinationAddress destinationAddress;
-
-
 	private final List<DeliveryRouteRecord> routes= new ArrayList<>();
-
-	private LocalDateTime deletedAt;
-	private String deletedBy;
 
 	// saga Event 버퍼
 	private final List<Object> domainEvents = new ArrayList<>();
@@ -42,7 +35,7 @@ public class Delivery {
 	@Builder
 	public Delivery(UUID id, UUID orderId, DeliveryStatus status, UUID startHubId, UUID endHubId,
 		String destinationAddress, String receiverName, UUID receiverSlackId, UUID companyDeliveryManagerId
-	, LocalDateTime deletedAt, String deletedBy) {
+	) {
 		this.id = id;
 		this.orderId = orderId;
 		this.status = status;
@@ -52,8 +45,7 @@ public class Delivery {
 		this.receiverName = receiverName;
 		this.receiverSlackId = receiverSlackId;
 		this.companyDeliveryManagerId = companyDeliveryManagerId;
-		this.deletedAt = deletedAt;
-		this.deletedBy = receiverName;
+
 	}
 
 	// 최초 배송 생성
@@ -127,13 +119,7 @@ public class Delivery {
 		this.companyDeliveryManagerId = managerId;
 	}
 
-	public void delete(String deletedBy) {
-		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = deletedBy;
-		for (DeliveryRouteRecord route : routes) {
-			route.delete(deletedBy);
-		}
-	}
+
 	// 이벤트 방출용 Getter 및 Clear 메서드
 	public void registerEvent(Object event) {this.domainEvents.add(event);}
 	public List<Object> getDomainEvents() { return Collections.unmodifiableList(domainEvents); }

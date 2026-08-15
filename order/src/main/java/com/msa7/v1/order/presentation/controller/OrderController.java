@@ -19,7 +19,9 @@ import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
 import com.msa7.v1.order.presentation.dto.payload.OrderWithDeliveryDto;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class OrderController {
 	@PreAuthorize("hasAnyRole('MASTER', 'HUB_MANAGER', 'DELIVERY_AGENT', 'SUPPLIER_AGENT')")
 	@PostMapping
 	public ResponseEntity<RestApiResponse<OrderResponse>> createOrder(@RequestBody CreateOrderRequest request) {
+		log.info("요청받은 productId: {}", request.productId());
 		Order order = orderService.createOrder(request.receiverCompanyId(),
 			request.productId(), request.quantity(), request.requestNotes(),
 			request.receiverSlackId(), request.startHubId(), request.endHubId(),

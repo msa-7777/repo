@@ -56,7 +56,7 @@ public class DeliveryController {
 		@RequestHeader("X-User-Id") UUID deletedBy,
 		@PathVariable UUID id) {
 
-		deliveryManagerService.deleteDeliveryManager(id, String.valueOf(deletedBy));
+		deliveryManagerService.deleteDeliveryManager(id, deletedBy);
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 담당자가 삭제되었습니다.", null));
 	}
 

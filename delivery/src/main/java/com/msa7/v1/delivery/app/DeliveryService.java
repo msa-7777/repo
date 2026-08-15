@@ -204,7 +204,7 @@ public class DeliveryService {
 				DeliveryOutboxEvent outboxEvent = new DeliveryOutboxEvent(
 					"Delivery",
 					event.orderId().toString(),
-					"DeliveryFailedEvent",
+					"fail",
 					objectMapper.writeValueAsString(failedEvent)
 				);
 				outboxEventRepo.save(outboxEvent);

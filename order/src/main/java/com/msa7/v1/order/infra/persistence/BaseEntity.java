@@ -31,12 +31,14 @@ public abstract class BaseEntity {
 	@LastModifiedBy
 	private UUID updatedBy;
 
+	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
+	@Column(name = "deleted_by")
 	private UUID deletedBy;
 
-	protected void markAsDeleted(UUID deletedBy) {
-		this.deletedAt = LocalDateTime.now();
+	protected void setDeletedInfo(LocalDateTime deletedAt, UUID deletedBy) {
+		this.deletedAt = deletedAt;
 		this.deletedBy = deletedBy;
 	}
 

@@ -1,5 +1,6 @@
 package com.msa7.v1.delivery.infra.repo;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 	public void deleteById(UUID id, UUID deletedBy) {
 		jpaDeliveryRepository.findById(id).ifPresent(entity -> {
 			Delivery delivery = toDomain(entity);
-			delivery.delete(deletedBy.toString());
+			entity.delete(deletedBy);
 			jpaDeliveryRepository.save(toEntity(delivery));
 		});
 	}
@@ -89,8 +90,6 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 					.status(route.getStatus())
 					.deliveryManagerId(route.getDeliveryManagerId())
 					.destinationAddress(route.getDestinationAddress())
-					.deletedAt(route.getDeletedAt())
-					.deletedBy(route.getDeletedBy())
 					.build();
 
 				entity.addRoute(routeEntity);
@@ -128,8 +127,6 @@ public class DeliveryRepositoryImpl implements DeliveryRepo {
 			.receiverSlackId(entity.getReceiverSlackId())
 			.companyDeliveryManagerId(entity.getCompanyDeliveryManagerId())
 			.destinationAddress(entity.getDestinationAddress())
-			.deletedAt(entity.getDeletedAt())
-			.deletedBy(entity.getDeletedBy())
 			.build();
 
 		// 3. 변환된 routes 리스트 추가

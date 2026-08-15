@@ -44,8 +44,8 @@ public class JwtUtil {
 
     // Token 식별자
     public static final String BEARER = "Bearer ";
-    // Access Token 만료 시간 - 60분
-    private final long TOKEN_TIME = 60 * 60 * 1000L;
+    // Access Token 만료 시간 - 24시간
+    private final long TOKEN_TIME = 24 * 60 * 60 * 1000L;
 
     @Value("${SECURITY_JWT_SECRET}")
     private String secretKey;

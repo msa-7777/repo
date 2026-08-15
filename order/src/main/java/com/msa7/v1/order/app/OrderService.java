@@ -27,7 +27,6 @@ public class OrderService {
 	private final OrderRepo orderRepo;
 	private final InventoryClient inventoryClient;
 	private final DeliveryClient deliveryClient;
-	private final OrderEventPub orderEventPub;
 
 	@Transactional
 	public Order createOrder(UUID receiverId, UUID productId, Integer quantity, String requests,
@@ -35,16 +34,10 @@ public class OrderService {
 	) {
 		// 재고 확인 inventory에서 요청(필요에 따라 동기 유지 또는 이벤트 전환)
 		inventoryClient.verifyInventory(productId, quantity);
-
 		// 도메인 생성 (이벤트 등록)
 		Order order = Order.create(receiverId, productId, quantity, requests
 		, receiverSlackId, startHubId, endHubId, destinationAddress);
-
-		Order savedOrder = orderRepo.save(order);
-
-		OrderCreatedEvent event = OrderCreatedEvent.from(savedOrder, receiverId, receiverSlackId, startHubId, endHubId, destinationAddress);
-		orderEventPub.publishOrderCreated(event);
-		return savedOrder;
+		return orderRepo.save(order);
 	}
 
 	@Transactional
