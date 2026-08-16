@@ -24,6 +24,8 @@ public class OrderOutboxEntity {
 	@Column(columnDefinition = "TEXT")
 	private String payload;
 	private boolean published;
+	private  LocalDateTime publishedAt;
+	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
 	public OrderOutboxEntity(String aggregateType, String aggregateId, String eventType, String payload) {
@@ -33,9 +35,11 @@ public class OrderOutboxEntity {
 		this.eventType = eventType;
 		this.payload = payload;
 		this.published = false;
+		this.publishedAt = LocalDateTime.now();
 		this.createdAt = LocalDateTime.now();
 	}
 	public void markAsPublished() {
 		this.published = true;
+		this.publishedAt = LocalDateTime.now();
 	}
 }

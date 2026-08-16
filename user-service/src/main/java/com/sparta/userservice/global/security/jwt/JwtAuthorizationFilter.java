@@ -57,18 +57,21 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String tokenValue = jwtUtil.getTokenFromRequest(request); // JWT 추출
+        String tokenValue = jwtUtil.getTokenFromRequest(request);
+
 
         if (StringUtils.hasText(tokenValue)) { // 존재하는 경우 검증 진행
             tokenValue = jwtUtil.subStringToken(tokenValue);
 
-            if (jwtUtil.validateToken(tokenValue)) { // JWT 토큰 검증
-                Claims info = jwtUtil.getUserInfoFromToken(tokenValue); // JWT payload에서 사용자 정보 추출
-
-                String loginId = info.get(JwtUtil.USERNAME_KEY, String.class);
+            if (!jwtUtil.validateToken(tokenValue)){
+                writeUnauthorized(response, "유효하지 않은 토큰입니다.");
+                return;
+            }
+            Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
+            String loginId = info.get(JwtUtil.USERNAME_KEY, String.class);
 
                 try {
-                    setAuthentication(loginId); // JwtUtil에서 subject에 loginId를 넣어놨었음
+                    setAuthentication(loginId);
                 } catch (UsernameNotFoundException e) {
                     log.warn("Authentication Failed: {}", e.getMessage());
                     writeUnauthorized(response, "인증에 실패했습니다.");
@@ -79,14 +82,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                     writeUnauthorized(response, "인증에 실패했습니다.");
                     return;
                 }
-            }
-            else {
-                log.warn("Token Error");
-                writeUnauthorized(response, "유효하지 않은 토큰입니다.");
-                return ;
-            }
         }
-
         // JWT가 없거나, JWT 인증 처리가 정상적으로 완료된 경우 다음 Filter로 요청 전달
         filterChain.doFilter(request, response);
     }

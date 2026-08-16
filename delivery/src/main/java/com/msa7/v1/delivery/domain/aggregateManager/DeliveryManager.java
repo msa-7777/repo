@@ -1,6 +1,5 @@
 package com.msa7.v1.delivery.domain.aggregateManager;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.msa7.v1.delivery.domain.vo.ManagerType;
@@ -12,26 +11,21 @@ import lombok.Getter;
 public class DeliveryManager {
 
 	private final UUID id;
-	private  UUID hubId;
+	private UUID hubId;
 	private final UUID slackId;
 
-	private  ManagerType type;
+	private ManagerType type;
 	private Integer assignmentSeq;
-
-	private LocalDateTime deletedAt;
-	private String deletedBy;
 
 	@Builder
 	public DeliveryManager(UUID id, UUID hubId, UUID slackId,
-		ManagerType type, Integer assignmentSeq,
-		LocalDateTime deletedAt, String deletedBy) {
+		ManagerType type, Integer assignmentSeq
+	) {
 		this.id = id;
 		this.hubId = hubId;
 		this.slackId = slackId;
 		this.type = type;
 		this.assignmentSeq = assignmentSeq;
-		this.deletedAt = deletedAt;
-		this.deletedBy = deletedBy;
 	}
 
 	public static DeliveryManager create(UUID userId, UUID hubId, UUID slackId, ManagerType type, Integer lastAssignmentSeq) {
@@ -47,11 +41,6 @@ public class DeliveryManager {
 	public void updateInfo(UUID hubId, ManagerType type) {
 		this.hubId = hubId;
 		this.type = type;
-	}
-
-	public void delete(String deletedBy) {
-		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = deletedBy;
 	}
 
 }

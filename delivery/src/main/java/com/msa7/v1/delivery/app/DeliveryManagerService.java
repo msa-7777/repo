@@ -50,14 +50,4 @@ public class DeliveryManagerService {
 	}
 
 
-	@Transactional
-	public void deleteDeliveryManager(UUID managerId, String deletedBy) {
-		DeliveryManager manager = managerRepo.findById(managerId)
-			.orElseThrow(() -> new IllegalArgumentException("담당자를 찾을 수 없습니다."));
-
-		manager.delete(deletedBy);
-		managerRepo.save(manager);
-	}
-
-
 }

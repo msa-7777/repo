@@ -49,16 +49,6 @@ public class DeliveryController {
 		return ResponseEntity.ok(RestApiResponse.ok( "배송 담당자가 생성되었습니다.", id));
 	}
 
-	// 배송 담당자 삭제 (논리적 삭제)
-	@PreAuthorize("hasRole('MASTER')")
-	@DeleteMapping("/managers/{id}")
-	public ResponseEntity<RestApiResponse<Void>> deleteManager(
-		@RequestHeader("X-User-Id") UUID deletedBy,
-		@PathVariable UUID id) {
-
-		deliveryManagerService.deleteDeliveryManager(id, String.valueOf(deletedBy));
-		return ResponseEntity.ok(RestApiResponse.ok( "배송 담당자가 삭제되었습니다.", null));
-	}
 
 	@PatchMapping("/{deliveryId}/routes/{routeId}/status")
 	public ResponseEntity<RestApiResponse<Void>> updateRouteStatus(

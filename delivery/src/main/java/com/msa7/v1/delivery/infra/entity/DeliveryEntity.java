@@ -1,5 +1,6 @@
 package com.msa7.v1.delivery.infra.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -88,7 +89,5 @@ public class DeliveryEntity extends BaseEntity {
 			route.setDelivery(this);
 		}
 	}
-
-
 
 }

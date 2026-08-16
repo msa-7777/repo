@@ -20,7 +20,6 @@ public class UserHeaderFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
         // 외부 사용자가 X-User-Id, X-User-Role을 직접 전달할 수 있으므로 먼저 기존 헤더를 제거한다.
         // 이후 JWT 검증을 통과한 사용자 정보만 다시 설정한다.
         ServerWebExchange sanitizedExchange = exchange.mutate()
@@ -42,11 +41,9 @@ public class UserHeaderFilter implements GlobalFilter, Ordered {
                     if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication)) {
                         return chain.filter(sanitizedExchange);
                     }
-
                     // 검증이 완료된 JWT 객체를 가져온다.
                     String userId = jwtAuthentication.getToken().getSubject();
                     String role = jwtAuthentication.getToken().getClaimAsString("role");
-
                     // JWT에서 검증된 사용자 정보만 내부 헤더로 추가한다.
                      /* sub  → X-User-Id
                      * role → X-User-Role

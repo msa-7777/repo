@@ -19,7 +19,8 @@ public class DeliveryManagerRepositoryImpl implements DeliveryManagerRepo {
 
 	@Override
 	public DeliveryManager save(DeliveryManager manager) {
-		DeliveryManagerEntity entity = toEntity(manager);
+		// 데이터가 존재하면 삭제 정보 유지 위한 코드
+		DeliveryManagerEntity entity = jpaRepo.findById(manager.getId()).orElse(toEntity(manager));
 		DeliveryManagerEntity savedEntity = jpaRepo.save(entity);
 		return toDomain(savedEntity);
 	}
@@ -47,9 +48,7 @@ public class DeliveryManagerRepositoryImpl implements DeliveryManagerRepo {
 			domain.getHubId(),
 			domain.getSlackId(),
 			domain.getType(),
-			domain.getAssignmentSeq(),
-			domain.getDeletedAt(),
-			domain.getDeletedBy()
+			domain.getAssignmentSeq()
 		);
 	}
 	private DeliveryManager toDomain(DeliveryManagerEntity entity) {
@@ -59,8 +58,6 @@ public class DeliveryManagerRepositoryImpl implements DeliveryManagerRepo {
 			.slackId(entity.getSlackId())
 			.type(entity.getType())
 			.assignmentSeq(entity.getAssignmentSeq())
-			.deletedAt(entity.getDeletedAt())
-			.deletedBy(entity.getDeletedBy())
 			.build();
 	}
 

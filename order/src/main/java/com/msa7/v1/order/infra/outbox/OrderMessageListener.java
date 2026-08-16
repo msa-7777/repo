@@ -17,7 +17,7 @@ public class OrderMessageListener {
 	private final OrderService orderService;
 	private final ObjectMapper objectMapper;
 
-	@RabbitListener(queues = "delivery-success-queue")
+	@RabbitListener(queues = "delivery-created-queue")
 	public void onDeliveryCreated(String payload) throws Exception {
 		DeliveryCreatedEvent event = objectMapper.readValue(payload, DeliveryCreatedEvent.class);
 		orderService.compeleteOrderSaga(event.orderId(), event.deliveryId());;

@@ -29,11 +29,11 @@ services:
         ]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: logistics-rabbitmq
+    container_name: rabbitmq
     networks:
       - v1_network
     ports:
@@ -42,6 +42,13 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
 
 
   eureka-server:
@@ -142,6 +149,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_URL: http://eureka-server:19090/eureka/
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      RABBITMQ_HOST: rabbitmq
 
     depends_on:
       postgres:
@@ -167,6 +175,8 @@ services:
 
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   slack-service:
@@ -239,6 +249,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19092/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   gateway-service:
     build:

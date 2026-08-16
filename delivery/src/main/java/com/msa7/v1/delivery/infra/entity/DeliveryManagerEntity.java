@@ -36,18 +36,13 @@ public class DeliveryManagerEntity extends BaseEntity {
 	@Column(name = "assignment_seq")
 	private Integer assignmentSeq;
 
-	private LocalDateTime deletedAt;
-	private String deletedBy;
 
 	public DeliveryManagerEntity(UUID id, UUID hubId, UUID slackId, ManagerType type,
-		Integer assignmentSeq, LocalDateTime deletedAt, String deletedBy) { // protected -> public
+		Integer assignmentSeq) { // String -> UUID 변경
 		this.id = id;
 		this.hubId = hubId;
 		this.slackId = slackId;
 		this.type = type;
 		this.assignmentSeq = assignmentSeq;
-		this.deletedAt = deletedAt;
-		this.deletedBy = deletedBy;
 	}
-
 }

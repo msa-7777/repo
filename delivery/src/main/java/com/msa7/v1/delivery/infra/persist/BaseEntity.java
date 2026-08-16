@@ -24,24 +24,31 @@ public abstract class BaseEntity {
 
 	@CreatedBy
 	@Column(updatable = false)
-	private String createdBy;
+	private UUID createdBy;
 
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
 
 	@LastModifiedBy
-	private String updatedBy;
+	private UUID updatedBy;
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
 	@Column(name = "deleted_by")
-	private String deletedBy;
+	private UUID deletedBy;
 
-	protected void setDeletedInfo(LocalDateTime deletedAt, String deletedBy) {
+	protected void setDeletedInfo(LocalDateTime deletedAt, UUID deletedBy) { // 파라미터 타입 변경
 		this.deletedAt = deletedAt;
 		this.deletedBy = deletedBy;
 	}
 
+	public void delete(UUID deletedBy) {
+		setDeletedInfo(LocalDateTime.now(), deletedBy);
+	}
+
+	public boolean isDeleted() {
+		return this.deletedAt != null;
+	}
 
 }

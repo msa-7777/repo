@@ -10,7 +10,6 @@ import com.msa7.v1.order.infra.feign.DeliveryClient;
 import com.msa7.v1.order.domain.aggregate.Order;
 import com.msa7.v1.order.domain.repo.OrderRepo;
 import com.msa7.v1.order.infra.feign.InventoryClient;
-import com.msa7.v1.order.infra.publisher.OrderEventPub;
 import com.msa7.v1.order.presentation.dto.onlycontoller.RestApiResponse;
 import com.msa7.v1.order.presentation.dto.payload.DeliveryResponse;
 import com.msa7.v1.order.presentation.dto.payload.OrderCreatedEvent;
@@ -27,7 +26,6 @@ public class OrderService {
 	private final OrderRepo orderRepo;
 	private final InventoryClient inventoryClient;
 	private final DeliveryClient deliveryClient;
-	private final OrderEventPub orderEventPub;
 
 	@Transactional
 	public Order createOrder(UUID receiverId, UUID productId, Integer quantity, String requests,
@@ -35,16 +33,10 @@ public class OrderService {
 	) {
 		// 재고 확인 inventory에서 요청(필요에 따라 동기 유지 또는 이벤트 전환)
 		inventoryClient.verifyInventory(productId, quantity);
-
 		// 도메인 생성 (이벤트 등록)
 		Order order = Order.create(receiverId, productId, quantity, requests
 		, receiverSlackId, startHubId, endHubId, destinationAddress);
-
-		Order savedOrder = orderRepo.save(order);
-
-		OrderCreatedEvent event = OrderCreatedEvent.from(savedOrder, receiverId, receiverSlackId, startHubId, endHubId, destinationAddress);
-		orderEventPub.publishOrderCreated(event);
-		return savedOrder;
+		return orderRepo.save(order);
 	}
 
 	@Transactional

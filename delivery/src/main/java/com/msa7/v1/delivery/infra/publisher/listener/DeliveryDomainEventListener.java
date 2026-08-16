@@ -24,7 +24,7 @@ public class DeliveryDomainEventListener {
 	public void handleDeliveryCreatedEvent(DeliveryCreatedEvent event) {
 		try {
 			DeliveryOutboxEvent outboxEvent = new DeliveryOutboxEvent(
-				"Delivery", event.deliveryId().toString(), "DeliveryCreatedEvent", objectMapper.writeValueAsString(event)
+				"Delivery", event.deliveryId().toString(), "created", objectMapper.writeValueAsString(event)
 			);
 			outboxEventRepo.save(outboxEvent);
 		} catch (Exception e) {

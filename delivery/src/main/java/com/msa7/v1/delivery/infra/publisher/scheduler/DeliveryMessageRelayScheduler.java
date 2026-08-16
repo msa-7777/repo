@@ -23,7 +23,8 @@ public class DeliveryMessageRelayScheduler {
 	public void publishOutboxEvents() {
 		List<DeliveryOutboxEvent> unPublishedEvents = outboxEventRepo.findAllByPublishedFalse();
 		for (DeliveryOutboxEvent event : unPublishedEvents) {
-			rabbitTemplate.convertAndSend("delivery-exchange", "delivery." + event.getEventType(), event.getPayload());
+			String routingKey = "delivery." + event.getEventType();
+			rabbitTemplate.convertAndSend("delivery-exchange", routingKey, event.getPayload());
 			event.markAsPublished();
 		}
 	}
